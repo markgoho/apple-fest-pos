@@ -1,1 +1,1 @@
-console.log("Hello via Bun!");
+import "./app/server/index";

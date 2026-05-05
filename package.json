@@ -3,6 +3,22 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "dev": "bun run --parallel dev:server dev:web",
+    "dev:server": "bun --hot ./index.ts",
+    "dev:web": "bun run --cwd app/web dev --host 0.0.0.0",
+    "build:web": "bun run --cwd app/web build",
+    "start": "bun ./index.ts",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@sveltejs/adapter-static": "latest",
+    "@sveltejs/kit": "latest",
+    "@sveltejs/vite-plugin-svelte": "latest",
+    "svelte": "latest",
+    "vite": "latest",
+    "vite-plugin-pwa": "latest"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
