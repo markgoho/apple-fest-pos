@@ -10,6 +10,7 @@
     "build:web": "bun run --cwd app/web build",
     "start": "bun ./index.ts",
     "test": "bun test",
+    "server:restart": "sudo systemctl restart apple-fest-pos",
     "deploy:pi": "./scripts/deploy-pi.sh markgoho@scout-pi"
   },
   "dependencies": {
