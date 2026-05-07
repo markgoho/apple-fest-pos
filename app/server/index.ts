@@ -1,3 +1,5 @@
+import { getDatabase } from "./db/sqlite";
+import { handlePreflight, withCors } from "./http/cors";
 import { handleHealth } from "./routes/health";
 import { handleMenu } from "./routes/menu";
 import { handlePlaceOrder } from "./routes/orders";
@@ -6,25 +8,31 @@ const port = Number(process.env.PORT ?? 3000);
 const webRoot = `${import.meta.dir}/../web/build`;
 const indexFile = Bun.file(`${webRoot}/index.html`);
 
+getDatabase();
+
 Bun.serve({
   port,
   async fetch(request): Promise<Response> {
     const url = new URL(request.url);
 
+    if (request.method === "OPTIONS" && url.pathname.startsWith("/api/")) {
+      return handlePreflight(request);
+    }
+
     if (url.pathname === "/api/health" && request.method === "GET") {
-      return handleHealth();
+      return withCors(request, handleHealth());
     }
 
     if (url.pathname === "/api/menu" && request.method === "GET") {
-      return handleMenu();
+      return withCors(request, handleMenu());
     }
 
     if (url.pathname === "/api/orders" && request.method === "POST") {
-      return handlePlaceOrder(request);
+      return withCors(request, await handlePlaceOrder(request));
     }
 
     if (url.pathname.startsWith("/api/")) {
-      return Response.json({ error: "Not found" }, { status: 404 });
+      return withCors(request, Response.json({ error: "Not found" }, { status: 404 }));
     }
 
     return serveStaticFile(url.pathname);

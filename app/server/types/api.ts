@@ -25,19 +25,32 @@ export type PlaceOrderRequest = {
   items: CartLine[];
 };
 
+export type PrintStatus = "queued" | "printed" | "failed" | "disabled";
+
+export type OrderStatus = "accepted" | "printed" | "print_failed";
+
+export type ReceiptOrder = {
+  orderId: string;
+  orderNumber: number;
+  createdAt: string;
+  subtotalCents: number;
+  totalCents: number;
+  items: CartLine[];
+};
+
 export type PlaceOrderResponse = {
   order: {
     id: string;
     orderNumber: number;
-    status: "accepted" | "printed" | "print_failed";
+    status: OrderStatus;
     subtotalCents: number;
     taxCents: number;
     totalCents: number;
     createdAt: string;
   };
   print: {
-    customer: "queued" | "printed" | "failed" | "disabled";
-    kitchen: "queued" | "printed" | "failed" | "disabled";
+    customer: PrintStatus;
+    kitchen: PrintStatus;
   };
 };
 

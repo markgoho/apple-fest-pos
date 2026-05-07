@@ -1,0 +1,18 @@
+[Unit]
+Description=Apple Fest POS Bun Server
+After=network.target
+
+[Service]
+Type=simple
+User=markgoho
+WorkingDirectory=/home/markgoho/apple-fest-pos
+Environment=PATH=/home/markgoho/.bun/bin:/usr/local/bin:/usr/bin:/bin
+Environment=PORT=3000
+Environment=PRINTER_ENABLED=false
+Environment=SQLITE_PATH=/home/markgoho/apple-fest-pos/data/pos.sqlite
+ExecStart=/home/markgoho/.bun/bin/bun run ./app/server/index.ts
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
