@@ -1,4 +1,6 @@
 import { Database } from "bun:sqlite";
+import { dirname } from "node:path";
+import { mkdirSync } from "node:fs";
 import { schemaStatements } from "./schema";
 
 let database: Database | null = null;
@@ -9,6 +11,7 @@ export function getDatabase(): Database {
   }
 
   const path = process.env.SQLITE_PATH || `${import.meta.dir}/../../../data/pos.sqlite`;
+  mkdirSync(dirname(path), { recursive: true });
   database = new Database(path, { create: true });
   database.exec("PRAGMA journal_mode = WAL;");
   database.exec("PRAGMA synchronous = NORMAL;");

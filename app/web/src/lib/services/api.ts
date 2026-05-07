@@ -9,20 +9,26 @@ export class ApiError extends Error {
   }
 }
 
+const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
+
 export async function getHealth(): Promise<HealthResponse> {
-  return fetchJson<HealthResponse>("/api/health");
+  return fetchJson<HealthResponse>(apiUrl("/api/health"));
 }
 
 export async function getMenu(): Promise<MenuItem[]> {
-  return fetchJson<MenuItem[]>("/api/menu");
+  return fetchJson<MenuItem[]>(apiUrl("/api/menu"));
 }
 
 export async function placeOrder(order: PlaceOrderRequest): Promise<PlaceOrderResponse> {
-  return fetchJson<PlaceOrderResponse>("/api/orders", {
+  return fetchJson<PlaceOrderResponse>(apiUrl("/api/orders"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(order)
   });
+}
+
+function apiUrl(path: string): string {
+  return `${apiBaseUrl}${path}`;
 }
 
 async function fetchJson<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
