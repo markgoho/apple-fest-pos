@@ -3,6 +3,7 @@ import { handlePreflight, withCors } from "./http/cors";
 import { handleHealth } from "./routes/health";
 import { handleMenu } from "./routes/menu";
 import { handlePlaceOrder } from "./routes/orders";
+import { handleAdminSales } from "./routes/admin";
 
 const port = Number(process.env.PORT ?? 3000);
 const webRoot = `${import.meta.dir}/../web/build`;
@@ -29,6 +30,10 @@ Bun.serve({
 
     if (url.pathname === "/api/orders" && request.method === "POST") {
       return withCors(request, await handlePlaceOrder(request));
+    }
+
+    if (url.pathname === "/api/admin/sales" && request.method === "GET") {
+      return withCors(request, handleAdminSales(request));
     }
 
     if (url.pathname.startsWith("/api/")) {

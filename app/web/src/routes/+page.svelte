@@ -10,6 +10,7 @@
     <div class="actions">
       <a href="/pos">Cashier POS</a>
       <a href="/kitchen">Kitchen display</a>
+      <a href="/admin">Admin sales</a>
     </div>
   </section>
 </main>

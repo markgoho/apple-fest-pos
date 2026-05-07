@@ -1,4 +1,10 @@
-import type { HealthResponse, MenuItem, PlaceOrderRequest, PlaceOrderResponse } from "$lib/types/api";
+import type {
+  AdminSalesResponse,
+  HealthResponse,
+  MenuItem,
+  PlaceOrderRequest,
+  PlaceOrderResponse
+} from "$lib/types/api";
 
 export class ApiError extends Error {
   constructor(
@@ -25,6 +31,11 @@ export async function placeOrder(order: PlaceOrderRequest): Promise<PlaceOrderRe
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(order)
   });
+}
+
+export async function getAdminSales(date?: string): Promise<AdminSalesResponse> {
+  const path = date ? `/api/admin/sales?date=${encodeURIComponent(date)}` : "/api/admin/sales";
+  return fetchJson<AdminSalesResponse>(apiUrl(path));
 }
 
 function apiUrl(path: string): string {

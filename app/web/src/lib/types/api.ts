@@ -58,3 +58,36 @@ export type HealthResponse = {
   ok: true;
   serverTime: string;
 };
+
+export type AdminSalesItemLine = {
+  menuItemId: string;
+  name: string;
+  quantity: number;
+  revenueCents: number;
+};
+
+export type AdminSalesOrder = {
+  id: string;
+  orderNumber: number;
+  status: OrderStatus;
+  subtotalCents: number;
+  taxCents: number;
+  totalCents: number;
+  paymentMethod: string;
+  customerPrintStatus: PrintStatus;
+  kitchenPrintStatus: PrintStatus;
+  createdAt: string;
+  items: { menuItemId: string; name: string; quantity: number }[];
+};
+
+export type AdminSalesResponse = {
+  businessDate: string;
+  serverTime: string;
+  summary: {
+    orderCount: number;
+    totalCents: number;
+    printFailures: number;
+  };
+  items: AdminSalesItemLine[];
+  orders: AdminSalesOrder[];
+};
