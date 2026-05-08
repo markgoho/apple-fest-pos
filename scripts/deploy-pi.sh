@@ -9,4 +9,4 @@ fi
 PI_HOST="$1"
 APP_DIR="/home/markgoho/apple-fest-pos"
 
-ssh "$PI_HOST" "cd $APP_DIR && git pull && bun install && sudo systemctl restart apple-fest-pos && systemctl --no-pager --full status apple-fest-pos"
+ssh "$PI_HOST" "cd $APP_DIR && git pull && bun install && bun run build:web && sudo systemctl restart apple-fest-pos && systemctl --no-pager --full status apple-fest-pos"
