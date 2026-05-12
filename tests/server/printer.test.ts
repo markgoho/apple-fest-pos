@@ -15,14 +15,15 @@ describe("escpos builders", () => {
     const payload = buildCustomerReceipt(order);
 
     expect(Array.from(payload.slice(0, 2))).toEqual([0x1b, 0x40]);
-    expect(Array.from(payload.slice(-3))).toEqual([0x1d, 0x56, 0x00]);
+    expect(Array.from(payload.slice(-4))).toEqual([0x1d, 0x56, 0x42, 0x08]);
+    expect(new TextDecoder().decode(payload)).toContain("\r\n");
   });
 
   test("builds a kitchen ticket with emphasis and cut command", () => {
     const payload = buildKitchenTicket(order);
 
     expect(Array.from(payload.slice(0, 2))).toEqual([0x1b, 0x40]);
-    expect(Array.from(payload.slice(-3))).toEqual([0x1d, 0x56, 0x00]);
+    expect(Array.from(payload.slice(-4))).toEqual([0x1d, 0x56, 0x42, 0x08]);
     expect(Array.from(payload)).toContain(0x11);
   });
 });

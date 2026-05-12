@@ -49,11 +49,11 @@ function doubleSizeOff(): Uint8Array {
 }
 
 function cutPaper(): Uint8Array {
-  return Uint8Array.from([0x1d, 0x56, 0x00]);
+  return Uint8Array.from([0x1d, 0x56, 0x42, 0x08]);
 }
 
 function encodeLines(lines: string[]): Uint8Array {
-  return encoder.encode(`${lines.join("\n")}\n\n\n`);
+  return encoder.encode(`${lines.join("\r\n")}\r\n\r\n\r\n`);
 }
 
 function concatEscPos(chunks: Uint8Array[]): Uint8Array {
