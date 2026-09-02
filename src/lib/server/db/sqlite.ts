@@ -10,7 +10,7 @@ export function getDatabase(): Database {
     return database;
   }
 
-  const path = process.env.SQLITE_PATH || `${import.meta.dir}/../../../data/pos.sqlite`;
+  const path = process.env.SQLITE_PATH || `${process.cwd()}/data/pos.sqlite`;
   mkdirSync(dirname(path), { recursive: true });
   database = new Database(path, { create: true });
   database.exec("PRAGMA journal_mode = WAL;");

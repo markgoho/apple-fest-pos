@@ -1,27 +1,34 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { ApiError, getAdminSales } from "#lib/services/api";
   import { formatCents } from "#lib/utils/currency";
   import type { AdminSalesResponse } from "#lib/types/api";
+  import type { PageProps } from "./$types";
+
+  let { data }: PageProps = $props();
 
   const refreshIntervalMs = 5000;
 
-  let sales = $state<AdminSalesResponse | null>(null);
+  let sales = $derived<AdminSalesResponse>(data.sales);
   let error = $state<string | null>(null);
   let lastUpdated = $state<Date | null>(null);
 
   async function refresh() {
     try {
-      sales = await getAdminSales();
+      const response = await fetch(`/api/admin/sales?date=${encodeURIComponent(sales.businessDate)}`);
+      if (!response.ok) {
+        error = `Request failed with ${response.status}`;
+        return;
+      }
+
+      sales = (await response.json()) as AdminSalesResponse;
       error = null;
       lastUpdated = new Date();
-    } catch (cause) {
-      error = cause instanceof ApiError ? cause.message : "Could not reach server";
+    } catch {
+      error = "Could not reach server";
     }
   }
 
   onMount(() => {
-    refresh();
     const interval = setInterval(refresh, refreshIntervalMs);
     return () => clearInterval(interval);
   });
@@ -44,12 +51,11 @@
       {:else if lastUpdated}
         <span>Updated {lastUpdated.toLocaleTimeString()}</span>
       {:else}
-        <span>Loading…</span>
+        <span>Live</span>
       {/if}
     </div>
   </header>
 
-  {#if sales}
     <section class="summary">
       <h1>Sales · {sales.businessDate}</h1>
       <div class="cards">
@@ -132,7 +138,6 @@
         </table>
       {/if}
     </section>
-  {/if}
 </main>
 
 <style>

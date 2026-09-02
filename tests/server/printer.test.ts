@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { buildCustomerReceipt, buildKitchenTicket } from "../../app/server/services/escpos";
+import { buildCustomerReceipt, buildKitchenTicket } from "../../src/lib/server/services/escpos";
 
 const order = {
   orderId: "order-1",

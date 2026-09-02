@@ -1,4 +1,4 @@
-import type { ReceiptOrder } from "../types/api";
+import type { ReceiptOrder } from "#lib/types/api";
 import { menuItemsById } from "./menu-items";
 
 const encoder = new TextEncoder();

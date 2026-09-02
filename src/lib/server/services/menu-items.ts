@@ -1,4 +1,4 @@
-import type { MenuItem } from "../types/api";
+import type { MenuItem } from "#lib/types/api";
 
 export const menuItems: MenuItem[] = [
   { id: "potato-pancake", name: "Potato Pancake", category: "Menu", priceCents: 1000, sortOrder: 10, printGroup: "kitchen" },
@@ -7,8 +7,6 @@ export const menuItems: MenuItem[] = [
   { id: "harvest-toastie", name: "The Harvest Toastie", category: "Grilled Cheese", priceCents: 800, sortOrder: 40, printGroup: "kitchen" }
 ];
 
-const sortedMenuItems = menuItems.toSorted((a, b) => a.sortOrder - b.sortOrder);
+export const sortedMenuItems: MenuItem[] = menuItems.toSorted((a, b) => a.sortOrder - b.sortOrder);
 
-export function handleMenu(): Response {
-  return Response.json(sortedMenuItems);
-}
+export const menuItemsById = new Map(menuItems.map((item) => [item.id, item]));

@@ -1,7 +1,7 @@
 import { getDatabase } from "../db/sqlite";
 import { menuItemsById } from "./menu-items";
 import { printOrder } from "./printer-service";
-import type { OrderStatus, PlaceOrderRequest, PlaceOrderResponse } from "../types/api";
+import type { OrderStatus, PlaceOrderRequest, PlaceOrderResponse } from "#lib/types/api";
 
 type TransactionRow = {
   id: string;

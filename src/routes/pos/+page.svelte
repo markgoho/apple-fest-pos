@@ -2,7 +2,6 @@
   import { onMount } from "svelte";
   import CartPanel from "#lib/components/CartPanel.svelte";
   import MenuGrid from "#lib/components/MenuGrid.svelte";
-  import { ApiError, getMenu, placeOrder } from "#lib/services/api";
   import {
     addMenuItem,
     buildOrderRequest,
@@ -12,14 +11,17 @@
     updateQuantity,
     type CartState
   } from "#lib/stores/cart";
-  import type { MenuItem, PlaceOrderResponse } from "#lib/types/api";
+  import type { PlaceOrderResponse } from "#lib/types/api";
   import { formatCents } from "#lib/utils/currency";
   import { getDeviceId } from "#lib/utils/device";
   import { createId } from "#lib/utils/id";
+  import type { PageProps } from "./$types";
 
-  let menuItems = $state<MenuItem[]>([]);
+  let { data }: PageProps = $props();
+
+  const menuItems = $derived(data.menuItems);
+
   let cart = $state<CartState>(createEmptyCart());
-  let loadingMenu = $state(true);
   let submitting = $state(false);
   let confirmation = $state<PlaceOrderResponse | null>(null);
   let notice = $state("");
@@ -29,18 +31,7 @@
 
   onMount(() => {
     deviceId = getDeviceId();
-    void loadMenu();
   });
-
-  async function loadMenu() {
-    try {
-      menuItems = await getMenu();
-    } catch {
-      notice = "No connection. Try again.";
-    } finally {
-      loadingMenu = false;
-    }
-  }
 
   async function handleSubmit() {
     submitting = true;
@@ -51,12 +42,24 @@
     const order = buildOrderRequest(cart, clientOrderId, deviceId);
 
     try {
-      const response = await placeOrder(order);
-      confirmation = response;
-      notice = `Order #${response.order.orderNumber} accepted.`;
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(order)
+      });
+
+      const body = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        notice = typeof body?.error === "string" ? body.error : `Request failed with ${response.status}`;
+        return;
+      }
+
+      confirmation = body as PlaceOrderResponse;
+      notice = `Order #${confirmation.order.orderNumber} accepted.`;
       cart = createEmptyCart();
-    } catch (error) {
-      notice = error instanceof ApiError ? error.message : "No connection. Try again.";
+    } catch {
+      notice = "No connection. Try again.";
     } finally {
       submitting = false;
     }
@@ -86,9 +89,7 @@
       </div>
     {/if}
 
-    {#if loadingMenu}
-      <p>Loading menu...</p>
-    {:else if menuItems.length === 0}
+    {#if menuItems.length === 0}
       <p>No menu items are available.</p>
     {:else}
       <MenuGrid items={menuItems} onAdd={(item) => (cart = addMenuItem(cart, item))} />

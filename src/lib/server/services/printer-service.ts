@@ -1,4 +1,4 @@
-import type { PlaceOrderResponse, ReceiptOrder } from "../types/api";
+import type { PlaceOrderResponse, ReceiptOrder } from "#lib/types/api";
 import { buildCustomerReceipt, buildKitchenTicket } from "./escpos";
 
 type PrintStatus = PlaceOrderResponse["print"];

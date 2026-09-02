@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { closeDatabase } from "../../app/server/db/sqlite";
-import { handlePreflight, withCors } from "../../app/server/http/cors";
-import { handlePlaceOrder } from "../../app/server/routes/orders";
+import { closeDatabase } from "../../src/lib/server/db/sqlite";
+import { handlePlaceOrder } from "../../src/lib/server/routes/orders";
 
 const sqlitePath = `${import.meta.dir}/tmp-orders.sqlite`;
 
@@ -60,32 +59,6 @@ describe("handlePlaceOrder", () => {
 
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({ error: "Unknown menu item: unknown-item" });
-  });
-});
-
-describe("cors helpers", () => {
-  test("answers api preflight requests", () => {
-    process.env.PWA_ORIGIN = "https://pos.example";
-    const response = handlePreflight(new Request("http://localhost:3000/api/orders", {
-      method: "OPTIONS",
-      headers: { origin: "https://pos.example" }
-    }));
-
-    expect(response.status).toBe(204);
-    expect(response.headers.get("Access-Control-Allow-Methods")).toBe("GET,POST,OPTIONS");
-  });
-
-  test("adds cors headers to api responses", () => {
-    process.env.PWA_ORIGIN = "https://pos.example";
-    const response = withCors(
-      new Request("http://localhost:3000/api/orders", {
-        method: "POST",
-        headers: { origin: "https://pos.example" }
-      }),
-      Response.json({ ok: true })
-    );
-
-    expect(response.headers.get("Access-Control-Allow-Headers")).toBe("Content-Type");
   });
 });
 

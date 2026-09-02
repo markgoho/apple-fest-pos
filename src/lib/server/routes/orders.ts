@@ -1,4 +1,4 @@
-import type { PlaceOrderRequest } from "../types/api";
+import type { PlaceOrderRequest } from "#lib/types/api";
 import { placeOrder } from "../services/order-service";
 
 export async function handlePlaceOrder(request: Request): Promise<Response> {

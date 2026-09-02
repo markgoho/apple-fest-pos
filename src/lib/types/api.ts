@@ -54,9 +54,23 @@ export type PlaceOrderResponse = {
   };
 };
 
-export type HealthResponse = {
-  ok: true;
+export type KitchenTicketLine = {
+  menuItemId: string;
+  name: string;
+  quantity: number;
+  notes?: string;
+};
+
+export type KitchenTicket = {
+  orderNumber: number;
+  createdAt: string;
+  notes?: string;
+  lines: KitchenTicketLine[];
+};
+
+export type KitchenBoard = {
   serverTime: string;
+  tickets: KitchenTicket[];
 };
 
 export type AdminSalesItemLine = {
