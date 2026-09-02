@@ -19,3 +19,23 @@ One selling day of Apple Fest. The 2026 event is a Saturday and a Sunday, roughl
 ## Side
 
 The condiment served with a potato pancake: sour cream, applesauce or ketchup. A Side comes from this fixed set, and the Operator chooses it when the pancake goes into the order, not afterwards. A pancake with no Side is a normal order, not an incomplete one. A Side is not a Note: a Note is free text, and a Side is one of a known set that can be counted.
+
+## Customer Receipt
+
+The paper the customer takes away. It carries the order number, which is how the customer collects the food and how the booth finds the order again. One order makes exactly one Customer Receipt, and it prints on the Window Printer.
+
+## Kitchen Ticket
+
+The paper the cook works from. It lists what to make, and it prints on the Kitchen Printer. A Kitchen Ticket that is printed a second time carries a REPRINT mark, so the kitchen checks the order number instead of cooking the order again.
+
+## Window Printer
+
+The thermal printer at the booth window. It prints the Customer Receipt only.
+
+## Kitchen Printer
+
+The thermal printer at the cooking end of the booth. It prints the Kitchen Ticket only.
+
+## Sent
+
+The state of a document that left the tablet for its printer. Sent is not proof that paper came out: the printer answers nothing about paper, so an empty roll, an open cover and a jam all count as Sent. No state in this system proves a ticket exists. Only a human eye on the tray does.
