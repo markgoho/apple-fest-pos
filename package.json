@@ -18,8 +18,7 @@
     "@sveltejs/kit": "latest",
     "@sveltejs/vite-plugin-svelte": "latest",
     "svelte": "latest",
-    "vite": "latest",
-    "vite-plugin-pwa": "latest"
+    "vite": "latest"
   },
   "devDependencies": {
     "@types/bun": "latest"

@@ -2,9 +2,7 @@
   import { onMount } from "svelte";
   import CartPanel from "$lib/components/CartPanel.svelte";
   import MenuGrid from "$lib/components/MenuGrid.svelte";
-  import SyncBanner from "$lib/components/SyncBanner.svelte";
-  import { getMenu } from "$lib/services/api";
-  import { listQueuedOrders } from "$lib/services/outbox";
+  import { ApiError, getMenu, placeOrder } from "$lib/services/api";
   import {
     addMenuItem,
     buildOrderRequest,
@@ -14,7 +12,6 @@
     updateQuantity,
     type CartState
   } from "$lib/stores/cart";
-  import { createSyncState, refreshReachability, retryQueuedOrders, submitOrQueue, type SyncState } from "$lib/stores/sync";
   import type { MenuItem, PlaceOrderResponse } from "$lib/types/api";
   import { formatCents } from "$lib/utils/currency";
   import { getDeviceId } from "$lib/utils/device";
@@ -22,7 +19,6 @@
 
   let menuItems = $state<MenuItem[]>([]);
   let cart = $state<CartState>(createEmptyCart());
-  let sync = $state<SyncState>(createSyncState());
   let loadingMenu = $state(true);
   let submitting = $state(false);
   let confirmation = $state<PlaceOrderResponse | null>(null);
@@ -33,49 +29,17 @@
 
   onMount(() => {
     deviceId = getDeviceId();
-    void initialize();
-
-    const interval = setInterval(() => {
-      void updateSyncStatus();
-    }, 5000);
-
-    return () => clearInterval(interval);
+    void loadMenu();
   });
 
-  async function initialize() {
+  async function loadMenu() {
     try {
       menuItems = await getMenu();
     } catch {
-      notice = "Menu is unavailable until the server is reachable.";
+      notice = "No connection. Try again.";
     } finally {
       loadingMenu = false;
     }
-
-    await updateSyncStatus();
-  }
-
-  async function updateSyncStatus() {
-    const queuedOrders = await listQueuedOrders();
-    const queuedCount = queuedOrders.length;
-
-    sync = await refreshReachability({ ...sync, queuedCount });
-
-    if (!sync.online || queuedCount === 0) {
-      return;
-    }
-
-    sync = { ...sync, syncing: true, message: "Syncing queued orders..." };
-
-    const syncedCount = await retryQueuedOrders();
-    const remainingOrders = await listQueuedOrders();
-    const syncedMessage = syncedCount > 0 ? `Synced ${syncedCount} queued order(s)` : sync.message;
-
-    sync = {
-      ...sync,
-      syncing: false,
-      queuedCount: remainingOrders.length,
-      message: syncedMessage
-    };
   }
 
   async function handleSubmit() {
@@ -87,18 +51,12 @@
     const order = buildOrderRequest(cart, clientOrderId, deviceId);
 
     try {
-      const result = await submitOrQueue(order);
-      if (result.queued) {
-        notice = "Server is offline. Order queued and will retry automatically.";
-      } else {
-        confirmation = result.response;
-        notice = `Order #${result.response.order.orderNumber} accepted.`;
-      }
-
+      const response = await placeOrder(order);
+      confirmation = response;
+      notice = `Order #${response.order.orderNumber} accepted.`;
       cart = createEmptyCart();
-      await updateSyncStatus();
     } catch (error) {
-      notice = error instanceof Error ? error.message : "Unable to submit order.";
+      notice = error instanceof ApiError ? error.message : "No connection. Try again.";
     } finally {
       submitting = false;
     }
@@ -108,8 +66,6 @@
 <svelte:head>
   <title>Cashier POS</title>
 </svelte:head>
-
-<SyncBanner {sync} />
 
 <main>
   <section class="workspace">
@@ -154,7 +110,7 @@
 
 <style>
   main {
-    height: calc(100dvh - 3rem);
+    height: 100dvh;
     overflow: hidden;
     display: grid;
     grid-template-columns: 1fr minmax(22rem, 30rem);
