@@ -1,0 +1,14 @@
+# Lets the deploy user run scripts/install-pi-service.sh with no password
+# prompt. Scoped to exactly the commands that script runs as root: nothing
+# broader. Install with visudo -c first; a bad sudoers file has no local
+# recovery on a Pi with no console.
+markgoho ALL=(root) NOPASSWD: \
+  /usr/sbin/useradd --system --no-create-home --shell /usr/sbin/nologin pos, \
+  /usr/bin/test -f /etc/pos/pos.crt, \
+  /usr/bin/test -f /etc/pos/pos.key, \
+  /usr/bin/install -o root -g root -m 0755 /tmp/pos-deploy/pos /usr/local/bin/pos, \
+  /usr/bin/cp /tmp/pos-deploy/apple-fest-pos.service /etc/systemd/system/apple-fest-pos.service, \
+  /usr/bin/systemctl daemon-reload, \
+  /usr/bin/systemctl enable apple-fest-pos, \
+  /usr/bin/systemctl restart apple-fest-pos, \
+  /usr/bin/systemctl status apple-fest-pos
