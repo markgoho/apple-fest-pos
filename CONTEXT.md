@@ -4,7 +4,7 @@ The glossary for the Apple Fest POS. Terms only, no implementation.
 
 ## Operator
 
-A person who runs the booth: takes orders on a tablet, watches for print failures, and reconciles the till. The Operator uses `/pos`, `/kitchen`, and `/admin`. Screens for the Operator are dense and assume a tablet on a stand.
+A person who runs the booth: takes orders on a tablet, watches for print failures, and reconciles the till. The Operator uses `/pos`, `/kitchen`, and `/admin`. Most Operators are scouts between 11 and 17; an adult takes orders only occasionally. The Operator holds the tablet in the hands, not on a stand, and turns it to either orientation. Screens for the Operator are dense, work in landscape and in portrait, and assume a novice.
 
 ## Leader
 
