@@ -14,7 +14,7 @@ if ! id -u pos >/dev/null 2>&1; then
   sudo useradd --system --no-create-home --shell /usr/sbin/nologin pos
 fi
 
-if [ ! -r /etc/pos/pos.crt ] || [ ! -r /etc/pos/pos.key ]; then
+if ! sudo test -f /etc/pos/pos.crt || ! sudo test -f /etc/pos/pos.key; then
   echo "No certificate at /etc/pos/pos.crt and /etc/pos/pos.key." >&2
   echo "Run scripts/booth-https.sh on the Mac first (stage: Copy the" >&2
   echo "certificate to the Pi), then run this again." >&2
