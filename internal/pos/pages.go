@@ -18,9 +18,15 @@ var templateFiles embed.FS
 //go:embed static
 var StaticFiles embed.FS
 
+// buildVersion changes every time the process starts, which is every deploy.
+// Static files carry no cache-control header, so a tablet's browser can keep
+// serving a stale script after a redeploy unless the URL itself changes.
+var buildVersion = fmt.Sprintf("%d", time.Now().Unix())
+
 var templateFuncs = template.FuncMap{
 	"cents": FormatCents,
 	"clock": FormatClock,
+	"asset": func(path string) string { return path + "?v=" + buildVersion },
 }
 
 // pageTemplates holds one parsed template per screen, keyed by the template
