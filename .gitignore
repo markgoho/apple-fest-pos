@@ -4,8 +4,8 @@ node_modules
 # output
 out
 dist
-app/web/.svelte-kit
-app/web/build
+.svelte-kit
+build
 *.tgz
 
 # code coverage

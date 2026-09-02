@@ -1,5 +1,5 @@
-import type { MenuItem, PlaceOrderRequest } from "$lib/types/api";
-import { createId } from "$lib/utils/id";
+import type { MenuItem, PlaceOrderRequest } from "#lib/types/api";
+import { createId } from "#lib/utils/id";
 
 const potatoPancakeId = "potato-pancake";
 

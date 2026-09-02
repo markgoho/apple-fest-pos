@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { CartState } from "$lib/stores/cart";
-  import { formatCents } from "$lib/utils/currency";
+  import type { CartState } from "#lib/stores/cart";
+  import { formatCents } from "#lib/utils/currency";
 
   const potatoPancakeSides = ["Sour cream", "Applesauce", "Ketchup"];
 

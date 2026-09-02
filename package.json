@@ -1,24 +1,24 @@
 {
   "name": "apple-fest-pos",
-  "module": "index.ts",
   "type": "module",
   "private": true,
+  "imports": {
+    "#lib/*": "./src/lib/*"
+  },
   "scripts": {
-    "dev": "bun run --parallel dev:server dev:web",
-    "dev:server": "bun --hot ./index.ts",
-    "dev:web": "bun run --cwd app/web dev --host 0.0.0.0",
-    "build:web": "bun run --cwd app/web build",
-    "start": "bun ./index.ts",
+    "dev": "bun --bun vite dev --host 0.0.0.0",
+    "build": "bun --bun vite build",
+    "start": "bun ./build",
     "test": "bun test",
     "server:restart": "sudo systemctl restart apple-fest-pos",
     "deploy:pi": "./scripts/deploy-pi.sh markgoho@scout-pi.local"
   },
   "dependencies": {
-    "@sveltejs/adapter-static": "latest",
-    "@sveltejs/kit": "latest",
+    "@sveltejs/kit": "next",
     "@sveltejs/vite-plugin-svelte": "latest",
     "svelte": "latest",
-    "vite": "latest"
+    "vite": "latest",
+    "@sveltejs/adapter-bun": "next"
   },
   "devDependencies": {
     "@types/bun": "latest"

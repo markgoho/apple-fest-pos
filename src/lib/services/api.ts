@@ -4,7 +4,7 @@ import type {
   MenuItem,
   PlaceOrderRequest,
   PlaceOrderResponse
-} from "$lib/types/api";
+} from "#lib/types/api";
 
 export class ApiError extends Error {
   constructor(

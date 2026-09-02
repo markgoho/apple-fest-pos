@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import CartPanel from "$lib/components/CartPanel.svelte";
-  import MenuGrid from "$lib/components/MenuGrid.svelte";
-  import { ApiError, getMenu, placeOrder } from "$lib/services/api";
+  import CartPanel from "#lib/components/CartPanel.svelte";
+  import MenuGrid from "#lib/components/MenuGrid.svelte";
+  import { ApiError, getMenu, placeOrder } from "#lib/services/api";
   import {
     addMenuItem,
     buildOrderRequest,
@@ -11,11 +11,11 @@
     updateLineNotes,
     updateQuantity,
     type CartState
-  } from "$lib/stores/cart";
-  import type { MenuItem, PlaceOrderResponse } from "$lib/types/api";
-  import { formatCents } from "$lib/utils/currency";
-  import { getDeviceId } from "$lib/utils/device";
-  import { createId } from "$lib/utils/id";
+  } from "#lib/stores/cart";
+  import type { MenuItem, PlaceOrderResponse } from "#lib/types/api";
+  import { formatCents } from "#lib/utils/currency";
+  import { getDeviceId } from "#lib/utils/device";
+  import { createId } from "#lib/utils/id";
 
   let menuItems = $state<MenuItem[]>([]);
   let cart = $state<CartState>(createEmptyCart());

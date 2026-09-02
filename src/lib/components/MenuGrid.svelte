@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { MenuItem } from "$lib/types/api";
-  import { formatCents } from "$lib/utils/currency";
+  import type { MenuItem } from "#lib/types/api";
+  import { formatCents } from "#lib/utils/currency";
 
   type Props = {
     items: MenuItem[];

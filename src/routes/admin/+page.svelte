@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { ApiError, getAdminSales } from "$lib/services/api";
-  import { formatCents } from "$lib/utils/currency";
-  import type { AdminSalesResponse } from "$lib/types/api";
+  import { ApiError, getAdminSales } from "#lib/services/api";
+  import { formatCents } from "#lib/utils/currency";
+  import type { AdminSalesResponse } from "#lib/types/api";
 
   const refreshIntervalMs = 5000;
 

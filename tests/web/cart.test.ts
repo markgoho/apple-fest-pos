@@ -7,8 +7,8 @@ import {
   getTotalCents,
   updateLineNotes,
   updateQuantity
-} from "../../app/web/src/lib/stores/cart";
-import type { MenuItem } from "../../app/web/src/lib/types/api";
+} from "../../src/lib/stores/cart";
+import type { MenuItem } from "../../src/lib/types/api";
 
 const potatoPancake: MenuItem = {
   id: "potato-pancake",
