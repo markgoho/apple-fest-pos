@@ -15,3 +15,7 @@ An Operator and a Leader can be the same human at different moments. The distinc
 ## Event day
 
 One selling day of Apple Fest. The 2026 event is a Saturday and a Sunday, roughly 8am to 6pm each. An event day is the unit that order numbers reset on and that sales screens select.
+
+## Side
+
+The condiment served with a potato pancake: sour cream, applesauce or ketchup. A Side comes from this fixed set, and the Operator chooses it when the pancake goes into the order, not afterwards. A pancake with no Side is a normal order, not an incomplete one. A Side is not a Note: a Note is free text, and a Side is one of a known set that can be counted.
