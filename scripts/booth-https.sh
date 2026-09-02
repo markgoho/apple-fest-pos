@@ -189,6 +189,22 @@ CERT_DIR="${CERT_DIR:-$HOME/booth-certs}"
 
 banner "Apple Fest POS: HTTPS on the booth network"
 
+
+_clear
+printf '\n%s%s  Before you start%s\n\n' "$BOLD" "$BLUE" "$RESET"
+say "Stages 1 to 4 need the internet only. The certificate comes by DNS-01, so"
+say "it never touches the Pi or the router."
+say "Stages 5 to 8 need the booth network: the GL.iNet powered on, the Pi joined"
+say "to it, and this Mac joined to it."
+say ""
+say "The short way is one sitting. Put the GL.iNet in Repeater mode against your"
+say "home wifi, then the booth network has an uplink and all eight stages run in"
+say "a row. At the event you leave the uplink off."
+say ""
+note "Stop with Ctrl-C at any time. Every value goes to $ENV_FILE, and a re-run"
+note "offers it back, so two sittings cost nothing."
+pause
+
 # ── 1 ─────────────────────────────────────────────────────────────────────
 stage "DuckDNS: the booth name"
 say "The booth needs a public name that a Let's Encrypt certificate can cover."
