@@ -315,8 +315,8 @@ step "Sign in to the GL.iNet AX3000."
 step "Go to Clients, find the Pi, and turn on the address reservation."
 step "If the Pi is not listed, power it on and join it to the booth network."
 ask PI_ADDRESS "The Pi's reserved address (for example 192.168.8.50):"
-ask PI_USER "The SSH user on the Pi [pi]:"
-[[ -z "$PI_USER" ]] && PI_USER="pi"
+ask PI_USER "The SSH user on the Pi [markgoho]:"
+[[ -z "$PI_USER" ]] && PI_USER="markgoho"
 write_env PI_ADDRESS "$PI_ADDRESS"
 write_env PI_USER "$PI_USER"
 pause
@@ -343,9 +343,9 @@ stage "Copy the certificate to the Pi"
 say "The certificate and key live in /etc/pos on the Pi, read by the pos user only."
 say "The DuckDNS token stays on the Mac. The Pi never runs an ACME client."
 if confirm "Copy them to $PI_USER@$PI_ADDRESS now?"; then
-  ssh "$PI_USER@$PI_ADDRESS" 'sudo useradd --system --no-create-home pos 2>/dev/null; sudo mkdir -p /etc/pos'
+  ssh -t "$PI_USER@$PI_ADDRESS" 'sudo useradd --system --no-create-home pos 2>/dev/null; sudo mkdir -p /etc/pos'
   scp "$CERT_PATH" "$KEY_PATH" "$PI_USER@$PI_ADDRESS:/tmp/"
-  ssh "$PI_USER@$PI_ADDRESS" "sudo mv /tmp/$(basename "$CERT_PATH") /etc/pos/pos.crt && \
+  ssh -t "$PI_USER@$PI_ADDRESS" "sudo mv /tmp/$(basename "$CERT_PATH") /etc/pos/pos.crt && \
     sudo mv /tmp/$(basename "$KEY_PATH") /etc/pos/pos.key && \
     sudo chown root:pos /etc/pos/pos.crt /etc/pos/pos.key && \
     sudo chmod 640 /etc/pos/pos.crt /etc/pos/pos.key && ls -l /etc/pos"
