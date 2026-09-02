@@ -1,5 +1,7 @@
 [Unit]
 Description=Apple Fest POS Bun Server
+# network.target only. network-online.target waits for a route that an
+# air-gapped booth network does not have.
 After=network.target
 
 [Service]
@@ -7,10 +9,12 @@ Type=simple
 User=markgoho
 WorkingDirectory=/home/markgoho/apple-fest-pos
 Environment=PATH=/home/markgoho/.bun/bin:/usr/local/bin:/usr/bin:/bin
+Environment=HOST=0.0.0.0
 Environment=PORT=3000
 Environment=PRINTER_ENABLED=false
 Environment=SQLITE_PATH=/home/markgoho/apple-fest-pos/data/pos.sqlite
-ExecStart=/home/markgoho/.bun/bin/bun run ./app/server/index.ts
+Environment=DO_NOT_TRACK=1
+ExecStart=/home/markgoho/.bun/bin/bun ./build
 Restart=always
 RestartSec=2
 
