@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 )
@@ -174,5 +175,65 @@ func TestCreatedAtMatchesTheJavaScriptISOFormat(t *testing.T) {
 	}
 	if got := len(createdAt); got != 24 || createdAt[23] != 'Z' {
 		t.Errorf("createdAt = %q, want a 24 character string that ends in Z", createdAt)
+	}
+}
+
+func TestConcurrentDuplicateClientIDsSellOnce(t *testing.T) {
+	service := newTestService(t)
+
+	const attempts = 8
+	responses := make(chan PlaceOrderResponse, attempts)
+	errs := make(chan error, attempts)
+
+	var start sync.WaitGroup
+	start.Add(1)
+
+	var finished sync.WaitGroup
+	for range attempts {
+		finished.Add(1)
+		go func() {
+			defer finished.Done()
+			start.Wait()
+
+			response, err := service.PlaceOrder(PlaceOrderRequest{
+				ClientOrderID: "double-tap",
+				DeviceID:      "device-1",
+				Payment:       Payment{Method: "cash"},
+				Items:         []CartLine{{MenuItemID: "potato-pancake", Quantity: 2}},
+			})
+			if err != nil {
+				errs <- err
+				return
+			}
+			responses <- response
+		}()
+	}
+
+	start.Done()
+	finished.Wait()
+	close(responses)
+	close(errs)
+
+	for err := range errs {
+		t.Fatalf("place order: %v", err)
+	}
+
+	ids := map[string]bool{}
+	for response := range responses {
+		ids[response.Order.ID] = true
+		if response.Order.OrderNumber != 100 {
+			t.Errorf("orderNumber = %d, want 100", response.Order.OrderNumber)
+		}
+	}
+	if len(ids) != 1 {
+		t.Errorf("stored %d orders, want 1", len(ids))
+	}
+
+	var rows int
+	if err := service.DB.QueryRow(`SELECT COUNT(*) FROM transactions`).Scan(&rows); err != nil {
+		t.Fatalf("count rows: %v", err)
+	}
+	if rows != 1 {
+		t.Errorf("transactions = %d, want 1", rows)
 	}
 }

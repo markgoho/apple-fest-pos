@@ -10,9 +10,12 @@ const transactionColumns = `id, client_order_id, device_id, order_number, busine
 	subtotal_cents, tax_cents, total_cents, payment_method, request_json,
 	customer_print_status, kitchen_print_status, created_at`
 
-func (service *OrderService) findByClientOrderID(clientOrderID string) (transactionRow, bool, error) {
+// findByClientOrderID reads a stored order inside the open transaction, so
+// that the check and the insert are one atomic step. A double tap on the
+// tablet must replay the order, not hit the UNIQUE constraint.
+func findByClientOrderID(transaction *sql.Tx, clientOrderID string) (transactionRow, bool, error) {
 	var row transactionRow
-	err := service.DB.
+	err := transaction.
 		QueryRow(`SELECT `+transactionColumns+` FROM transactions WHERE client_order_id = ?`, clientOrderID).
 		Scan(&row.ID, &row.ClientOrderID, &row.DeviceID, &row.OrderNumber, &row.BusinessDate,
 			&row.Status, &row.SubtotalCents, &row.TaxCents, &row.TotalCents, &row.PaymentMethod,
@@ -30,7 +33,7 @@ func (service *OrderService) findByClientOrderID(clientOrderID string) (transact
 // insertOrder takes the next order number and writes the row in one
 // transaction. Every read and write inside it goes through tx, because the
 // pool holds one connection and a db call here would deadlock.
-func (service *OrderService) insertOrder(request PlaceOrderRequest) (transactionRow, error) {
+func (service *OrderService) insertOrder(request PlaceOrderRequest) (transactionRow, bool, error) {
 	createdAt := service.Now().UTC().Format(timestampLayout)
 	businessDate := createdAt[:10]
 
@@ -58,17 +61,25 @@ func (service *OrderService) insertOrder(request PlaceOrderRequest) (transaction
 
 	transaction, err := service.DB.Begin()
 	if err != nil {
-		return transactionRow{}, fmt.Errorf("begin order transaction: %w", err)
+		return transactionRow{}, false, fmt.Errorf("begin order transaction: %w", err)
 	}
 	defer transaction.Rollback()
 
+	existing, found, err := findByClientOrderID(transaction, request.ClientOrderID)
+	if err != nil {
+		return transactionRow{}, false, err
+	}
+	if found {
+		return existing, true, nil
+	}
+
 	storedBusinessDate, err := metadataValue(transaction, "business_date", businessDate)
 	if err != nil {
-		return transactionRow{}, err
+		return transactionRow{}, false, err
 	}
 	nextOrderNumber, err := metadataValue(transaction, "next_order_number", "")
 	if err != nil {
-		return transactionRow{}, err
+		return transactionRow{}, false, err
 	}
 
 	row.OrderNumber = service.StartingOrderNumber
@@ -79,10 +90,10 @@ func (service *OrderService) insertOrder(request PlaceOrderRequest) (transaction
 	}
 
 	if err := setMetadataValue(transaction, "business_date", businessDate); err != nil {
-		return transactionRow{}, err
+		return transactionRow{}, false, err
 	}
 	if err := setMetadataValue(transaction, "next_order_number", fmt.Sprint(row.OrderNumber+1)); err != nil {
-		return transactionRow{}, err
+		return transactionRow{}, false, err
 	}
 
 	if _, err := transaction.Exec(
@@ -92,13 +103,13 @@ func (service *OrderService) insertOrder(request PlaceOrderRequest) (transaction
 		string(row.Status), row.SubtotalCents, row.TaxCents, row.TotalCents, row.PaymentMethod,
 		row.RequestJSON, string(row.CustomerPrintStatus), string(row.KitchenPrintStatus), row.CreatedAt,
 	); err != nil {
-		return transactionRow{}, fmt.Errorf("insert order: %w", err)
+		return transactionRow{}, false, fmt.Errorf("insert order: %w", err)
 	}
 
 	if err := transaction.Commit(); err != nil {
-		return transactionRow{}, fmt.Errorf("commit order: %w", err)
+		return transactionRow{}, false, fmt.Errorf("commit order: %w", err)
 	}
-	return row, nil
+	return row, false, nil
 }
 
 func metadataValue(transaction *sql.Tx, key string, fallback string) (string, error) {

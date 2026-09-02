@@ -49,18 +49,15 @@ func (service *OrderService) PlaceOrder(request PlaceOrderRequest) (PlaceOrderRe
 		return PlaceOrderResponse{}, err
 	}
 
-	if existing, found, err := service.findByClientOrderID(request.ClientOrderID); err != nil {
-		return PlaceOrderResponse{}, err
-	} else if found {
-		return existing.response(existing.Status, PrintResult{
-			Customer: existing.CustomerPrintStatus,
-			Kitchen:  existing.KitchenPrintStatus,
-		}), nil
-	}
-
-	row, err := service.insertOrder(request)
+	row, replayed, err := service.insertOrder(request)
 	if err != nil {
 		return PlaceOrderResponse{}, err
+	}
+	if replayed {
+		return row.response(row.Status, PrintResult{
+			Customer: row.CustomerPrintStatus,
+			Kitchen:  row.KitchenPrintStatus,
+		}), nil
 	}
 
 	print := PrintOrder(service.Printer, ReceiptOrder{
