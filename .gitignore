@@ -41,3 +41,9 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # runtime database
 /data
+
+# Vendor hardware manuals kept at the repo root for reference, not shipped.
+# "ITPP068 Thermal Printer Linux Software Manual 220721-1.00.pdf" is the
+# manual for the two booth printers. It came from a pCloud share link that
+# has expired, so the local copy is the only one. Do not delete it.
+/*.pdf
