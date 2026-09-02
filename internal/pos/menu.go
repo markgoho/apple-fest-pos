@@ -16,11 +16,17 @@ type MenuItem struct {
 	PriceCents int        `json:"priceCents"`
 	SortOrder  int        `json:"sortOrder"`
 	PrintGroup PrintGroup `json:"printGroup"`
+
+	// Sides is the fixed set of condiments the item can carry. An item with
+	// Sides always starts a new cart line, because each pancake gets its own
+	// choice.
+	Sides []string `json:"sides,omitempty"`
 }
 
 // MenuItems holds the menu in sort order.
 var MenuItems = []MenuItem{
-	{ID: "potato-pancake", Name: "Potato Pancake", Category: "Menu", PriceCents: 1000, SortOrder: 10, PrintGroup: PrintGroupKitchen},
+	{ID: "potato-pancake", Name: "Potato Pancake", Category: "Menu", PriceCents: 1000, SortOrder: 10, PrintGroup: PrintGroupKitchen,
+		Sides: []string{"Sour cream", "Applesauce", "Ketchup"}},
 	{ID: "og-toastie", Name: "The OG Toastie", Category: "Grilled Cheese", PriceCents: 500, SortOrder: 20, PrintGroup: PrintGroupKitchen},
 	{ID: "pizza-toastie", Name: "The Pizza Toastie", Category: "Grilled Cheese", PriceCents: 600, SortOrder: 30, PrintGroup: PrintGroupKitchen},
 	{ID: "harvest-toastie", Name: "The Harvest Toastie", Category: "Grilled Cheese", PriceCents: 800, SortOrder: 40, PrintGroup: PrintGroupKitchen},

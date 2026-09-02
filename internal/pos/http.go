@@ -8,13 +8,70 @@ import (
 	"strings"
 )
 
-// Handler builds the JSON API of the POS.
+// Handler builds the screens, the static files, and the JSON API of the POS.
 func (service *OrderService) Handler() http.Handler {
 	mux := http.NewServeMux()
+	mux.Handle("GET /static/", http.FileServerFS(StaticFiles))
+	mux.HandleFunc("GET /{$}", handleHome)
+	mux.HandleFunc("GET /pos", handlePOSScreen)
+	mux.HandleFunc("GET /kitchen", service.handleKitchenScreen)
+	mux.HandleFunc("GET /admin", service.handleAdminScreen)
 	mux.HandleFunc("POST /api/orders", service.handlePlaceOrder)
 	mux.HandleFunc("GET /api/kitchen", service.handleKitchen)
 	mux.HandleFunc("GET /api/admin/sales", service.handleAdminSales)
 	return mux
+}
+
+const (
+	kitchenRefreshSeconds = 4
+	adminRefreshSeconds   = 5
+)
+
+func handleHome(writer http.ResponseWriter, request *http.Request) {
+	render(writer, "home.html", page{Title: "Apple Fest POS", BodyClass: "theme"})
+}
+
+// handlePOSScreen draws the menu grid. The cart is client-side state, so the
+// server sends the menu once and the script does the rest.
+func handlePOSScreen(writer http.ResponseWriter, request *http.Request) {
+	buttons := make([]menuButton, 0, len(MenuItems))
+	for _, item := range MenuItems {
+		buttons = append(buttons, menuButton{MenuItem: item, SideList: strings.Join(item.Sides, "|")})
+	}
+	render(writer, "pos.html", posPage{
+		page:      page{Title: "Cashier POS", BodyClass: "theme"},
+		MenuItems: buttons,
+	})
+}
+
+// handleKitchenScreen draws the open orders. The screen is read-only, so a
+// meta refresh keeps it current and the page carries no script.
+func (service *OrderService) handleKitchenScreen(writer http.ResponseWriter, request *http.Request) {
+	board, err := service.GetKitchenBoard()
+	if err != nil {
+		log.Printf("kitchen board: %v", err)
+		http.Error(writer, "Could not read the kitchen board", http.StatusInternalServerError)
+		return
+	}
+	render(writer, "kitchen.html", kitchenPage{
+		page:         page{Title: "Kitchen display", BodyClass: "theme", RefreshSeconds: kitchenRefreshSeconds},
+		KitchenBoard: board,
+	})
+}
+
+// handleAdminScreen draws the sales of one event day. An empty date means
+// today.
+func (service *OrderService) handleAdminScreen(writer http.ResponseWriter, request *http.Request) {
+	sales, err := service.GetAdminSales(request.URL.Query().Get("date"))
+	if err != nil {
+		log.Printf("admin sales: %v", err)
+		http.Error(writer, "Could not read the sales", http.StatusInternalServerError)
+		return
+	}
+	render(writer, "admin.html", adminPage{
+		page:               page{Title: "Sales", BodyClass: "theme", RefreshSeconds: adminRefreshSeconds},
+		AdminSalesResponse: sales,
+	})
 }
 
 func (service *OrderService) handlePlaceOrder(writer http.ResponseWriter, request *http.Request) {
