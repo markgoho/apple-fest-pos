@@ -173,21 +173,26 @@
   }
   .tile:active { transform: translateY(1px); }
 
+  /* Name on its own row, qty stepper on the row below: side by side, the
+     stepper's fixed footprint left so little width for the name that it
+     wrapped mid-word and got clipped by the card's own overflow. */
   .cart-line {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.6rem;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 0;
     background: var(--panel);
     border: 1px solid var(--edge);
     border-radius: 0.9rem;
     padding: 0.6rem 0.75rem;
   }
-  .cart-line .name { font-weight: 700; color: var(--apple-red-dark); font-size: 1rem; line-height: 1.2; }
+  .cart-line .name { min-width: 0; font-weight: 700; color: var(--apple-red-dark); font-size: 1rem; line-height: 1.2; }
   .cart-line .name small { display: block; font-weight: 600; color: var(--gold-tan-ink); font-size: 0.75rem; text-transform: uppercase; }
   .qty {
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     gap: 0.35rem;
   }
   .qty button {
