@@ -65,7 +65,7 @@
             <time>{formatTime(ticket.createdAt)}</time>
           </div>
           <ul class="lines">
-            {#each ticket.lines as line (line.menuItemId)}
+            {#each ticket.lines as line, i (i)}
               <li>
                 <span class="qty">{line.quantity}×</span>
                 {line.name}

@@ -9,12 +9,13 @@
   const refreshIntervalMs = 5000;
 
   let sales = $derived<AdminSalesResponse>(data.sales);
+  const pinnedDate = $derived(data.pinnedDate);
   let error = $state<string | null>(null);
   let lastUpdated = $state<Date | null>(null);
 
   async function refresh() {
     try {
-      const response = await fetch(`/api/admin/sales?date=${encodeURIComponent(sales.businessDate)}`);
+      const response = await fetch(pinnedDate ? `/api/admin/sales?date=${encodeURIComponent(pinnedDate)}` : "/api/admin/sales");
       if (!response.ok) {
         error = `Request failed with ${response.status}`;
         return;
@@ -121,7 +122,7 @@
                 <td class="num">{order.orderNumber}</td>
                 <td>{formatTime(order.createdAt)}</td>
                 <td>
-                  {#each order.items as line, i (line.menuItemId)}
+                  {#each order.items as line, i (i)}
                     {#if i > 0}, {/if}{line.quantity}× {line.name}
                   {/each}
                 </td>
