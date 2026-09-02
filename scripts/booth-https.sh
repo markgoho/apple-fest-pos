@@ -214,12 +214,15 @@ open_url "https://www.duckdns.org/"
 step "Sign in with any of the listed accounts."
 step "Type a subdomain in the 'domains' box and click 'add domain'."
 step "Do NOT set an IP address. DNS-01 uses a TXT record only."
+note "The booth name is the bare name, with no 'pos.' in front. DuckDNS keeps one"
+note "TXT record for the account domain, so a prefix puts the DNS-01 challenge"
+note "where DuckDNS will not answer for it."
 step "Copy the token from the top of the page."
 ask BOOTH_SUBDOMAIN "The subdomain you added (name only, no .duckdns.org):"
 ask_secret DUCKDNS_TOKEN "Paste the DuckDNS token:"
 write_env BOOTH_SUBDOMAIN "$BOOTH_SUBDOMAIN"
 write_env DUCKDNS_TOKEN "$DUCKDNS_TOKEN"
-BOOTH_HOST="pos.${BOOTH_SUBDOMAIN}.duckdns.org"
+BOOTH_HOST="${BOOTH_SUBDOMAIN}.duckdns.org"
 write_env BOOTH_HOST "$BOOTH_HOST"
 note "The booth name is $BOOTH_HOST"
 note "$ENV_FILE holds the token and git ignores that file. Keep it off the Pi."
@@ -255,6 +258,9 @@ pause
 
 # ── 3 ─────────────────────────────────────────────────────────────────────
 stage "Staging certificate: prove the command"
+say "--dns.propagation-wait replaces lego's own propagation check with a plain"
+say "wait. The check queries the DuckDNS nameservers on UDP 53 directly, which a"
+say "corporate VPN blocks. Let's Encrypt still does its own lookup."
 say "Let's Encrypt limits production certificates hard, so test the command"
 say "against the staging server first. A staging certificate is not trusted;"
 say "it only proves that the DNS-01 challenge works."
@@ -262,12 +268,14 @@ ask ACME_EMAIL "Your email for the ACME account:"
 write_env ACME_EMAIL "$ACME_EMAIL"
 mkdir -p "$CERT_DIR"
 say "Command:"
+warn "DuckDNS 502s now and then. A failed run is usually worth one retry."
 note "  $DUCKDNS_ENV_NAME=**** lego --accept-tos --email $ACME_EMAIL \\"
 note "    --dns duckdns --domains $BOOTH_HOST --path $CERT_DIR \\"
 note "    --server https://acme-staging-v02.api.letsencrypt.org/directory run"
 if confirm "Run the staging issue now?"; then
   env "$DUCKDNS_ENV_NAME=$DUCKDNS_TOKEN" "$LEGO" --accept-tos --email "$ACME_EMAIL" \
-    --dns duckdns --domains "$BOOTH_HOST" --path "$CERT_DIR" \
+    --dns duckdns --dns.propagation-wait 90s \
+    --domains "$BOOTH_HOST" --path "$CERT_DIR" \
     --server https://acme-staging-v02.api.letsencrypt.org/directory run \
     && printf '  %s✓ staging issue worked%s\n' "$GREEN" "$RESET" \
     || warn "staging failed. Fix the token or the name before you go on."
@@ -283,7 +291,8 @@ warn "The certificate lasts 90 days. Note the expiry date; the venue is air-gapp
 warn "so a renewal must happen at home before the event."
 if confirm "Run the production issue now?"; then
   env "$DUCKDNS_ENV_NAME=$DUCKDNS_TOKEN" "$LEGO" --accept-tos --email "$ACME_EMAIL" \
-    --dns duckdns --domains "$BOOTH_HOST" --path "$CERT_DIR" run \
+    --dns duckdns --dns.propagation-wait 90s \
+    --domains "$BOOTH_HOST" --path "$CERT_DIR" run \
     || warn "production issue failed"
 fi
 CERT_PATH="$CERT_DIR/certificates/$BOOTH_HOST.crt"
