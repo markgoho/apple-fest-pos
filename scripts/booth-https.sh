@@ -186,6 +186,7 @@ finish() {
 TOTAL_STAGES=8
 ENV_FILE="${ENV_FILE:-.env}"
 CERT_DIR="${CERT_DIR:-$HOME/booth-certs}"
+LEGO_WORK="${LEGO_WORK:-${TMPDIR:-/tmp}/booth-lego}"
 
 banner "Apple Fest POS: HTTPS on the booth network"
 
@@ -227,18 +228,26 @@ pause
 # ── 2 ─────────────────────────────────────────────────────────────────────
 stage "lego on the Mac"
 say "lego is the ACME client. It runs on the Mac only, never on the Pi."
+LEGO="lego"
 if command -v lego >/dev/null 2>&1; then
   note "lego is already installed: $(lego --version 2>&1 | head -n1)"
+elif confirm "Install lego with Homebrew? Say no to build a throwaway copy instead."; then
+  brew install lego
 else
-  if confirm "Install lego with Homebrew now?"; then
-    brew install lego
+  say "Building a throwaway lego. Nothing lands outside $LEGO_WORK."
+  mkdir -p "$LEGO_WORK"
+  if GOPATH="$LEGO_WORK/gopath" GOMODCACHE="$LEGO_WORK/modcache" GOBIN="$LEGO_WORK" \
+     go install github.com/go-acme/lego/v4/cmd/lego@latest; then
+    LEGO="$LEGO_WORK/lego"
+    note "throwaway lego at $LEGO"
+    note "delete it with: rm -rf $LEGO_WORK"
   else
-    SKIPPED+=("install lego (brew install lego)")
+    SKIPPED+=("get lego")
     warn "without lego the next two stages cannot run"
   fi
 fi
 say "lego names the DuckDNS credential in its own help. Read it here:"
-lego dnshelp -c duckdns 2>&1 | sed 's/^/    /' || warn "lego dnshelp failed"
+"$LEGO" dnshelp -c duckdns 2>&1 | sed 's/^/    /' || warn "lego dnshelp failed"
 ask DUCKDNS_ENV_NAME "The credential variable lego printed [DUCKDNS_TOKEN]:"
 [[ -z "$DUCKDNS_ENV_NAME" ]] && DUCKDNS_ENV_NAME="DUCKDNS_TOKEN"
 write_env DUCKDNS_ENV_NAME "$DUCKDNS_ENV_NAME"
@@ -257,7 +266,7 @@ note "  $DUCKDNS_ENV_NAME=**** lego --accept-tos --email $ACME_EMAIL \\"
 note "    --dns duckdns --domains $BOOTH_HOST --path $CERT_DIR \\"
 note "    --server https://acme-staging-v02.api.letsencrypt.org/directory run"
 if confirm "Run the staging issue now?"; then
-  env "$DUCKDNS_ENV_NAME=$DUCKDNS_TOKEN" lego --accept-tos --email "$ACME_EMAIL" \
+  env "$DUCKDNS_ENV_NAME=$DUCKDNS_TOKEN" "$LEGO" --accept-tos --email "$ACME_EMAIL" \
     --dns duckdns --domains "$BOOTH_HOST" --path "$CERT_DIR" \
     --server https://acme-staging-v02.api.letsencrypt.org/directory run \
     && printf '  %s✓ staging issue worked%s\n' "$GREEN" "$RESET" \
@@ -273,7 +282,7 @@ say "Same command against the real server. This one the tablets will trust."
 warn "The certificate lasts 90 days. Note the expiry date; the venue is air-gapped,"
 warn "so a renewal must happen at home before the event."
 if confirm "Run the production issue now?"; then
-  env "$DUCKDNS_ENV_NAME=$DUCKDNS_TOKEN" lego --accept-tos --email "$ACME_EMAIL" \
+  env "$DUCKDNS_ENV_NAME=$DUCKDNS_TOKEN" "$LEGO" --accept-tos --email "$ACME_EMAIL" \
     --dns duckdns --domains "$BOOTH_HOST" --path "$CERT_DIR" run \
     || warn "production issue failed"
 fi
