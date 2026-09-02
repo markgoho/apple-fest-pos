@@ -2,28 +2,31 @@
 <main class="board">
   <header class="bar">
     <a class="home" href="/">Apple Fest POS</a>
-    <time>{{clock .ServerTime}}</time>
+    <time id="clock">{{clock .ServerTime}}</time>
   </header>
 
-  {{if .Tickets}}
-  <ul class="tickets">
-    {{range .Tickets}}
-    <li class="ticket">
-      <div class="bar">
-        <strong>#{{.OrderNumber}}</strong>
-        <time>{{clock .CreatedAt}}</time>
-      </div>
-      <ul class="ticket-lines">
-        {{range .Lines}}
-        <li><span class="qty">{{.Quantity}}&times;</span> {{.Name}}{{with .Notes}}<em>{{.}}</em>{{end}}</li>
-        {{end}}
-      </ul>
-      {{with .Notes}}<p class="ticket-notes">{{.}}</p>{{end}}
-    </li>
+  <div id="board-body">
+    {{if .Tickets}}
+    <ul class="tickets">
+      {{range .Tickets}}
+      <li class="ticket">
+        <div class="bar">
+          <strong>#{{.OrderNumber}}</strong>
+          <time>{{clock .CreatedAt}}</time>
+        </div>
+        <ul class="ticket-lines">
+          {{range .Lines}}
+          <li><span class="qty">{{.Quantity}}&times;</span> {{.Name}}{{with .Notes}}<em>{{.}}</em>{{end}}</li>
+          {{end}}
+        </ul>
+        {{with .Notes}}<p class="ticket-notes">{{.}}</p>{{end}}
+      </li>
+      {{end}}
+    </ul>
+    {{else}}
+    <p class="empty">No orders yet today.</p>
     {{end}}
-  </ul>
-  {{else}}
-  <p class="empty">No orders yet today.</p>
-  {{end}}
+  </div>
 </main>
+<script src="/static/kitchen.js" defer></script>
 {{end}}

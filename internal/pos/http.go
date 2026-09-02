@@ -22,11 +22,6 @@ func (service *OrderService) Handler() http.Handler {
 	return mux
 }
 
-const (
-	kitchenRefreshSeconds = 4
-	adminRefreshSeconds   = 5
-)
-
 func handleHome(writer http.ResponseWriter, request *http.Request) {
 	render(writer, "home.html", page{Title: "Apple Fest POS", BodyClass: "theme"})
 }
@@ -44,8 +39,9 @@ func handlePOSScreen(writer http.ResponseWriter, request *http.Request) {
 	})
 }
 
-// handleKitchenScreen draws the open orders. The screen is read-only, so a
-// meta refresh keeps it current and the page carries no script.
+// handleKitchenScreen draws the open orders. The screen is read-only; a
+// script polls /api/kitchen and redraws in place, because a meta refresh's
+// navigation would drop the tablet out of full screen every cycle.
 func (service *OrderService) handleKitchenScreen(writer http.ResponseWriter, request *http.Request) {
 	board, err := service.GetKitchenBoard()
 	if err != nil {
@@ -54,7 +50,7 @@ func (service *OrderService) handleKitchenScreen(writer http.ResponseWriter, req
 		return
 	}
 	render(writer, "kitchen.html", kitchenPage{
-		page:         page{Title: "Kitchen display", BodyClass: "theme", RefreshSeconds: kitchenRefreshSeconds},
+		page:         page{Title: "Kitchen display", BodyClass: "theme"},
 		KitchenBoard: board,
 	})
 }
@@ -69,7 +65,7 @@ func (service *OrderService) handleAdminScreen(writer http.ResponseWriter, reque
 		return
 	}
 	render(writer, "admin.html", adminPage{
-		page:               page{Title: "Sales", BodyClass: "theme", RefreshSeconds: adminRefreshSeconds},
+		page:               page{Title: "Sales", BodyClass: "theme"},
 		AdminSalesResponse: sales,
 	})
 }

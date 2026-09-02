@@ -59,9 +59,8 @@ func FormatClock(timestamp string) string {
 
 // page holds what every screen puts in the shared layout.
 type page struct {
-	Title          string
-	BodyClass      string
-	RefreshSeconds int
+	Title     string
+	BodyClass string
 }
 
 // menuButton is one menu item as the /pos grid needs it.
