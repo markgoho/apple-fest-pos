@@ -1,0 +1,569 @@
+<!-- PROTOTYPE — throwaway, do not build on. Answers issue #22: what does /pos look like
+     in landscape and portrait? Three structurally different layouts, switchable at the
+     bottom of the screen. This is the real page at real scale: resize the window, or open
+     the link on the tablet itself and rotate it, to compare orientations. Cart, add,
+     quantity and Submit are faked in memory — nothing here reaches the server. -->
+<title>POS layout options</title>
+<style>
+  /* tokens copied from internal/pos/static/pos.css, plus the corrected colour roles from
+     docs/adr/0004-pos-colour-meaning.md and the 88px tap floor from issue #17 */
+  :root {
+    --apple-red-dark: #7f1d1d;
+    --leaf-green-dark: #225022;
+    --gold-tan: #d9a441;
+    --gold-tan-ink: #5f3217;
+    --cream: #fff7df;
+    --parchment: #f8e7bc;
+    --orchard-brown: #5f3217;
+    --panel: #fffaf0;
+    --edge: #e4b95c;
+    --tap: 5.5rem; /* 88px floor */
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--cream), #f6d28d 55%, #e8b15f);
+    color: var(--orchard-brown);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  button { font: inherit; touch-action: manipulation; user-select: none; }
+  :focus-visible { outline: 3px solid var(--leaf-green-dark); outline-offset: 2px; }
+
+  /* This is the real page at real scale: resize the window, or open the link on the
+     tablet itself and rotate it, to compare landscape against portrait. */
+  #screen {
+    position: relative;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    font-size: 16px;
+  }
+
+  .switcher {
+    position: fixed;
+    left: 50%;
+    bottom: 1.25rem;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: #1a1a1aee;
+    color: #fff;
+    border-radius: 999px;
+    padding: 0.5rem 0.6rem;
+    box-shadow: 0 0.6rem 1.5rem #0006;
+    font-weight: 700;
+    z-index: 100;
+  }
+  .switcher button {
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 999px;
+    border: 0;
+    background: #ffffff22;
+    color: #fff;
+    font-size: 1.1rem;
+    cursor: pointer;
+  }
+  .switcher button:hover { background: #ffffff3a; }
+  #variant-label { min-width: 11rem; text-align: center; font-size: 0.95rem; }
+
+  /* --- shared screen chrome, reused by all three variants --- */
+  .zone-label {
+    position: absolute;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    opacity: 0.55;
+    pointer-events: none;
+    z-index: 5;
+  }
+  .zone-guarded { top: 0.5rem; left: 0.5rem; background: var(--apple-red-dark); color: #fff; }
+  .zone-home { bottom: 0.5rem; right: 0.5rem; background: var(--leaf-green-dark); color: #fff; }
+
+  .cart-lines:empty::before,
+  .vc-float-lines:empty::before {
+    content: "Tap menu items to start an order.";
+    display: block;
+    padding: 0.5rem 0.1rem;
+    color: var(--gold-tan-ink);
+    font-weight: 600;
+  }
+
+  /* pairs a persistent Guarded-zone Clear with the Read-zone band so the two
+     never overlap: Clear takes its own width, the band fills what's left */
+  .top-row { flex: 0 0 auto; display: flex; align-items: stretch; }
+  .top-row .clear-btn { flex: 0 0 auto; border-radius: 0; }
+  .band {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.6rem 1rem;
+    background: var(--panel);
+    border-bottom: 2px solid var(--edge);
+    font-weight: 800;
+  }
+  /* inside .top-row the band is a row sibling of Clear, not a column child of
+     #screen, so here (only here) it should grow to fill the remaining width */
+  .top-row .band { flex: 1; min-width: 0; }
+  .band .order-no { color: var(--leaf-green-dark); font-size: 1.05rem; }
+  .band .order-no .n { font-size: 1.3rem; }
+  .neutral-btn {
+    min-height: 2.4rem;
+    padding: 0 0.9rem;
+    border-radius: 0.6rem;
+    border: 2px solid var(--gold-tan);
+    background: var(--parchment);
+    color: var(--gold-tan-ink);
+    font-weight: 800;
+  }
+  .band .fault { color: var(--apple-red-dark); font-size: 0.85rem; font-weight: 700; }
+
+  .clear-btn {
+    min-width: var(--tap);
+    min-height: var(--tap);
+    border-radius: 1rem;
+    border: 0;
+    background: var(--apple-red-dark);
+    color: #fff;
+    font-weight: 800;
+    font-size: 1.05rem;
+  }
+
+  .tile {
+    min-height: var(--tap);
+    border: 2px solid var(--gold-tan);
+    border-radius: 1.1rem;
+    background: linear-gradient(160deg, var(--cream), #ffe8ab 58%, #facd71);
+    color: var(--apple-red-dark);
+    text-align: start;
+    padding: 0.85rem 1rem;
+    display: grid;
+    align-content: space-between;
+    gap: 0.5rem;
+    box-shadow: 0 0.3rem 0 var(--gold-tan);
+  }
+  .tile .side-tag {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--gold-tan-ink);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .tile strong { font-size: 1.15rem; line-height: 1.15; }
+  .tile .price {
+    justify-self: start;
+    border-radius: 999px;
+    background: var(--gold-tan);
+    color: var(--gold-tan-ink);
+    font-weight: 800;
+    font-size: 1rem;
+    padding: 0.2rem 0.6rem;
+  }
+  .tile:active { transform: translateY(1px); }
+
+  .cart-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    border-radius: 0.9rem;
+    padding: 0.6rem 0.75rem;
+  }
+  .cart-line .name { font-weight: 700; color: var(--apple-red-dark); font-size: 1rem; line-height: 1.2; }
+  .cart-line .name small { display: block; font-weight: 600; color: var(--gold-tan-ink); font-size: 0.75rem; text-transform: uppercase; }
+  .qty {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .qty button {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.6rem;
+    border: 0;
+    background: var(--parchment);
+    color: var(--gold-tan-ink);
+    font-weight: 900;
+    font-size: 1.1rem;
+  }
+  .qty output { min-width: 1.6rem; text-align: center; font-weight: 800; color: var(--apple-red-dark); }
+
+  .submit-btn {
+    min-height: var(--tap);
+    border-radius: 1rem;
+    border: 0;
+    background: var(--leaf-green-dark);
+    color: #fff;
+    font-weight: 900;
+    font-size: 1.25rem;
+    padding: 0 1.1rem;
+  }
+  .submit-btn:disabled { opacity: 0.55; }
+  .total-figure { font-weight: 900; color: var(--apple-red-dark); font-variant-numeric: tabular-nums; }
+
+  .va-menu, .vb-menu, .vc-menu, .cart-lines, .vc-float-lines {
+    list-style: none;
+    margin: 0;
+  }
+
+  /* --- Variant A: corrected split pane. Menu keeps the pane, cart is a fixed
+     narrow rail pinned to the Home edge instead of taking 47% of the width. --- */
+  .va-body { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 15.5rem; }
+  .va-menu { padding: 0.9rem; display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 1fr; gap: 0.75rem; min-height: 0; }
+  .va-cart { border-left: 3px solid var(--gold-tan); background: var(--parchment); display: flex; flex-direction: column; padding: 0.75rem; gap: 0.6rem; min-height: 0; }
+  .va-cart .cart-lines { flex: 1; min-height: 0; overflow: hidden; display: grid; gap: 0.5rem; align-content: start; }
+  @media (orientation: portrait) {
+    .va-body { grid-template-columns: 1fr; grid-template-rows: 1fr 15.5rem; }
+    .va-menu { grid-template-columns: repeat(2, 1fr); }
+    .va-cart { border-left: 0; border-top: 3px solid var(--gold-tan); }
+  }
+  .va-checkout { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+  .va-checkout .submit-btn { flex: 1; }
+
+  /* --- Variant B: full-bleed grid, cart lives in a tab that opens a bottom sheet
+     so the grid never shares the pane with a permanent column. --- */
+  .vb-body { flex: 1; min-height: 0; position: relative; overflow: hidden; }
+  .vb-menu { position: absolute; inset: 0; padding: 0.9rem 0.9rem 5.5rem; display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 1fr; gap: 0.7rem; }
+  @media (orientation: portrait) {
+    .vb-menu { grid-template-columns: repeat(2, 1fr); padding-bottom: 6.5rem; }
+  }
+  .vb-tab { position: absolute; left: 0.75rem; right: 0.75rem; bottom: 0.75rem; height: var(--tap); border-radius: 1rem; background: var(--panel); border: 2px solid var(--edge); display: flex; align-items: center; justify-content: space-between; padding: 0 1rem; font-weight: 800; color: var(--apple-red-dark); box-shadow: 0 0.4rem 1rem #5f321733; }
+  .vb-sheet .cart-lines { flex: 1; min-height: 0; overflow-y: auto; display: grid; gap: 0.5rem; align-content: start; }
+
+  /* --- Variant C: the grid is the whole screen, always. Total/Submit float as a
+     card pinned to the Home corner; a tap on it expands the line list above itself. --- */
+  .vc-body { flex: 1; min-height: 0; position: relative; }
+  .vc-menu { position: absolute; inset: 0; padding: 0.9rem; display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 1fr; gap: 0.7rem; }
+  @media (orientation: portrait) {
+    .vc-menu { grid-template-columns: repeat(2, 1fr); }
+  }
+  .vc-float {
+    position: fixed;
+    right: 0.9rem;
+    bottom: 0.9rem;
+    width: 15rem;
+    background: var(--panel);
+    border: 2px solid var(--gold-tan);
+    border-radius: 1.1rem;
+    box-shadow: 0 0.8rem 1.6rem #5f321740;
+  }
+  .vc-summary { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.75rem; font-weight: 800; color: var(--apple-red-dark); background: none; border: 0; width: 100%; }
+  .vc-checkout { display: flex; gap: 0.5rem; padding: 0 0.75rem 0.75rem; }
+  .vc-checkout .submit-btn { flex: 1; font-size: 1.05rem; }
+
+  /* the review list is a native popover, tethered above the always-visible summary
+     card by fixed offsets (same right edge, cleared by the card's own height) */
+  .vc-review {
+    position: fixed;
+    right: 0.9rem;
+    bottom: 6.4rem;
+    left: auto;
+    top: auto;
+    margin: 0;
+    width: 15rem;
+    max-height: 15rem;
+    overflow-y: auto;
+    background: var(--panel);
+    border: 2px solid var(--gold-tan);
+    border-radius: 1.1rem;
+    box-shadow: 0 0.8rem 1.6rem #5f321740;
+    padding: 0.75rem;
+    color: inherit;
+  }
+  .vc-review .vc-float-lines { display: grid; gap: 0.45rem; }
+  /* the [open] qualifier matters: an unqualified display here would outrank the
+     UA stylesheet's dialog{display:none} and show the sheet before it's opened */
+  .vb-sheet[open] {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    margin: 0;
+    width: 100%;
+    max-width: none;
+    max-height: 78%;
+    border: 0;
+    border-top: 3px solid var(--gold-tan);
+    border-radius: 1.1rem 1.1rem 0 0;
+    background: var(--parchment);
+    color: inherit;
+    padding: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .vb-sheet::backdrop { background: #2a1c0866; }
+  .vb-sheet-head { display: flex; justify-content: space-between; align-items: center; }
+  .vb-sheet-head form { margin: 0; }
+  .vb-sheet-head .clear-btn { min-width: 4rem; padding: 0 0.9rem; }
+  .vb-checkout { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; }
+  .vb-checkout .submit-btn { flex: 1; }
+</style>
+<div id="screen"></div>
+
+<nav class="switcher" aria-label="Prototype variant">
+  <button type="button" id="prev" aria-label="Previous variant">←</button>
+  <span id="variant-label">A</span>
+  <button type="button" id="next" aria-label="Next variant">→</button>
+</nav>
+
+<script>
+"use strict";
+
+// the 7 tiles issue #19 settled: one line per pancake side, plus the 3 toasties
+const MENU = [
+  { id: "potato-pancake", side: "", tag: "Plain", name: "Potato Pancake", price: 1000 },
+  { id: "potato-pancake", side: "sour-cream", tag: "Sour Cream", name: "Potato Pancake", price: 1000 },
+  { id: "potato-pancake", side: "applesauce", tag: "Applesauce", name: "Potato Pancake", price: 1000 },
+  { id: "potato-pancake", side: "ketchup", tag: "Ketchup", name: "Potato Pancake", price: 1000 },
+  { id: "og-toastie", side: "", tag: "", name: "The OG Toastie", price: 500 },
+  { id: "pizza-toastie", side: "", tag: "", name: "The Pizza Toastie", price: 600 },
+  { id: "harvest-toastie", side: "", tag: "", name: "The Harvest Toastie", price: 800 },
+];
+
+function formatCents(cents) {
+  const dollars = Math.floor(cents / 100);
+  const rest = cents % 100;
+  return rest === 0 ? "$" + dollars : "$" + dollars + "." + String(rest).padStart(2, "0");
+}
+
+function tileMarkup(item) {
+  const tag = item.tag ? `<span class="side-tag">${item.tag}</span>` : "";
+  return `<li><button type="button" class="tile" data-id="${item.id}" data-side="${item.side}" data-tag="${item.tag}" data-name="${item.name}" data-price="${item.price}">${tag}<strong>${item.name}</strong><span class="price">${formatCents(item.price)}</span></button></li>`;
+}
+const TILES = MENU.map(tileMarkup).join("");
+
+function bandMarkup() {
+  return `<header class="band">
+    <p class="order-no">Last order <output class="n">—</output></p>
+    <button type="button" class="neutral-btn" data-reprint>Reprint</button>
+  </header>`;
+}
+
+// Guarded (Clear) and the Read-zone band share the top strip: Clear takes the
+// Guarded corner, the band fills the rest, and the two never overlap.
+function topRow() {
+  return `<div class="top-row">
+    <button type="button" class="clear-btn" data-clear>Clear</button>
+    ${bandMarkup()}
+  </div>`;
+}
+
+function zoneLabels() {
+  return `<span class="zone-label zone-guarded">Guarded</span><span class="zone-label zone-home">Home</span>`;
+}
+
+// Variant A: the corrected split. Menu keeps the pane; the cart is a fixed
+// narrow rail in the Home zone instead of the 47%-wide column being replaced.
+function variantA() {
+  return `${topRow()}
+    <div class="va-body">
+      <ul class="va-menu" aria-label="Menu" data-menu>${TILES}</ul>
+      <aside class="va-cart" aria-label="Order">
+        <ul class="cart-lines" data-lines></ul>
+        <div class="va-checkout">
+          <output class="total-figure" data-total>${formatCents(0)}</output>
+          <button type="button" class="submit-btn" data-submit disabled>Submit</button>
+        </div>
+      </aside>
+    </div>
+    ${zoneLabels()}`;
+}
+
+// Variant B: full-bleed grid; the cart lives behind a tab that opens a native
+// modal bottom sheet, so the grid never gives up part of its pane permanently.
+function variantB(uid) {
+  const sheetId = "vb-sheet-" + uid;
+  return `${bandMarkup()}
+    <div class="vb-body">
+      <ul class="vb-menu" aria-label="Menu" data-menu>${TILES}</ul>
+      <button type="button" class="vb-tab" data-open-sheet="${sheetId}">
+        <span data-tab-summary>Tap menu items to start an order</span>
+        <output class="total-figure" data-total>${formatCents(0)}</output>
+      </button>
+      <dialog id="${sheetId}" class="vb-sheet" closedby="any" aria-label="Order">
+        <div class="vb-sheet-head">
+          <h2>Order</h2>
+          <button type="button" class="clear-btn" data-clear>Clear</button>
+        </div>
+        <ul class="cart-lines" data-lines></ul>
+        <div class="vb-checkout">
+          <output class="total-figure" data-total>${formatCents(0)}</output>
+          <form method="dialog"><button type="submit" class="neutral-btn">Done</button></form>
+          <button type="button" class="submit-btn" data-submit disabled>Submit</button>
+        </div>
+      </dialog>
+    </div>
+    ${zoneLabels()}`;
+}
+
+// Variant C: the grid fills the whole screen, always. Total and Submit float
+// as a card pinned to the Home corner; a tap opens a native popover with the lines.
+function variantC(uid) {
+  const reviewId = "vc-review-" + uid;
+  return `${topRow()}
+    <div class="vc-body">
+      <ul class="vc-menu" aria-label="Menu" data-menu>${TILES}</ul>
+      <div id="${reviewId}" class="vc-review" popover aria-label="Order lines">
+        <ul class="vc-float-lines" data-lines></ul>
+      </div>
+      <div class="vc-float">
+        <button type="button" class="vc-summary" popovertarget="${reviewId}">
+          <span data-tab-summary>Tap menu items to start an order</span>
+          <output class="total-figure" data-total>${formatCents(0)}</output>
+        </button>
+        <div class="vc-checkout">
+          <button type="button" class="submit-btn" data-submit disabled>Submit</button>
+        </div>
+      </div>
+    </div>
+    ${zoneLabels()}`;
+}
+
+// Shared behaviour: every variant exposes the same data-hooks, so one wiring
+// pass drives all three. Cart state lives per screen instance, in memory only.
+function wireRoot(root) {
+  const menu = root.querySelector("[data-menu]");
+  const linesList = root.querySelector("[data-lines]");
+  const totals = root.querySelectorAll("[data-total]");
+  const tabSummaries = root.querySelectorAll("[data-tab-summary]");
+  const submitButtons = root.querySelectorAll("[data-submit]");
+  const clearButtons = root.querySelectorAll("[data-clear]");
+  const orderOutput = root.querySelector(".order-no .n");
+
+  let cart = [];
+  let orderNumber = 1000;
+  let sending = false;
+
+  function totalCents() {
+    return cart.reduce((sum, line) => sum + line.price * line.qty, 0);
+  }
+
+  function render() {
+    linesList.innerHTML = cart.map((line) => `
+      <li class="cart-line" data-key="${line.key}">
+        <p class="name">${line.name}${line.tag ? `<small>${line.tag}</small>` : ""}</p>
+        <div class="qty">
+          <button type="button" data-minus aria-label="Remove one ${line.name}${line.tag ? " " + line.tag : ""}">−</button>
+          <output>${line.qty}</output>
+          <button type="button" data-plus aria-label="Add one ${line.name}${line.tag ? " " + line.tag : ""}">+</button>
+        </div>
+      </li>`).join("");
+    const total = totalCents();
+    totals.forEach((el) => { el.textContent = formatCents(total); });
+    const itemCount = cart.reduce((n, l) => n + l.qty, 0);
+    tabSummaries.forEach((el) => {
+      el.textContent = itemCount === 0 ? "Tap menu items to start an order" : itemCount + " item" + (itemCount === 1 ? "" : "s");
+    });
+    submitButtons.forEach((btn) => { btn.disabled = cart.length === 0 || sending; });
+  }
+
+  menu.addEventListener("click", (event) => {
+    const tile = event.target.closest(".tile");
+    if (!tile) return;
+    const key = tile.dataset.id + "|" + tile.dataset.side;
+    const existing = cart.find((line) => line.key === key);
+    if (existing) {
+      existing.qty += 1;
+    } else {
+      cart.push({ key, id: tile.dataset.id, side: tile.dataset.side, tag: tile.dataset.tag, name: tile.dataset.name, price: Number(tile.dataset.price), qty: 1 });
+    }
+    render();
+  });
+
+  linesList.addEventListener("click", (event) => {
+    const line = event.target.closest(".cart-line");
+    if (!line) return;
+    const entry = cart.find((l) => l.key === line.dataset.key);
+    if (event.target.closest("[data-plus]")) {
+      entry.qty += 1;
+    } else if (event.target.closest("[data-minus]")) {
+      entry.qty -= 1;
+      if (entry.qty <= 0) cart = cart.filter((l) => l.key !== entry.key);
+    } else {
+      return;
+    }
+    render();
+  });
+
+  clearButtons.forEach((btn) => btn.addEventListener("click", () => { cart = []; render(); }));
+
+  submitButtons.forEach((btn) => btn.addEventListener("click", () => {
+    if (cart.length === 0 || sending) return;
+    sending = true;
+    submitButtons.forEach((b) => { b.textContent = "Sending…"; b.disabled = true; });
+    setTimeout(() => {
+      orderNumber += 1;
+      orderOutput.textContent = "#" + orderNumber;
+      cart = [];
+      sending = false;
+      submitButtons.forEach((b) => { b.textContent = "Submit"; });
+      render();
+      root.querySelectorAll("dialog[open]").forEach((dialog) => dialog.close());
+      root.querySelectorAll("[popover]").forEach((popover) => popover.hidePopover?.());
+    }, 550);
+  }));
+
+  root.querySelectorAll("[data-open-sheet]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.getElementById(btn.dataset.openSheet)?.showModal();
+    });
+  });
+
+  render();
+}
+
+const VARIANTS = [
+  { key: "a", label: "A — Corrected split pane", build: variantA },
+  { key: "b", label: "B — Full-bleed grid + bottom sheet", build: variantB },
+  { key: "c", label: "C — Full-bleed grid + floating Home card", build: variantC },
+];
+
+const screen = document.getElementById("screen");
+const label = document.getElementById("variant-label");
+let current = 0;
+
+function paint(index) {
+  current = (index + VARIANTS.length) % VARIANTS.length;
+  const variant = VARIANTS[current];
+  label.textContent = variant.label;
+  screen.innerHTML = variant.build("s");
+  wireRoot(screen);
+  try {
+    const url = new URL(location.href);
+    url.searchParams.set("variant", variant.key);
+    history.replaceState(null, "", url);
+  } catch {
+    // file:// origins and some sandboxed viewers refuse history writes; the
+    // switcher still works, it just won't be a shareable/reload-stable link.
+  }
+}
+
+document.getElementById("prev").addEventListener("click", () => paint(current - 1));
+document.getElementById("next").addEventListener("click", () => paint(current + 1));
+document.addEventListener("keydown", (event) => {
+  const active = document.activeElement;
+  if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.isContentEditable)) return;
+  if (event.key === "ArrowLeft") paint(current - 1);
+  if (event.key === "ArrowRight") paint(current + 1);
+});
+
+const requestedKey = new URLSearchParams(location.search).get("variant");
+const startIndex = Math.max(0, VARIANTS.findIndex((v) => v.key === requestedKey));
+paint(startIndex);
+</script>
+
