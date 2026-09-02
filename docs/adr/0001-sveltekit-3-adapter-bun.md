@@ -1,10 +1,10 @@
 ---
-status: superseded by ADR-0002
+status: superseded by ADR-0003
 ---
 
 # SvelteKit 3 with the official adapter-bun
 
-Superseded by [ADR-0002](./0002-one-go-binary.md): the POS now ships as one Go binary.
+Superseded by [ADR-0003](./0003-one-go-binary.md): the POS now ships as one Go binary.
 
 The Apple Fest POS ran two processes in development: a `Bun.serve()` API in `app/server/` and a Vite dev server for the Svelte client. To collapse these into one process on one URL, SvelteKit now owns the server. The app moves to `@sveltejs/kit@next` (3.x) with the official `@sveltejs/adapter-bun`, which serves through a real `Bun.serve()`. Development is `bun --bun vite dev`, the build is `bun run --bun build`, and the server starts with `bun ./build`.
 

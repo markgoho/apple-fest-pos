@@ -1,6 +1,6 @@
 # Apple Fest POS
 
-The POS is **one Go binary**, cross-compiled on the Mac and copied to a Raspberry Pi. See [ADR-0002](./docs/adr/0002-one-go-binary.md).
+The POS is **one Go binary**, cross-compiled on the Mac and copied to a Raspberry Pi. See [ADR-0003](./docs/adr/0003-one-go-binary.md).
 
 ## Go first
 
