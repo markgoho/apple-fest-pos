@@ -1,20 +1,29 @@
 [Unit]
-Description=Apple Fest POS Bun Server
+Description=Apple Fest POS
 # network.target only. network-online.target waits for a route that an
 # air-gapped booth network does not have.
 After=network.target
 
 [Service]
 Type=simple
-User=markgoho
-WorkingDirectory=/home/markgoho/apple-fest-pos
-Environment=PATH=/home/markgoho/.bun/bin:/usr/local/bin:/usr/bin:/bin
-Environment=HOST=0.0.0.0
-Environment=PORT=3000
+User=pos
+Group=pos
+# systemd creates /var/lib/pos, owned by pos, before start. No mkdir/chown
+# in any deploy script.
+StateDirectory=pos
+WorkingDirectory=/var/lib/pos
+Environment=TZ=America/New_York
+Environment=PORT=443
+Environment=HTTP_PORT=80
+Environment=TLS_CERT=/etc/pos/pos.crt
+Environment=TLS_KEY=/etc/pos/pos.key
+Environment=SQLITE_PATH=/var/lib/pos/pos.sqlite
 Environment=PRINTER_ENABLED=false
-Environment=SQLITE_PATH=/home/markgoho/apple-fest-pos/data/pos.sqlite
-Environment=DO_NOT_TRACK=1
-ExecStart=/home/markgoho/.bun/bin/bun ./build
+# Binding :443 and :80 needs this capability; setcap on the binary does not
+# survive scp, so the unit grants it instead.
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+ExecStart=/usr/local/bin/pos
 Restart=always
 RestartSec=2
 
