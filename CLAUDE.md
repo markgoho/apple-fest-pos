@@ -31,10 +31,6 @@ CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ./cmd/pos   # build for the Pi
 
 No JavaScript framework, no bundler, no npm dependency ships in the app. The cart is hand-written JavaScript served as a static file.
 
-## Legacy
-
-`src/`, `tests/`, `package.json`, and `vite.config.ts` are the old SvelteKit and Bun server. They stay only as reference until the screens are rebuilt as server-rendered HTML. Do not add to them.
-
 ## Agent skills
 
 ### Issue tracker
