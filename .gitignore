@@ -47,3 +47,6 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 # manual for the two booth printers. It came from a pCloud share link that
 # has expired, so the local copy is the only one. Do not delete it.
 /*.pdf
+
+# local Pi credentials, never committed
+pi-access.local.md
