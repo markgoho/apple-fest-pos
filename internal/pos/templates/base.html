@@ -2,14 +2,19 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+    <meta name="theme-color" content="#b91c1c">
     {{with .RefreshSeconds}}<meta http-equiv="refresh" content="{{.}}">{{end}}
     <title>{{.Title}}</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='14' font-size='14'%3E%F0%9F%8D%8E%3C/text%3E%3C/svg%3E">
+    <link rel="manifest" href="/static/manifest.json">
     <link rel="stylesheet" href="/static/pos.css">
   </head>
   <body class="{{.BodyClass}}">
+    <button type="button" id="kiosk-start" class="kiosk-start" hidden>Start shift</button>
+    <button type="button" id="kiosk-resume" class="kiosk-resume" hidden>Resume full screen</button>
     {{template "content" .}}
+    <script src="/static/kiosk.js" defer></script>
   </body>
 </html>
 {{end}}
