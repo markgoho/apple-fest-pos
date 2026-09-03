@@ -148,7 +148,7 @@ func TestPlaceOrderRejectsASideOnAnItemWithNoSides(t *testing.T) {
 	if recorder.Code != http.StatusBadRequest {
 		t.Fatalf("status = %d, want 400", recorder.Code)
 	}
-	if body["error"] != "Unknown side for The OG Toastie: ketchup" {
+	if body["error"] != "Unknown side for OG Toastie: ketchup" {
 		t.Errorf("error = %v", body["error"])
 	}
 }
