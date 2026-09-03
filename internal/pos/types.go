@@ -28,6 +28,7 @@ const (
 type CartLine struct {
 	MenuItemID string `json:"menuItemId"`
 	Quantity   int    `json:"quantity"`
+	Side       string `json:"side,omitempty"`
 	Notes      string `json:"notes,omitempty"`
 
 	// fractionalQuantity is true when the request sent a quantity that is not
@@ -88,6 +89,7 @@ type ReceiptOrder struct {
 type cartLineJSON struct {
 	MenuItemID string      `json:"menuItemId"`
 	Quantity   json.Number `json:"quantity"`
+	Side       string      `json:"side,omitempty"`
 	Notes      string      `json:"notes,omitempty"`
 }
 
@@ -99,6 +101,7 @@ func (line *CartLine) UnmarshalJSON(data []byte) error {
 	}
 
 	line.MenuItemID = raw.MenuItemID
+	line.Side = raw.Side
 	line.Notes = raw.Notes
 	quantity, err := strconv.ParseInt(raw.Quantity.String(), 10, 32)
 	line.Quantity = int(quantity)

@@ -8,6 +8,12 @@ const (
 	PrintGroupCustomer PrintGroup = "customer"
 )
 
+// Side is one condiment choice a menu item can carry. See CONTEXT.md.
+type Side struct {
+	ID    string `json:"id"`
+	Label string `json:"label"`
+}
+
 // MenuItem is one sellable product. The menu is hard-coded in the binary.
 type MenuItem struct {
 	ID         string     `json:"id"`
@@ -17,16 +23,31 @@ type MenuItem struct {
 	SortOrder  int        `json:"sortOrder"`
 	PrintGroup PrintGroup `json:"printGroup"`
 
-	// Sides is the fixed set of condiments the item can carry. An item with
-	// Sides always starts a new cart line, because each pancake gets its own
-	// choice.
-	Sides []string `json:"sides,omitempty"`
+	// Sides is the fixed set of condiments the item can carry. The Operator
+	// chooses the Side on the menu tile at add time, so an item with Sides
+	// draws one tile per Side plus one Plain tile; the side rides on the cart
+	// line, not on a separate step.
+	Sides []Side `json:"sides,omitempty"`
+}
+
+// HasSide reports whether id names one of the item's Sides.
+func (item MenuItem) HasSide(id string) bool {
+	for _, side := range item.Sides {
+		if side.ID == id {
+			return true
+		}
+	}
+	return false
 }
 
 // MenuItems holds the menu in sort order.
 var MenuItems = []MenuItem{
 	{ID: "potato-pancake", Name: "Potato Pancake", Category: "Menu", PriceCents: 1000, SortOrder: 10, PrintGroup: PrintGroupKitchen,
-		Sides: []string{"Sour cream", "Applesauce", "Ketchup"}},
+		Sides: []Side{
+			{ID: "sour-cream", Label: "Sour Cream"},
+			{ID: "applesauce", Label: "Applesauce"},
+			{ID: "ketchup", Label: "Ketchup"},
+		}},
 	{ID: "og-toastie", Name: "The OG Toastie", Category: "Grilled Cheese", PriceCents: 500, SortOrder: 20, PrintGroup: PrintGroupKitchen},
 	{ID: "pizza-toastie", Name: "The Pizza Toastie", Category: "Grilled Cheese", PriceCents: 600, SortOrder: 30, PrintGroup: PrintGroupKitchen},
 	{ID: "harvest-toastie", Name: "The Harvest Toastie", Category: "Grilled Cheese", PriceCents: 800, SortOrder: 40, PrintGroup: PrintGroupKitchen},

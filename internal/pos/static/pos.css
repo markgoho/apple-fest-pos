@@ -4,6 +4,8 @@
   --leaf-green: #2f6b2f;
   --leaf-green-dark: #225022;
   --cider-gold: #d97706;
+  --gold-tan: #d9a441;
+  --gold-tan-ink: #5f3217;
   --cream: #fff7df;
   --parchment: #f8e7bc;
   --orchard-brown: #5f3217;
@@ -166,185 +168,252 @@ button:disabled {
   font-weight: 700;
 }
 
-/* The cashier screen */
+/* The cashier screen: a fixed top strip (Clear in the Guarded corner, the
+   order-number band filling the rest) over a body pane, menu grid stretched
+   to fill its pane with a fixed cart rail pinned to the Home corner. Tiles
+   and controls hold the 88px tap floor from issue #17; the stepper is a
+   deliberate 40px exception as a secondary in-cart adjustment. */
 
 .pos {
+  --tap: 5.5rem;
   block-size: var(--app-height, 100dvh);
   overflow: hidden;
-  display: grid;
-  grid-template-columns: 1fr minmax(22rem, 30rem);
-}
-
-.workspace {
-  min-block-size: 0;
-  overflow: auto;
-  padding: 1rem;
-  display: grid;
-  gap: 1rem;
-  align-content: start;
-}
-
-.notice {
-  font-weight: 800;
-  color: var(--leaf-green-dark);
-}
-
-.notice.bad {
-  color: var(--apple-red);
-}
-
-.menu {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
-  gap: 0.85rem;
-}
-
-.menu-item {
-  min-block-size: 7.5rem;
-  border: 2px solid #f6c56d;
-  border-radius: 1.35rem;
-  background: linear-gradient(160deg, var(--cream), #ffe8ab 58%, #facd71);
-  color: var(--apple-red-dark);
-  box-shadow: 0 0.35rem 0 var(--cider-gold), 0 0.9rem 1.5rem #5f32171f;
-  text-align: start;
-  padding: 1rem;
-  display: grid;
-  align-content: space-between;
-}
-
-.menu-item strong {
-  font-size: clamp(1.25rem, 2.4vw, 1.6rem);
-}
-
-.menu-item .price {
-  inline-size: fit-content;
-  border-radius: 999px;
-  background: var(--apple-red);
-  color: white;
-  font-size: clamp(1.1rem, 2vw, 1.35rem);
-  font-weight: 800;
-  padding: 0.25rem 0.6rem;
-}
-
-.cart {
-  block-size: 100%;
-  min-block-size: 0;
-  background: linear-gradient(180deg, var(--parchment), var(--cream));
-  border-inline-start: 3px solid #d59a45;
-  padding: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
 }
 
-.cart h2 {
-  color: var(--apple-red-dark);
+.top-row {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: stretch;
 }
 
-.lines {
-  display: grid;
-  gap: 0.65rem;
-  overflow: auto;
-  align-content: start;
-  padding-inline-end: 0.25rem;
+.clear-btn {
+  flex: 0 0 auto;
+  min-inline-size: var(--tap);
+  min-block-size: var(--tap);
+  border-radius: 0;
+  background: var(--apple-red-dark);
 }
 
-.line {
-  display: grid;
-  gap: 0.7rem;
-  background: var(--panel);
-  border: 1px solid var(--edge);
-  border-radius: 1rem;
-  padding: 0.85rem;
-}
-
-.line-main {
+.band {
+  flex: 1;
+  min-inline-size: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+  padding: 0.6rem 1rem;
+  background: var(--panel);
+  border-block-end: 2px solid var(--edge);
 }
 
-.line strong {
-  color: var(--apple-red-dark);
-  flex: 1;
+.band .order-no {
+  color: var(--leaf-green-dark);
+  font-weight: 800;
+}
+
+.band .order-no .n {
   font-size: 1.3rem;
-  line-height: 1.1;
 }
 
-.sides {
+.band .fault {
+  flex: 1;
+  color: var(--apple-red-dark);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.neutral-btn {
+  flex: 0 0 auto;
+  min-block-size: 2.6rem;
+  padding: 0 0.9rem;
+  border-radius: 0.6rem;
+  border: 2px solid var(--gold-tan);
+  background: var(--parchment);
+  color: var(--gold-tan-ink);
+  font-weight: 800;
+}
+
+.body {
+  flex: 1;
+  min-block-size: 0;
+  display: grid;
+  grid-template-columns: 1fr 15.5rem;
+}
+
+.menu {
+  min-block-size: 0;
+  margin: 0;
+  padding: 0.9rem;
+  list-style: none;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
+  grid-auto-rows: 1fr;
+  gap: 0.75rem;
 }
 
-.sides button {
-  background: #f9db95;
+.tile {
+  min-block-size: var(--tap);
+  border: 2px solid var(--gold-tan);
+  border-radius: 1.1rem;
+  background: linear-gradient(160deg, var(--cream), #ffe8ab 58%, #facd71);
   color: var(--apple-red-dark);
-  font-size: 0.95rem;
-}
-
-.sides button[aria-pressed="true"] {
-  background: var(--leaf-green);
-  color: white;
-}
-
-.quantity {
+  text-align: start;
+  padding: 0.85rem 1rem;
   display: grid;
-  grid-template-columns: 3rem 2.5rem 3rem;
-  align-items: center;
-  gap: 0.35rem;
-  text-align: center;
+  align-content: space-between;
+  gap: 0.5rem;
+  box-shadow: 0 0.3rem 0 var(--gold-tan);
 }
 
-.quantity output {
+.tile .side-tag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--gold-tan-ink);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.tile strong {
+  font-size: 1.15rem;
+  line-height: 1.15;
+}
+
+.tile .price {
+  justify-self: start;
+  border-radius: 999px;
+  background: var(--gold-tan);
+  color: var(--gold-tan-ink);
+  font-weight: 800;
+  font-size: 1rem;
+  padding: 0.2rem 0.6rem;
+}
+
+.tile:active {
+  transform: translateY(1px);
+}
+
+.cart {
+  min-block-size: 0;
+  border-inline-start: 3px solid var(--gold-tan);
+  background: var(--parchment);
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem;
+  gap: 0.6rem;
+}
+
+.lines {
+  flex: 1;
+  min-block-size: 0;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+  align-content: start;
+}
+
+.lines:empty::before {
+  content: "Tap menu items to start an order.";
+  display: block;
+  padding: 0.5rem 0.1rem;
+  color: var(--gold-tan-ink);
+  font-weight: 600;
+}
+
+.cart-line {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-inline-size: 0;
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 0.9rem;
+  padding: 0.6rem 0.75rem;
+}
+
+.cart-line .name {
+  min-inline-size: 0;
+  margin: 0;
+  font-weight: 700;
   color: var(--apple-red-dark);
-  font-size: 1.35rem;
-  font-weight: 900;
+  font-size: 1rem;
+  line-height: 1.2;
 }
 
-.quantity button {
+.cart-line .name small {
+  display: block;
+  font-weight: 600;
+  color: var(--gold-tan-ink);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+}
+
+.stepper button {
+  min-block-size: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.6rem;
+  background: var(--parchment);
+  color: var(--gold-tan-ink);
+  font-weight: 900;
+  font-size: 1.1rem;
   padding: 0;
 }
 
-.quantity .add {
-  background: var(--leaf-green);
+.stepper output {
+  min-inline-size: 1.6rem;
+  text-align: center;
+  font-weight: 800;
+  color: var(--apple-red-dark);
 }
 
 .checkout {
-  margin-block-start: auto;
-  border-radius: 1rem;
-  background: var(--panel);
-  display: grid;
-  grid-template-columns: minmax(9rem, 1fr) 1.3fr;
+  flex: 0 0 auto;
+  display: flex;
   align-items: center;
-  gap: 0.85rem;
-  padding: 0.9rem;
+  justify-content: space-between;
+  gap: 0.6rem;
 }
 
 .total {
-  color: var(--apple-red-dark);
-  font-size: clamp(2rem, 6vw, 3rem);
   font-weight: 900;
-  line-height: 1;
+  color: var(--apple-red-dark);
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
 }
 
-.submit {
-  min-block-size: 4.75rem;
-  background: var(--leaf-green);
-  box-shadow: 0 0.35rem 0 var(--leaf-green-dark);
-  font-size: 1.45rem;
+.submit-btn {
+  flex: 1;
+  min-block-size: var(--tap);
+  border-radius: 1rem;
+  background: var(--leaf-green-dark);
+  font-size: 1.25rem;
 }
 
-@media (max-width: 840px), (orientation: portrait) {
-  .pos {
+@media (orientation: portrait) {
+  .body {
     grid-template-columns: 1fr;
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: 1fr 15.5rem;
   }
 
-  .workspace {
-    overflow: visible;
-    padding-block-end: 0.75rem;
+  .menu {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .cart {
+    border-inline-start: 0;
+    border-block-start: 3px solid var(--gold-tan);
   }
 }
 

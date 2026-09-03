@@ -1,36 +1,37 @@
 {{define "content"}}
 <main class="pos">
-  <section class="workspace">
-    <header class="bar">
-      <a class="home" href="/">Apple Fest POS</a>
-      <p class="notice" id="notice" role="status"></p>
+  <div class="top-row">
+    <button type="button" class="clear-btn" id="clear" disabled>Clear</button>
+    <header class="band">
+      <p class="order-no">Last order <output class="n" id="last-order">—</output></p>
+      <p class="fault" id="fault" role="status"></p>
+      <button type="button" class="neutral-btn" id="reprint" disabled>Reprint</button>
     </header>
+  </div>
 
-    <section class="menu" aria-label="Menu items">
+  <div class="body">
+    <ul class="menu" aria-label="Menu items" id="menu">
       {{range .MenuItems}}
-      <button type="button" class="menu-item" data-menu-item-id="{{.ID}}" data-name="{{.Name}}"
-              data-price-cents="{{.PriceCents}}" data-sides="{{.SideList}}">
-        <strong>{{.Name}}</strong>
-        <span class="price">{{cents .PriceCents}}</span>
-      </button>
+      <li>
+        <button type="button" class="tile" data-menu-item-id="{{.MenuItemID}}" data-name="{{.Name}}"
+                data-price-cents="{{.PriceCents}}" data-side-id="{{.SideID}}" data-side-label="{{.SideLabel}}">
+          {{if .SideLabel}}<span class="side-tag">{{.SideLabel}}</span>{{end}}
+          <strong>{{.Name}}</strong>
+          <span class="price">{{cents .PriceCents}}</span>
+        </button>
+      </li>
       {{end}}
-    </section>
-  </section>
+    </ul>
 
-  <aside class="cart" aria-label="Current order">
-    <div class="bar">
-      <h2>Order</h2>
-      <button type="button" class="ghost" id="clear" disabled>Clear</button>
-    </div>
+    <aside class="cart" aria-label="Current order">
+      <ul class="lines" id="lines"></ul>
 
-    <p class="empty" id="empty">Tap menu items to start an order.</p>
-    <div class="lines" id="lines"></div>
-
-    <div class="checkout">
-      <strong class="total" id="total">{{cents 0}}</strong>
-      <button type="button" class="submit" id="submit" disabled>Submit order</button>
-    </div>
-  </aside>
+      <div class="checkout">
+        <output class="total" id="total">{{cents 0}}</output>
+        <button type="button" class="submit-btn" id="submit" disabled>Submit</button>
+      </div>
+    </aside>
+  </div>
 </main>
 <script src="{{asset "/static/pos.js"}}" defer></script>
 {{end}}

@@ -168,8 +168,12 @@ func ValidateOrder(request PlaceOrderRequest) error {
 		if len(line.Notes) > 200 {
 			return fmt.Errorf("%w: Item notes are too long", ErrValidation)
 		}
-		if _, found := MenuItemByID(line.MenuItemID); !found {
+		item, found := MenuItemByID(line.MenuItemID)
+		if !found {
 			return fmt.Errorf("%w: Unknown menu item: %s", ErrValidation, line.MenuItemID)
+		}
+		if line.Side != "" && !item.HasSide(line.Side) {
+			return fmt.Errorf("%w: Unknown side for %s: %s", ErrValidation, item.Name, line.Side)
 		}
 	}
 

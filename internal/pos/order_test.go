@@ -111,6 +111,48 @@ func TestPlaceOrderRejectsUnknownMenuItems(t *testing.T) {
 	}
 }
 
+func TestPlaceOrderAcceptsAKnownSide(t *testing.T) {
+	service := newTestService(t)
+	request := validOrder()
+	request["items"] = []map[string]any{{"menuItemId": "potato-pancake", "quantity": 1, "side": "applesauce"}}
+
+	recorder, body := postOrder(t, service, request)
+
+	if recorder.Code != http.StatusCreated {
+		t.Fatalf("status = %d, want 201: %v", recorder.Code, body)
+	}
+}
+
+func TestPlaceOrderRejectsAnUnknownSide(t *testing.T) {
+	service := newTestService(t)
+	request := validOrder()
+	request["items"] = []map[string]any{{"menuItemId": "potato-pancake", "quantity": 1, "side": "hot-sauce"}}
+
+	recorder, body := postOrder(t, service, request)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want 400", recorder.Code)
+	}
+	if body["error"] != "Unknown side for Potato Pancake: hot-sauce" {
+		t.Errorf("error = %v", body["error"])
+	}
+}
+
+func TestPlaceOrderRejectsASideOnAnItemWithNoSides(t *testing.T) {
+	service := newTestService(t)
+	request := validOrder()
+	request["items"] = []map[string]any{{"menuItemId": "og-toastie", "quantity": 1, "side": "ketchup"}}
+
+	recorder, body := postOrder(t, service, request)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want 400", recorder.Code)
+	}
+	if body["error"] != "Unknown side for The OG Toastie: ketchup" {
+		t.Errorf("error = %v", body["error"])
+	}
+}
+
 func TestPlaceOrderRejectsFractionalQuantities(t *testing.T) {
 	service := newTestService(t)
 	request := validOrder()

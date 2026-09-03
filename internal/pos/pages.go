@@ -69,15 +69,19 @@ type page struct {
 	BodyClass string
 }
 
-// menuButton is one menu item as the /pos grid needs it.
-type menuButton struct {
-	MenuItem
-	SideList string
+// menuTile is one tile of the /pos grid. An item with Sides draws one tile
+// per Side plus one Plain tile; an item with no Sides draws a single tile.
+type menuTile struct {
+	MenuItemID string
+	Name       string
+	PriceCents int
+	SideID     string
+	SideLabel  string
 }
 
 type posPage struct {
 	page
-	MenuItems []menuButton
+	MenuItems []menuTile
 }
 
 type kitchenPage struct {

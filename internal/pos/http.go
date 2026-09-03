@@ -30,13 +30,20 @@ func handleHome(writer http.ResponseWriter, request *http.Request) {
 // handlePOSScreen draws the menu grid. The cart is client-side state, so the
 // server sends the menu once and the script does the rest.
 func handlePOSScreen(writer http.ResponseWriter, request *http.Request) {
-	buttons := make([]menuButton, 0, len(MenuItems))
+	var tiles []menuTile
 	for _, item := range MenuItems {
-		buttons = append(buttons, menuButton{MenuItem: item, SideList: strings.Join(item.Sides, "|")})
+		if len(item.Sides) == 0 {
+			tiles = append(tiles, menuTile{MenuItemID: item.ID, Name: item.Name, PriceCents: item.PriceCents})
+			continue
+		}
+		tiles = append(tiles, menuTile{MenuItemID: item.ID, Name: item.Name, PriceCents: item.PriceCents, SideLabel: "Plain"})
+		for _, side := range item.Sides {
+			tiles = append(tiles, menuTile{MenuItemID: item.ID, Name: item.Name, PriceCents: item.PriceCents, SideID: side.ID, SideLabel: side.Label})
+		}
 	}
 	render(writer, "pos.html", posPage{
 		page:      page{Title: "Cashier POS", BodyClass: "theme"},
-		MenuItems: buttons,
+		MenuItems: tiles,
 	})
 }
 

@@ -3,16 +3,19 @@
 // server replays the order instead of selling it twice.
 "use strict";
 
+const menuElement = document.getElementById("menu");
 const linesElement = document.getElementById("lines");
-const emptyElement = document.getElementById("empty");
 const totalElement = document.getElementById("total");
-const noticeElement = document.getElementById("notice");
+const faultElement = document.getElementById("fault");
+const lastOrderElement = document.getElementById("last-order");
 const submitButton = document.getElementById("submit");
 const clearButton = document.getElementById("clear");
+const reprintButton = document.getElementById("reprint");
 
 let cart = [];
 let clientOrderId = newId();
 let submitting = false;
+let lastOrderId = null;
 
 function newId() {
   if (globalThis.crypto && globalThis.crypto.randomUUID) {
@@ -45,24 +48,8 @@ function totalCents() {
   return cart.reduce((total, line) => total + line.priceCents * line.quantity, 0);
 }
 
-function showNotice(message, bad) {
-  noticeElement.textContent = message;
-  noticeElement.classList.toggle("bad", Boolean(bad));
-}
-
-// addItem starts a new line for an item that carries Sides, because each one
-// gets its own choice. Every other item merges into its existing line.
-function addItem(item) {
-  if (item.sides.length === 0) {
-    const existing = cart.find((line) => line.menuItemId === item.id);
-    if (existing) {
-      existing.quantity += 1;
-      draw();
-      return;
-    }
-  }
-  cart.push({ key: newId(), menuItemId: item.id, name: item.name, priceCents: item.priceCents, sides: item.sides, side: "", quantity: 1 });
-  draw();
+function showFault(message) {
+  faultElement.textContent = message;
 }
 
 function changeQuantity(key, quantity) {
@@ -76,75 +63,50 @@ function changeQuantity(key, quantity) {
   draw();
 }
 
-function chooseSide(line, side) {
-  line.side = line.side === side ? "" : side;
-  draw();
-}
-
-function element(tag, className, text) {
-  const node = document.createElement(tag);
-  if (className) {
-    node.className = className;
-  }
-  if (text !== undefined) {
-    node.textContent = text;
-  }
-  return node;
-}
-
 function drawLine(line) {
-  const article = element("article", "line");
-  const main = element("div", "line-main");
-  main.append(element("strong", "", line.name));
+  const item = document.createElement("li");
+  item.className = "cart-line";
 
-  if (line.sides.length > 0) {
-    const remove = element("button", "remove", "Remove");
-    remove.type = "button";
-    remove.setAttribute("aria-label", "Remove " + line.name);
-    remove.addEventListener("click", () => changeQuantity(line.key, 0));
-    main.append(remove);
-  } else {
-    const quantity = element("div", "quantity");
-    const less = element("button", "", "−");
-    less.type = "button";
-    less.setAttribute("aria-label", "Remove one " + line.name);
-    less.addEventListener("click", () => changeQuantity(line.key, line.quantity - 1));
-
-    const count = element("output", "", String(line.quantity));
-    count.setAttribute("aria-label", line.name + " quantity");
-
-    const more = element("button", "add", "+");
-    more.type = "button";
-    more.setAttribute("aria-label", "Add one " + line.name);
-    more.addEventListener("click", () => changeQuantity(line.key, line.quantity + 1));
-
-    quantity.append(less, count, more);
-    main.append(quantity);
+  const name = document.createElement("p");
+  name.className = "name";
+  name.textContent = line.name;
+  if (line.sideLabel) {
+    const tag = document.createElement("small");
+    tag.textContent = line.sideLabel;
+    name.append(tag);
   }
-  article.append(main);
+  item.append(name);
 
-  if (line.sides.length > 0) {
-    const sides = element("div", "sides");
-    sides.setAttribute("aria-label", "Side for " + line.name);
-    for (const side of line.sides) {
-      const choice = element("button", "", side);
-      choice.type = "button";
-      choice.setAttribute("aria-pressed", String(line.side === side));
-      choice.addEventListener("click", () => chooseSide(line, side));
-      sides.append(choice);
-    }
-    article.append(sides);
-  }
-  return article;
+  const quantity = document.createElement("div");
+  quantity.className = "stepper";
+
+  const less = document.createElement("button");
+  less.type = "button";
+  less.textContent = "−";
+  less.setAttribute("aria-label", "Remove one " + line.name + (line.sideLabel ? " " + line.sideLabel : ""));
+  less.addEventListener("click", () => changeQuantity(line.key, line.quantity - 1));
+
+  const count = document.createElement("output");
+  count.textContent = String(line.quantity);
+  count.setAttribute("aria-label", line.name + " quantity");
+
+  const more = document.createElement("button");
+  more.type = "button";
+  more.textContent = "+";
+  more.setAttribute("aria-label", "Add one " + line.name + (line.sideLabel ? " " + line.sideLabel : ""));
+  more.addEventListener("click", () => changeQuantity(line.key, line.quantity + 1));
+
+  quantity.append(less, count, more);
+  item.append(quantity);
+  return item;
 }
 
 function draw() {
   linesElement.replaceChildren(...cart.map(drawLine));
-  emptyElement.hidden = cart.length > 0;
   totalElement.textContent = formatCents(totalCents());
   submitButton.disabled = cart.length === 0 || submitting;
   clearButton.disabled = cart.length === 0 || submitting;
-  submitButton.textContent = submitting ? "Submitting..." : "Submit order";
+  submitButton.textContent = submitting ? "Sending…" : "Submit";
 }
 
 function clearCart() {
@@ -153,16 +115,25 @@ function clearCart() {
   draw();
 }
 
+// printFault names the physical printer, not the document, because that is
+// what the Operator can act on.
+function printFault(print) {
+  const faults = [];
+  if (print.customer === "failed") faults.push("Window Printer did not print.");
+  if (print.kitchen === "failed") faults.push("Kitchen Printer did not print.");
+  return faults.join(" ");
+}
+
 async function submitOrder() {
   submitting = true;
-  showNotice("");
+  showFault("");
   draw();
 
   const body = {
     clientOrderId: clientOrderId,
     deviceId: deviceId(),
     payment: { method: "cash" },
-    items: cart.map((line) => ({ menuItemId: line.menuItemId, quantity: line.quantity, notes: line.side || undefined }))
+    items: cart.map((line) => ({ menuItemId: line.menuItemId, quantity: line.quantity, side: line.sideId || undefined }))
   };
 
   try {
@@ -174,35 +145,72 @@ async function submitOrder() {
     const answer = await response.json().catch(() => null);
 
     if (!response.ok) {
-      showNotice(answer && answer.error ? answer.error : "Request failed with " + response.status, true);
+      showFault(answer && answer.error ? answer.error : "Request failed with " + response.status);
       return;
     }
 
-    showNotice("Order #" + answer.order.orderNumber + " accepted · " + formatCents(answer.order.totalCents) + " · kitchen print " + answer.print.kitchen);
+    lastOrderId = answer.order.id;
+    lastOrderElement.textContent = "#" + answer.order.orderNumber;
+    reprintButton.disabled = false;
+    showFault(printFault(answer.print));
     clearCart();
   } catch {
     // The cart and the clientOrderId stay, so the next tap is the same order.
-    showNotice("No connection. Try again.", true);
+    showFault("Not sent. Tap Submit again.");
   } finally {
     submitting = false;
     draw();
   }
 }
 
-for (const button of document.querySelectorAll(".menu-item")) {
+async function reprintOrder() {
+  if (!lastOrderId || submitting) return;
+  submitting = true;
+  reprintButton.disabled = true;
+  reprintButton.textContent = "Sending…";
+  showFault("");
+  draw();
+
+  try {
+    const response = await fetch("/api/orders/" + lastOrderId + "/reprint", { method: "POST" });
+    const answer = await response.json().catch(() => null);
+    if (!response.ok) {
+      showFault(answer && answer.error ? answer.error : "Reprint failed with " + response.status);
+    } else {
+      showFault(printFault(answer.print));
+    }
+  } catch {
+    showFault("Not sent. Tap Reprint again.");
+  } finally {
+    submitting = false;
+    reprintButton.disabled = false;
+    reprintButton.textContent = "Reprint";
+    draw();
+  }
+}
+
+for (const tile of menuElement.querySelectorAll(".tile")) {
   const item = {
-    id: button.dataset.menuItemId,
-    name: button.dataset.name,
-    priceCents: Number(button.dataset.priceCents),
-    sides: button.dataset.sides ? button.dataset.sides.split("|") : []
+    menuItemId: tile.dataset.menuItemId,
+    name: tile.dataset.name,
+    priceCents: Number(tile.dataset.priceCents),
+    sideId: tile.dataset.sideId || "",
+    sideLabel: tile.dataset.sideLabel || ""
   };
-  button.addEventListener("click", () => addItem(item));
+  tile.addEventListener("click", () => {
+    const key = item.menuItemId + "|" + item.sideId;
+    const existing = cart.find((line) => line.key === key);
+    if (existing) {
+      existing.quantity += 1;
+    } else {
+      cart.push({ key, ...item, quantity: 1 });
+    }
+    draw();
+  });
 }
 
 submitButton.addEventListener("click", submitOrder);
-clearButton.addEventListener("click", () => {
-  clearCart();
-  showNotice("");
-});
+clearButton.addEventListener("click", clearCart);
+reprintButton.addEventListener("click", reprintOrder);
 
 draw();
