@@ -208,6 +208,10 @@ button:disabled {
   border-block-end: 2px solid var(--edge);
 }
 
+.band .home {
+  flex: 0 0 auto;
+}
+
 .band .order-no {
   color: var(--leaf-green-dark);
   font-weight: 800;
