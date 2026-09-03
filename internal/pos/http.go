@@ -17,6 +17,7 @@ func (service *OrderService) Handler() http.Handler {
 	mux.HandleFunc("GET /kitchen", service.handleKitchenScreen)
 	mux.HandleFunc("GET /admin", service.handleAdminScreen)
 	mux.HandleFunc("POST /api/orders", service.handlePlaceOrder)
+	mux.HandleFunc("POST /api/orders/{id}/reprint", service.handleReprintOrder)
 	mux.HandleFunc("GET /api/kitchen", service.handleKitchen)
 	mux.HandleFunc("GET /api/admin/sales", service.handleAdminSales)
 	return mux
@@ -89,6 +90,21 @@ func (service *OrderService) handlePlaceOrder(writer http.ResponseWriter, reques
 	}
 
 	writeJSON(writer, http.StatusCreated, response)
+}
+
+func (service *OrderService) handleReprintOrder(writer http.ResponseWriter, request *http.Request) {
+	response, err := service.ReprintOrder(request.PathValue("id"))
+	if errors.Is(err, ErrNotFound) {
+		writeError(writer, http.StatusNotFound, "Order not found")
+		return
+	}
+	if err != nil {
+		log.Printf("reprint order: %v", err)
+		writeError(writer, http.StatusInternalServerError, "Could not reprint the order")
+		return
+	}
+
+	writeJSON(writer, http.StatusOK, response)
 }
 
 func (service *OrderService) handleKitchen(writer http.ResponseWriter, request *http.Request) {

@@ -25,6 +25,9 @@ type OrderService struct {
 // ErrValidation marks a request the operator can correct. It maps to 400.
 var ErrValidation = errors.New("validation")
 
+// ErrNotFound marks a lookup for an order that does not exist. It maps to 404.
+var ErrNotFound = errors.New("not found")
+
 type transactionRow struct {
 	ID                  string
 	ClientOrderID       string
@@ -101,10 +104,45 @@ func orderStatusFor(print PrintResult) OrderStatus {
 	if print.Customer == PrintFailed || print.Kitchen == PrintFailed {
 		return OrderPrintFailed
 	}
-	if print.Customer == PrintPrinted && print.Kitchen == PrintPrinted {
+	if print.Customer == PrintSent && print.Kitchen == PrintSent {
 		return OrderPrinted
 	}
 	return OrderAccepted
+}
+
+// ReprintOrder resends the documents of a stored order: whatever failed the
+// first time, or both documents when nothing failed. Every document it sends
+// carries a REPRINT header.
+func (service *OrderService) ReprintOrder(orderID string) (PlaceOrderResponse, error) {
+	row, found, err := findByID(service.DB, orderID)
+	if err != nil {
+		return PlaceOrderResponse{}, err
+	}
+	if !found {
+		return PlaceOrderResponse{}, ErrNotFound
+	}
+
+	request := parseStoredRequest(row.RequestJSON)
+	print := PrintReprint(service.Printer, ReceiptOrder{
+		OrderID:       row.ID,
+		OrderNumber:   row.OrderNumber,
+		CreatedAt:     row.CreatedAt,
+		SubtotalCents: row.SubtotalCents,
+		TotalCents:    row.TotalCents,
+		Items:         request.Items,
+	}, PrintResult{Customer: row.CustomerPrintStatus, Kitchen: row.KitchenPrintStatus})
+	status := orderStatusFor(print)
+
+	if _, err := service.DB.Exec(
+		`UPDATE transactions
+		 SET status = ?, customer_print_status = ?, kitchen_print_status = ?
+		 WHERE id = ?`,
+		string(status), string(print.Customer), string(print.Kitchen), row.ID,
+	); err != nil {
+		return PlaceOrderResponse{}, fmt.Errorf("update reprint status: %w", err)
+	}
+
+	return row.response(status, print), nil
 }
 
 // ValidateOrder checks the request in the same order as the TypeScript server,

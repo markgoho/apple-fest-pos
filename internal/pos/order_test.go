@@ -3,6 +3,7 @@ package pos
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -22,7 +23,7 @@ func newTestService(t *testing.T) *OrderService {
 
 	return &OrderService{
 		DB:                  database,
-		Printer:             PrinterConfig{Enabled: false, Port: "9100"},
+		Printer:             PrinterConfig{Enabled: false, WindowPort: "9100", KitchenPort: "9100"},
 		StartingOrderNumber: 100,
 		Now:                 time.Now,
 	}
@@ -175,6 +176,58 @@ func TestCreatedAtMatchesTheJavaScriptISOFormat(t *testing.T) {
 	}
 	if got := len(createdAt); got != 24 || createdAt[23] != 'Z' {
 		t.Errorf("createdAt = %q, want a 24 character string that ends in Z", createdAt)
+	}
+}
+
+func TestReprintOrderReturns404ForAnUnknownID(t *testing.T) {
+	service := newTestService(t)
+
+	_, err := service.ReprintOrder("does-not-exist")
+	if !errors.Is(err, ErrNotFound) {
+		t.Fatalf("err = %v, want ErrNotFound", err)
+	}
+}
+
+func TestReprintOrderResendsWithPrinterDisabled(t *testing.T) {
+	service := newTestService(t)
+	_, body := postOrder(t, service, validOrder())
+	orderID := body["order"].(map[string]any)["id"].(string)
+
+	response, err := service.ReprintOrder(orderID)
+	if err != nil {
+		t.Fatalf("reprint order: %v", err)
+	}
+	if response.Print.Customer != PrintDisabled || response.Print.Kitchen != PrintDisabled {
+		t.Errorf("print = %+v, want both disabled", response.Print)
+	}
+	if response.Order.OrderNumber != 100 {
+		t.Errorf("orderNumber = %d, want 100", response.Order.OrderNumber)
+	}
+}
+
+func TestReprintOrderRouteReturns200ForAKnownID(t *testing.T) {
+	service := newTestService(t)
+	_, body := postOrder(t, service, validOrder())
+	orderID := body["order"].(map[string]any)["id"].(string)
+
+	request := httptest.NewRequest(http.MethodPost, "/api/orders/"+orderID+"/reprint", nil)
+	recorder := httptest.NewRecorder()
+	service.Handler().ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200: %s", recorder.Code, recorder.Body.String())
+	}
+}
+
+func TestReprintOrderRouteReturns404ForAnUnknownID(t *testing.T) {
+	service := newTestService(t)
+
+	request := httptest.NewRequest(http.MethodPost, "/api/orders/does-not-exist/reprint", nil)
+	recorder := httptest.NewRecorder()
+	service.Handler().ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusNotFound {
+		t.Fatalf("status = %d, want 404", recorder.Code)
 	}
 }
 

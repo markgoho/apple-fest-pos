@@ -24,7 +24,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ./cmd/pos   # build for the Pi
 
 - `cmd/pos/` reads the environment and starts the server.
 - `internal/pos/` holds the domain: menu, database, orders, ESC/POS, printer, sales, kitchen, HTTP.
-- Environment variables: `PORT`, `SQLITE_PATH`, `ORDER_NUMBER_START`, `PRINTER_ENABLED`, `PRINTER_HOST`, `PRINTER_PORT`, `TLS_CERT`, `TLS_KEY`, `HTTP_PORT`.
+- Environment variables: `PORT`, `SQLITE_PATH`, `ORDER_NUMBER_START`, `PRINTER_ENABLED`, `WINDOW_PRINTER_HOST`, `WINDOW_PRINTER_PORT`, `KITCHEN_PRINTER_HOST`, `KITCHEN_PRINTER_PORT`, `TLS_CERT`, `TLS_KEY`, `HTTP_PORT`.
 - TLS: set `TLS_CERT` and `TLS_KEY` together to serve HTTPS. `PORT` then defaults to 443, and a second listener on `HTTP_PORT` (default 80) redirects to HTTPS. With either variable empty the server stays plain HTTP on `PORT` (default 3000).
 
 ## Browser code

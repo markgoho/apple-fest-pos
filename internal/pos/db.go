@@ -34,6 +34,10 @@ var schemaStatements = []string{
     ON transactions (business_date, order_number)`,
 	`CREATE INDEX IF NOT EXISTS idx_transactions_created_at
     ON transactions (created_at)`,
+	// "printed" was the print status value before the Window/Kitchen printer
+	// split renamed it to "sent". This carries old rows on the Pi forward.
+	`UPDATE transactions SET customer_print_status = 'sent' WHERE customer_print_status = 'printed'`,
+	`UPDATE transactions SET kitchen_print_status = 'sent' WHERE kitchen_print_status = 'printed'`,
 }
 
 // OpenDatabase opens the SQLite file at path, makes its directory, and applies

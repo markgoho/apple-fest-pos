@@ -23,9 +23,11 @@ func main() {
 	service := &pos.OrderService{
 		DB: database,
 		Printer: pos.PrinterConfig{
-			Enabled: os.Getenv("PRINTER_ENABLED") == "true",
-			Host:    os.Getenv("PRINTER_HOST"),
-			Port:    envOrDefault("PRINTER_PORT", "9100"),
+			Enabled:     os.Getenv("PRINTER_ENABLED") == "true",
+			WindowHost:  os.Getenv("WINDOW_PRINTER_HOST"),
+			WindowPort:  envOrDefault("WINDOW_PRINTER_PORT", "9100"),
+			KitchenHost: os.Getenv("KITCHEN_PRINTER_HOST"),
+			KitchenPort: envOrDefault("KITCHEN_PRINTER_PORT", "9100"),
 		},
 		StartingOrderNumber: envInt("ORDER_NUMBER_START", 100),
 		Now:                 time.Now,

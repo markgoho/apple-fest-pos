@@ -10,7 +10,7 @@ type PrintStatus string
 
 const (
 	PrintQueued   PrintStatus = "queued"
-	PrintPrinted  PrintStatus = "printed"
+	PrintSent     PrintStatus = "sent"
 	PrintFailed   PrintStatus = "failed"
 	PrintDisabled PrintStatus = "disabled"
 )

@@ -14,20 +14,32 @@ const transactionColumns = `id, client_order_id, device_id, order_number, busine
 // that the check and the insert are one atomic step. A double tap on the
 // tablet must replay the order, not hit the UNIQUE constraint.
 func findByClientOrderID(transaction *sql.Tx, clientOrderID string) (transactionRow, bool, error) {
-	var row transactionRow
-	err := transaction.
-		QueryRow(`SELECT `+transactionColumns+` FROM transactions WHERE client_order_id = ?`, clientOrderID).
-		Scan(&row.ID, &row.ClientOrderID, &row.DeviceID, &row.OrderNumber, &row.BusinessDate,
-			&row.Status, &row.SubtotalCents, &row.TaxCents, &row.TotalCents, &row.PaymentMethod,
-			&row.RequestJSON, &row.CustomerPrintStatus, &row.KitchenPrintStatus, &row.CreatedAt)
+	row := transaction.QueryRow(`SELECT `+transactionColumns+` FROM transactions WHERE client_order_id = ?`, clientOrderID)
+	return scanTransactionRow(row)
+}
+
+// findByID reads a stored order by its id, for the reprint endpoint. It is a
+// plain read outside any transaction: a reprint carries no dedup requirement
+// the way placing an order does.
+func findByID(database *sql.DB, id string) (transactionRow, bool, error) {
+	row := database.QueryRow(`SELECT `+transactionColumns+` FROM transactions WHERE id = ?`, id)
+	return scanTransactionRow(row)
+}
+
+func scanTransactionRow(row *sql.Row) (transactionRow, bool, error) {
+	var transaction transactionRow
+	err := row.Scan(&transaction.ID, &transaction.ClientOrderID, &transaction.DeviceID, &transaction.OrderNumber,
+		&transaction.BusinessDate, &transaction.Status, &transaction.SubtotalCents, &transaction.TaxCents,
+		&transaction.TotalCents, &transaction.PaymentMethod, &transaction.RequestJSON,
+		&transaction.CustomerPrintStatus, &transaction.KitchenPrintStatus, &transaction.CreatedAt)
 
 	if errors.Is(err, sql.ErrNoRows) {
 		return transactionRow{}, false, nil
 	}
 	if err != nil {
-		return transactionRow{}, false, fmt.Errorf("read order by client id: %w", err)
+		return transactionRow{}, false, fmt.Errorf("read order: %w", err)
 	}
-	return row, true, nil
+	return transaction, true, nil
 }
 
 // insertOrder takes the next order number and writes the row in one

@@ -16,7 +16,7 @@ var receiptOrder = ReceiptOrder{
 }
 
 func TestBuildCustomerReceiptHasTheCutCommand(t *testing.T) {
-	payload := BuildCustomerReceipt(receiptOrder)
+	payload := BuildCustomerReceipt(receiptOrder, false)
 
 	if !bytes.HasPrefix(payload, []byte{0x1b, 0x40}) {
 		t.Errorf("payload does not start with the initialize command")
@@ -30,10 +30,21 @@ func TestBuildCustomerReceiptHasTheCutCommand(t *testing.T) {
 	if !strings.Contains(string(payload), "Total $20.00") {
 		t.Errorf("payload has no formatted total: %q", string(payload))
 	}
+	if strings.Contains(string(payload), "REPRINT") {
+		t.Errorf("a first print should not carry a REPRINT header")
+	}
+}
+
+func TestBuildCustomerReceiptReprintHasTheReprintHeader(t *testing.T) {
+	payload := BuildCustomerReceipt(receiptOrder, true)
+
+	if !strings.Contains(string(payload), "REPRINT") {
+		t.Errorf("reprint payload has no REPRINT header: %q", string(payload))
+	}
 }
 
 func TestBuildKitchenTicketHasEmphasisAndTheCutCommand(t *testing.T) {
-	payload := BuildKitchenTicket(receiptOrder)
+	payload := BuildKitchenTicket(receiptOrder, false)
 
 	if !bytes.HasPrefix(payload, []byte{0x1b, 0x40}) {
 		t.Errorf("payload does not start with the initialize command")
@@ -46,6 +57,17 @@ func TestBuildKitchenTicketHasEmphasisAndTheCutCommand(t *testing.T) {
 	}
 	if !strings.Contains(string(payload), "2  POTATO PANCAKE") {
 		t.Errorf("payload has no upper case item line: %q", string(payload))
+	}
+	if strings.Contains(string(payload), "REPRINT") {
+		t.Errorf("a first print should not carry a REPRINT header")
+	}
+}
+
+func TestBuildKitchenTicketReprintHasTheReprintHeader(t *testing.T) {
+	payload := BuildKitchenTicket(receiptOrder, true)
+
+	if !strings.Contains(string(payload), "REPRINT") {
+		t.Errorf("reprint payload has no REPRINT header: %q", string(payload))
 	}
 }
 

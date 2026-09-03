@@ -15,13 +15,18 @@ var (
 	cutPaper          = []byte{0x1d, 0x56, 0x42, 0x08}
 )
 
-// BuildCustomerReceipt makes the ESC/POS bytes of the customer receipt.
-func BuildCustomerReceipt(order ReceiptOrder) []byte {
+// BuildCustomerReceipt makes the ESC/POS bytes of the customer receipt. A
+// reprint carries a REPRINT header, so a second copy never looks like the
+// original.
+func BuildCustomerReceipt(order ReceiptOrder, reprint bool) []byte {
 	lines := []string{
 		"Apple Fest POS",
 		fmt.Sprintf("Order #%d", order.OrderNumber),
 		formatTimestamp(order.CreatedAt),
 		"",
+	}
+	if reprint {
+		lines = append([]string{"REPRINT", ""}, lines...)
 	}
 
 	for _, line := range order.Items {
@@ -44,12 +49,17 @@ func BuildCustomerReceipt(order ReceiptOrder) []byte {
 	return concat(initializePrinter, encodeLines(lines), cutPaper)
 }
 
-// BuildKitchenTicket makes the ESC/POS bytes of the kitchen ticket.
-func BuildKitchenTicket(order ReceiptOrder) []byte {
+// BuildKitchenTicket makes the ESC/POS bytes of the kitchen ticket. A reprint
+// carries a REPRINT header, so the kitchen checks the order number instead of
+// cooking the order again.
+func BuildKitchenTicket(order ReceiptOrder, reprint bool) []byte {
 	lines := []string{
 		fmt.Sprintf("ORDER %d", order.OrderNumber),
 		formatTimestamp(order.CreatedAt),
 		"",
+	}
+	if reprint {
+		lines = append([]string{"REPRINT", ""}, lines...)
 	}
 
 	for _, line := range order.Items {
