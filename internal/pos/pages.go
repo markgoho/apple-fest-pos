@@ -74,6 +74,7 @@ type page struct {
 type menuTile struct {
 	MenuItemID string
 	Name       string
+	Label      string
 	PriceCents int
 	SideID     string
 	SideLabel  string

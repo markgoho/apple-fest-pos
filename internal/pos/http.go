@@ -34,11 +34,11 @@ func handlePOSScreen(writer http.ResponseWriter, request *http.Request) {
 	for _, item := range MenuItems {
 		var tiles []menuTile
 		if len(item.Sides) == 0 {
-			tiles = append(tiles, menuTile{MenuItemID: item.ID, Name: item.Name, PriceCents: item.PriceCents})
+			tiles = append(tiles, menuTile{MenuItemID: item.ID, Name: item.Name, Label: item.Label(), PriceCents: item.PriceCents})
 		} else {
-			tiles = append(tiles, menuTile{MenuItemID: item.ID, Name: item.Name, PriceCents: item.PriceCents, SideLabel: "Plain"})
+			tiles = append(tiles, menuTile{MenuItemID: item.ID, Name: item.Name, Label: item.Label(), PriceCents: item.PriceCents, SideLabel: "Plain"})
 			for _, side := range item.Sides {
-				tiles = append(tiles, menuTile{MenuItemID: item.ID, Name: item.Name, PriceCents: item.PriceCents, SideID: side.ID, SideLabel: side.Label})
+				tiles = append(tiles, menuTile{MenuItemID: item.ID, Name: item.Name, Label: item.Label(), PriceCents: item.PriceCents, SideID: side.ID, SideLabel: side.Label})
 			}
 		}
 

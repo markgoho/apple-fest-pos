@@ -23,11 +23,25 @@ type MenuItem struct {
 	SortOrder  int        `json:"sortOrder"`
 	PrintGroup PrintGroup `json:"printGroup"`
 
+	// TileLabel is what the /pos tile prints instead of Name. It exists so a
+	// tile can drop a word the section header already says ("Toastie" under
+	// GRILLED CHEESE) without shortening the name on the kitchen ticket or
+	// the cart line. Empty means the tile prints Name.
+	TileLabel string `json:"tileLabel,omitempty"`
+
 	// Sides is the fixed set of condiments the item can carry. The Operator
 	// chooses the Side on the menu tile at add time, so an item with Sides
 	// draws one tile per Side plus one Plain tile; the side rides on the cart
 	// line, not on a separate step.
 	Sides []Side `json:"sides,omitempty"`
+}
+
+// Label gives the text a /pos tile prints for the item.
+func (item MenuItem) Label() string {
+	if item.TileLabel != "" {
+		return item.TileLabel
+	}
+	return item.Name
 }
 
 // HasSide reports whether id names one of the item's Sides.
@@ -48,9 +62,9 @@ var MenuItems = []MenuItem{
 			{ID: "applesauce", Label: "Applesauce"},
 			{ID: "ketchup", Label: "Ketchup"},
 		}},
-	{ID: "og-toastie", Name: "OG Toastie", Category: "Grilled Cheese", PriceCents: 500, SortOrder: 20, PrintGroup: PrintGroupKitchen},
-	{ID: "pizza-toastie", Name: "Pizza Toastie", Category: "Grilled Cheese", PriceCents: 600, SortOrder: 30, PrintGroup: PrintGroupKitchen},
-	{ID: "harvest-toastie", Name: "Harvest Toastie", Category: "Grilled Cheese", PriceCents: 800, SortOrder: 40, PrintGroup: PrintGroupKitchen},
+	{ID: "og-toastie", Name: "OG Toastie", TileLabel: "OG", Category: "Grilled Cheese", PriceCents: 500, SortOrder: 20, PrintGroup: PrintGroupKitchen},
+	{ID: "pizza-toastie", Name: "Pizza Toastie", TileLabel: "Pizza", Category: "Grilled Cheese", PriceCents: 600, SortOrder: 30, PrintGroup: PrintGroupKitchen},
+	{ID: "harvest-toastie", Name: "Harvest Toastie", TileLabel: "Harvest", Category: "Grilled Cheese", PriceCents: 800, SortOrder: 40, PrintGroup: PrintGroupKitchen},
 }
 
 var menuItemsByID = func() map[string]MenuItem {

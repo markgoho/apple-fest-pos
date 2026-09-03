@@ -20,7 +20,7 @@
           <li>
             <button type="button" class="tile" data-menu-item-id="{{.MenuItemID}}" data-name="{{.Name}}"
                     data-price-cents="{{.PriceCents}}" data-side-id="{{.SideID}}" data-side-label="{{.SideLabel}}">
-              {{if .SideLabel}}<strong>{{.SideLabel}}</strong>{{else}}<strong>{{.Name}}</strong>{{end}}
+              {{if .SideLabel}}<strong>{{.SideLabel}}</strong>{{else}}<strong>{{.Label}}</strong>{{end}}
               <span class="price">{{cents .PriceCents}}</span>
             </button>
           </li>
