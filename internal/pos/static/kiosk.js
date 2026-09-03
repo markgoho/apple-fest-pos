@@ -67,6 +67,28 @@ resumeButton.addEventListener("click", () => {
   enterFullscreen();
 });
 
+// Only present on the mode-chooser screen, not on the transaction screens,
+// so a stray tap mid-shift cannot force a reload or drop full screen.
+const refreshButton = document.getElementById("kiosk-refresh");
+const endShiftButton = document.getElementById("kiosk-end-shift");
+
+refreshButton?.addEventListener("click", () => location.reload());
+
+endShiftButton?.addEventListener("click", async () => {
+  if (document.fullscreenElement) {
+    await document.exitFullscreen();
+  }
+  if (wakeLock) {
+    await wakeLock.release();
+  }
+  try {
+    localStorage.removeItem(SHIFT_KEY);
+  } catch {
+    // Worst case Start shift needs a stray extra tap to reset.
+  }
+  location.reload();
+});
+
 document.addEventListener("fullscreenchange", () => {
   resumeButton.hidden = isImmersive();
 });

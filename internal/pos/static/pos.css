@@ -152,6 +152,20 @@ button:disabled {
   text-decoration: none;
 }
 
+.kiosk-controls {
+  display: flex;
+  gap: 1rem;
+  margin-block-start: 1rem;
+}
+
+.kiosk-controls button {
+  flex: 1;
+  min-block-size: var(--tap);
+  border-radius: 1rem;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
 /* The cashier screen */
 
 .pos {
