@@ -9,6 +9,16 @@ const resumeButton = document.getElementById("kiosk-resume");
 
 let wakeLock = null;
 
+// 100dvh measures larger than the real visible screen when installed and
+// running fullscreen on Android Chrome, which pushed fixed bottom elements
+// like the checkout bar below the fold. window.innerHeight is the real
+// number; every full-page layout keys off --app-height instead of dvh.
+function setAppHeight() {
+  document.documentElement.style.setProperty("--app-height", `${window.innerHeight}px`);
+}
+setAppHeight();
+window.addEventListener("resize", setAppHeight);
+
 function shiftStarted() {
   try {
     return localStorage.getItem(SHIFT_KEY) === "1";

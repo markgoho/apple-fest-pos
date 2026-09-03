@@ -21,7 +21,7 @@
 
 html,
 body {
-  block-size: 100dvh;
+  block-size: var(--app-height, 100dvh);
   overscroll-behavior: none;
   -webkit-user-select: none;
   user-select: none;
@@ -36,7 +36,7 @@ textarea {
 
 body.theme {
   margin: 0;
-  min-block-size: 100dvh;
+  min-block-size: var(--app-height, 100dvh);
   background:
     radial-gradient(circle at 12% 8%, #fef3c7 0 10rem, transparent 10.5rem),
     linear-gradient(135deg, var(--cream), #f6d28d 55%, #e8b15f);
@@ -106,7 +106,7 @@ button:disabled {
 /* The chooser screen */
 
 .chooser {
-  min-block-size: 100dvh;
+  min-block-size: var(--app-height, 100dvh);
   display: grid;
   place-items: center;
   padding: 2rem;
@@ -169,7 +169,7 @@ button:disabled {
 /* The cashier screen */
 
 .pos {
-  block-size: 100dvh;
+  block-size: var(--app-height, 100dvh);
   overflow: hidden;
   display: grid;
   grid-template-columns: 1fr minmax(22rem, 30rem);
@@ -351,7 +351,7 @@ button:disabled {
 /* The kitchen display */
 
 .board {
-  min-block-size: 100dvh;
+  min-block-size: var(--app-height, 100dvh);
   padding: 1.5rem;
 }
 
@@ -414,7 +414,7 @@ button:disabled {
 /* The sales screen */
 
 .sales {
-  min-block-size: 100dvh;
+  min-block-size: var(--app-height, 100dvh);
   padding: 1.5rem;
   display: grid;
   gap: 1.5rem;
