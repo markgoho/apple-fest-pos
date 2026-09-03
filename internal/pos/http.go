@@ -30,20 +30,27 @@ func handleHome(writer http.ResponseWriter, request *http.Request) {
 // handlePOSScreen draws the menu grid. The cart is client-side state, so the
 // server sends the menu once and the script does the rest.
 func handlePOSScreen(writer http.ResponseWriter, request *http.Request) {
-	var tiles []menuTile
+	var sections []menuSection
 	for _, item := range MenuItems {
+		var tiles []menuTile
 		if len(item.Sides) == 0 {
 			tiles = append(tiles, menuTile{MenuItemID: item.ID, Name: item.Name, PriceCents: item.PriceCents})
+		} else {
+			tiles = append(tiles, menuTile{MenuItemID: item.ID, Name: item.Name, PriceCents: item.PriceCents, SideLabel: "Plain"})
+			for _, side := range item.Sides {
+				tiles = append(tiles, menuTile{MenuItemID: item.ID, Name: item.Name, PriceCents: item.PriceCents, SideID: side.ID, SideLabel: side.Label})
+			}
+		}
+
+		if len(sections) > 0 && sections[len(sections)-1].Category == item.Category {
+			sections[len(sections)-1].Tiles = append(sections[len(sections)-1].Tiles, tiles...)
 			continue
 		}
-		tiles = append(tiles, menuTile{MenuItemID: item.ID, Name: item.Name, PriceCents: item.PriceCents, SideLabel: "Plain"})
-		for _, side := range item.Sides {
-			tiles = append(tiles, menuTile{MenuItemID: item.ID, Name: item.Name, PriceCents: item.PriceCents, SideID: side.ID, SideLabel: side.Label})
-		}
+		sections = append(sections, menuSection{Category: item.Category, Tiles: tiles})
 	}
 	render(writer, "pos.html", posPage{
-		page:      page{Title: "Cashier POS", BodyClass: "theme"},
-		MenuItems: tiles,
+		page:         page{Title: "Cashier POS", BodyClass: "theme"},
+		MenuSections: sections,
 	})
 }
 

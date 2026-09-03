@@ -79,9 +79,16 @@ type menuTile struct {
 	SideLabel  string
 }
 
+// menuSection is one labeled group of tiles on the /pos grid, so the Operator
+// sees a clear break between Potato Pancakes and Grilled Cheese.
+type menuSection struct {
+	Category string
+	Tiles    []menuTile
+}
+
 type posPage struct {
 	page
-	MenuItems []menuTile
+	MenuSections []menuSection
 }
 
 type kitchenPage struct {

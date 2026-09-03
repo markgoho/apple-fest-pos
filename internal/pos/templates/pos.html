@@ -10,18 +10,24 @@
   </div>
 
   <div class="body">
-    <ul class="menu" aria-label="Menu items" id="menu">
-      {{range .MenuItems}}
-      <li>
-        <button type="button" class="tile" data-menu-item-id="{{.MenuItemID}}" data-name="{{.Name}}"
-                data-price-cents="{{.PriceCents}}" data-side-id="{{.SideID}}" data-side-label="{{.SideLabel}}">
-          {{if .SideLabel}}<span class="side-tag">{{.SideLabel}}</span>{{end}}
-          <strong>{{.Name}}</strong>
-          <span class="price">{{cents .PriceCents}}</span>
-        </button>
-      </li>
+    <div class="menu" id="menu">
+      {{range $i, $section := .MenuSections}}
+      <section class="menu-section" aria-labelledby="menu-section-{{$i}}">
+        <h2 class="menu-section-label" id="menu-section-{{$i}}">{{$section.Category}}</h2>
+        <ul class="tiles" aria-label="{{.Category}} items">
+          {{range .Tiles}}
+          <li>
+            <button type="button" class="tile" data-menu-item-id="{{.MenuItemID}}" data-name="{{.Name}}"
+                    data-price-cents="{{.PriceCents}}" data-side-id="{{.SideID}}" data-side-label="{{.SideLabel}}">
+              {{if .SideLabel}}<strong>{{.SideLabel}}</strong>{{else}}<strong>{{.Name}}</strong>{{end}}
+              <span class="price">{{cents .PriceCents}}</span>
+            </button>
+          </li>
+          {{end}}
+        </ul>
+      </section>
       {{end}}
-    </ul>
+    </div>
 
     <aside class="cart" aria-label="Current order">
       <ul class="lines" id="lines"></ul>

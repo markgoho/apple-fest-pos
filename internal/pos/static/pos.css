@@ -242,15 +242,68 @@ button:disabled {
   grid-template-columns: 1fr 15.5rem;
 }
 
+/* The menu is a column of labeled sections (Potato Pancakes, Grilled Cheese),
+   not one flat grid, so the Operator sees a clear break between them. Each
+   section gets its own column count, so a 4-tile section and a 3-tile
+   section both draw tiles that fill their row instead of sharing one grid
+   with an odd leftover cell. The flex ratio below keeps one tile row about
+   the same height in both sections: 2 rows of pancakes against 1 row of
+   toasties in landscape, matched by 2:1. No new hues here: ADR-0004 reserves
+   colour for risk, so the break is typography and gap, not a colour band. */
+
 .menu {
   min-block-size: 0;
-  margin: 0;
   padding: 0.9rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.menu-section {
+  min-block-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.menu-section-label {
+  flex: 0 0 auto;
+  margin: 0;
+  color: var(--gold-tan-ink);
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-block-end: 2px solid var(--edge);
+  padding-block-end: 0.3rem;
+}
+
+.tiles {
+  flex: 1;
+  min-block-size: 0;
+  margin: 0;
+  padding: 0;
   list-style: none;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
   grid-auto-rows: 1fr;
   gap: 0.75rem;
+}
+
+.menu-section:first-child {
+  flex-grow: 2;
+}
+
+.menu-section:first-child .tiles {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.menu-section:last-child {
+  flex-grow: 1;
+}
+
+.menu-section:last-child .tiles {
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .tile {
@@ -267,17 +320,9 @@ button:disabled {
   box-shadow: 0 0.3rem 0 var(--gold-tan);
 }
 
-.tile .side-tag {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--gold-tan-ink);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
 .tile strong {
-  font-size: 1.15rem;
-  line-height: 1.15;
+  font-size: 1.3rem;
+  line-height: 1.2;
 }
 
 .tile .price {
@@ -286,8 +331,8 @@ button:disabled {
   background: var(--gold-tan);
   color: var(--gold-tan-ink);
   font-weight: 800;
-  font-size: 1rem;
-  padding: 0.2rem 0.6rem;
+  font-size: 1.1rem;
+  padding: 0.25rem 0.7rem;
 }
 
 .tile:active {

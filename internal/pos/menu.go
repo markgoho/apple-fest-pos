@@ -42,7 +42,7 @@ func (item MenuItem) HasSide(id string) bool {
 
 // MenuItems holds the menu in sort order.
 var MenuItems = []MenuItem{
-	{ID: "potato-pancake", Name: "Potato Pancake", Category: "Menu", PriceCents: 1000, SortOrder: 10, PrintGroup: PrintGroupKitchen,
+	{ID: "potato-pancake", Name: "Potato Pancake", Category: "Potato Pancakes", PriceCents: 1000, SortOrder: 10, PrintGroup: PrintGroupKitchen,
 		Sides: []Side{
 			{ID: "sour-cream", Label: "Sour Cream"},
 			{ID: "applesauce", Label: "Applesauce"},
