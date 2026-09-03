@@ -45,6 +45,17 @@ async function enterFullscreen() {
   }
 }
 
+// An installed app launches into fullscreen chrome straight from the
+// manifest, with no call to the Fullscreen API and so no
+// document.fullscreenElement. Miss that, and the Resume bar wrongly shows
+// on a screen that is already fullscreen.
+function isImmersive() {
+  return (
+    document.fullscreenElement !== null ||
+    window.matchMedia("(display-mode: fullscreen), (display-mode: standalone)").matches
+  );
+}
+
 startButton.addEventListener("click", async () => {
   await enterFullscreen();
   await takeWakeLock();
@@ -57,7 +68,7 @@ resumeButton.addEventListener("click", () => {
 });
 
 document.addEventListener("fullscreenchange", () => {
-  resumeButton.hidden = document.fullscreenElement !== null;
+  resumeButton.hidden = isImmersive();
 });
 
 document.addEventListener("visibilitychange", () => {
@@ -73,7 +84,7 @@ document.addEventListener("contextmenu", (event) => {
 
 if (shiftStarted()) {
   takeWakeLock();
-  resumeButton.hidden = document.fullscreenElement !== null;
+  resumeButton.hidden = isImmersive();
 } else {
   startButton.hidden = false;
 }
