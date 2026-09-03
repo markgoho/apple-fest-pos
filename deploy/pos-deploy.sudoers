@@ -11,4 +11,4 @@ markgoho ALL=(root) NOPASSWD: \
   /usr/bin/systemctl daemon-reload, \
   /usr/bin/systemctl enable apple-fest-pos, \
   /usr/bin/systemctl restart apple-fest-pos, \
-  /usr/bin/systemctl status apple-fest-pos
+  /usr/bin/systemctl --no-pager --full status apple-fest-pos
