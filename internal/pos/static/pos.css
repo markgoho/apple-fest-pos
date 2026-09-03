@@ -5,7 +5,10 @@
   --leaf-green-dark: #225022;
   --cider-gold: #d97706;
   --gold-tan: #d9a441;
+  --gold-tan-edge: #e0b154;
+  --gold-tan-shadow: #a9742a;
   --gold-tan-ink: #5f3217;
+  --orchard-night: #33200f;
   --cream: #fff7df;
   --parchment: #f8e7bc;
   --orchard-brown: #5f3217;
@@ -39,9 +42,7 @@ textarea {
 body.theme {
   margin: 0;
   min-block-size: var(--app-height, 100dvh);
-  background:
-    radial-gradient(circle at 12% 8%, #fef3c7 0 10rem, transparent 10.5rem),
-    linear-gradient(135deg, var(--cream), #f6d28d 55%, #e8b15f);
+  background: var(--orchard-night);
   color: var(--orchard-brown);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 }
@@ -257,7 +258,7 @@ button:disabled {
 
 .menu {
   min-block-size: 0;
-  padding: 0.9rem;
+  padding: 0.9rem 0.9rem 1.2rem;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -274,12 +275,12 @@ button:disabled {
 .menu-section-label {
   flex: 0 0 auto;
   margin: 0;
-  color: var(--gold-tan-ink);
+  color: #f2d9a5;
   font-size: 0.85rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  border-block-end: 2px solid var(--edge);
+  border-block-end: 2px solid #8a6a35;
   padding-block-end: 0.3rem;
 }
 
@@ -304,29 +305,53 @@ button:disabled {
   gap: 0.75rem;
 }
 
+.tiles:has(> li:nth-child(3):last-child) {
+  grid-template-columns: repeat(3, 1fr);
+}
+
 .tiles > li:last-child:nth-child(odd) {
   grid-column: 1 / -1;
+}
+
+.tiles:has(> li:nth-child(3):last-child) > li:last-child {
+  grid-column: auto;
+}
+
+.menu-section:has(.tiles > li:nth-child(3):last-child) {
+  flex: 1;
+}
+
+.menu-section:has(.tiles > li:nth-child(4)) {
+  flex: 2;
+}
+
+/* The grid row stretches but the button inside it does not, so without these
+   two the spare height turns into gaps between tiles instead of bigger taps. */
+.tiles > li {
+  display: grid;
 }
 
 .tile {
   min-block-size: var(--tap);
   width: 100%;
-  border: 2px solid var(--gold-tan);
+  block-size: 100%;
+  border: 2px solid var(--gold-tan-edge);
   border-radius: 1.1rem;
-  background: linear-gradient(160deg, var(--cream), #ffe8ab 58%, #facd71);
+  background: var(--cream);
   color: var(--apple-red-dark);
-  text-align: start;
+  text-align: center;
   padding: 0.85rem 1.1rem;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  box-shadow: 0 0.3rem 0 var(--gold-tan);
+  justify-content: center;
+  gap: 0.2rem;
+  box-shadow: 0 0.3rem 0 var(--gold-tan-shadow);
 }
 
 .tile strong {
   min-inline-size: 0;
-  font-size: 1.3rem;
+  font-size: 2.1rem;
   line-height: 1.2;
 }
 
@@ -334,7 +359,7 @@ button:disabled {
   flex: 0 0 auto;
   color: var(--gold-tan-ink);
   font-weight: 900;
-  font-size: 2rem;
+  font-size: 3.6rem;
   line-height: 1;
 }
 
@@ -428,25 +453,26 @@ button:disabled {
 
 .checkout {
   flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.6rem;
+  display: block;
 }
 
 .total {
+  display: block;
+  text-align: center;
+  margin-block-end: 0.5rem;
   font-weight: 900;
   color: var(--apple-red-dark);
-  font-size: 1.35rem;
+  font-size: 3rem;
   font-variant-numeric: tabular-nums;
 }
 
 .submit-btn {
-  flex: 1;
+  inline-size: 100%;
   min-block-size: var(--tap);
   border-radius: 1rem;
   background: var(--leaf-green-dark);
-  font-size: 1.25rem;
+  font-size: 1.6rem;
+  padding-block: 1.1rem;
 }
 
 @media (orientation: portrait) {
