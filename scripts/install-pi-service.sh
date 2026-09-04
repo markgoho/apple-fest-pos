@@ -34,6 +34,13 @@ if [ -n "${SYSTEM_ADMIN_PIN:-}" ]; then
     | sudo tee "$SERVICE_PATH.d/system-admin-pin.conf" >/dev/null
 fi
 
+if [ -n "${LEADER_PIN:-}" ]; then
+  echo "==> Set LEADER_PIN (a drop-in, not the tracked unit file)"
+  sudo mkdir -p "$SERVICE_PATH.d"
+  printf '[Service]\nEnvironment=LEADER_PIN=%s\n' "$LEADER_PIN" \
+    | sudo tee "$SERVICE_PATH.d/leader-pin.conf" >/dev/null
+fi
+
 sudo systemctl daemon-reload
 sudo systemctl enable apple-fest-pos
 sudo systemctl restart apple-fest-pos

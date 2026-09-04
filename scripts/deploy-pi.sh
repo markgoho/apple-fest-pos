@@ -27,9 +27,11 @@ scp dist-pi/pos deploy/apple-fest-pos.service scripts/install-pi-service.sh \
   "$PI_HOST:$STAGE_DIR/"
 ssh "$PI_HOST" "chmod +x '$STAGE_DIR/install-pi-service.sh'"
 
-# SYSTEM_ADMIN_PIN lives in .env (gitignored), never in the tracked unit
-# file, and travels to the Pi only over this ssh command line, not scp.
+# SYSTEM_ADMIN_PIN and LEADER_PIN live in .env (gitignored), never in the
+# tracked unit file, and travel to the Pi only over this ssh command line,
+# not scp.
 SYSTEM_ADMIN_PIN="$(grep -m1 '^SYSTEM_ADMIN_PIN=' .env 2>/dev/null | cut -d= -f2-)"
+LEADER_PIN="$(grep -m1 '^LEADER_PIN=' .env 2>/dev/null | cut -d= -f2-)"
 
 echo "==> Install and restart (needs sudo on the Pi)"
-ssh -t "$PI_HOST" "SYSTEM_ADMIN_PIN='$SYSTEM_ADMIN_PIN' '$STAGE_DIR/install-pi-service.sh'"
+ssh -t "$PI_HOST" "SYSTEM_ADMIN_PIN='$SYSTEM_ADMIN_PIN' LEADER_PIN='$LEADER_PIN' '$STAGE_DIR/install-pi-service.sh'"
