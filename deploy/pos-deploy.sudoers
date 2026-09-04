@@ -8,6 +8,8 @@ markgoho ALL=(root) NOPASSWD: \
   /usr/bin/test -f /etc/pos/pos.key, \
   /usr/bin/install -o root -g root -m 0755 /tmp/pos-deploy/pos /usr/local/bin/pos, \
   /usr/bin/cp /tmp/pos-deploy/apple-fest-pos.service /etc/systemd/system/apple-fest-pos.service, \
+  /usr/bin/mkdir -p /etc/systemd/system/apple-fest-pos.service.d, \
+  /usr/bin/tee /etc/systemd/system/apple-fest-pos.service.d/system-admin-pin.conf, \
   /usr/bin/systemctl daemon-reload, \
   /usr/bin/systemctl enable apple-fest-pos, \
   /usr/bin/systemctl restart apple-fest-pos, \

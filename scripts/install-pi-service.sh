@@ -26,6 +26,14 @@ sudo install -o root -g root -m 0755 "$STAGE_DIR/pos" /usr/local/bin/pos
 
 echo "==> Install the unit file"
 sudo cp "$STAGE_DIR/apple-fest-pos.service" "$SERVICE_PATH"
+
+if [ -n "${SYSTEM_ADMIN_PIN:-}" ]; then
+  echo "==> Set SYSTEM_ADMIN_PIN (a drop-in, not the tracked unit file)"
+  sudo mkdir -p "$SERVICE_PATH.d"
+  printf '[Service]\nEnvironment=SYSTEM_ADMIN_PIN=%s\n' "$SYSTEM_ADMIN_PIN" \
+    | sudo tee "$SERVICE_PATH.d/system-admin-pin.conf" >/dev/null
+fi
+
 sudo systemctl daemon-reload
 sudo systemctl enable apple-fest-pos
 sudo systemctl restart apple-fest-pos
