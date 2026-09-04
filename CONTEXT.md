@@ -44,6 +44,10 @@ The thermal printer at the cooking end of the booth. It prints the Kitchen Ticke
 
 The state of an order the Operator has confirmed and the booth has committed to. Placing assigns the order number and puts both the Customer Receipt and the Kitchen Ticket on their way. An order that is not yet Placed is a cart: it exists only on the tablet, it costs nothing to change, and it is not a sale. Placing is irreversible on paper, because nothing recalls a Kitchen Ticket that has already printed. An order Placed by mistake is settled by the Leader against the till and by hand at the kitchen, never by the Operator's tablet.
 
+## Voided
+
+The state of a Placed order the Leader has reversed. A Voided order drops out of the day's sales total, order count, and per-item sales breakdown, as if it were never sold. It stays in the order list, marked Voided, so the screen agrees with the Kitchen Ticket paper still at the booth about which orders happened. The void step shows the order number, so the Leader matches the paper in hand to the order on screen before voiding it.
+
 ## Sent
 
 The state of a document that left the tablet for its printer. Sent is not proof that paper came out: the printer answers nothing about paper, so an empty roll, an open cover and a jam all count as Sent. No state in this system proves a ticket exists. Only a human eye on the tray does.
