@@ -1,0 +1,696 @@
+<!--
+PROTOTYPE — throwaway. Issue #47 (child of map #43).
+Three variants of the Leader page, switchable via ?variant=A|B|C and the
+floating bottom bar. Fake in-memory order data; nothing hits the server.
+
+Fixed inputs (settled in the map before this ticket, applied not re-decided):
+- Portrait only, one-thumb, reviewed on a personal phone.
+- Never shows print status (CONTEXT.md Leader entry).
+- Sales figures: order count, revenue total, per-item breakdown; a Voided
+  order drops out of all three but stays in the order list marked Voided.
+- Void is the only per-order action today; the confirm step shows the order
+  number so the Leader matches paper to screen (issue #45).
+- Apple Fest theme tokens from pos.css, --tap as the tap floor.
+
+Open question this prototype answers: where the sales figures sit relative
+to the order list, and how the Leader reaches Void on a one-thumb phone.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Prototype — Leader page</title>
+<style>
+:root {
+  --apple-red: #b91c1c;
+  --apple-red-dark: #7f1d1d;
+  --leaf-green: #2f6b2f;
+  --leaf-green-dark: #225022;
+  --cider-gold: #d97706;
+  --gold-tan: #d9a441;
+  --gold-tan-soft: #f9db95;
+  --gold-tan-edge: #e0b154;
+  --orchard-night: #33200f;
+  --cream: #fff7df;
+  --parchment: #f8e7bc;
+  --orchard-brown: #5f3217;
+  --panel: #fffaf0;
+  --edge: #e4b95c;
+  --tap: 3.5rem;
+  color-scheme: light;
+  accent-color: var(--leaf-green);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--parchment);
+  color: var(--orchard-night);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+body {
+  max-width: 26rem;
+  margin-inline: auto;
+  padding-bottom: 6rem;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  background: var(--orchard-night);
+  color: var(--cream);
+}
+
+.bar h1 {
+  font-size: 1.05rem;
+  margin: 0;
+  font-weight: 700;
+}
+
+.bar time {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+  font-size: 0.85rem;
+}
+
+.stat-band {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem;
+}
+
+.stat-card {
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 0.75rem;
+  padding: 0.65rem 0.8rem;
+}
+
+.stat-card .label {
+  margin: 0 0 0.15rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--orchard-brown);
+  opacity: 0.75;
+}
+
+.stat-card .value {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.items-disclosure {
+  margin: 0 1rem 0.85rem;
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 0.75rem;
+  overflow: clip;
+}
+
+.items-disclosure summary {
+  min-block-size: var(--tap);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+}
+
+.items-disclosure summary::-webkit-details-marker { display: none; }
+
+.items-disclosure summary .chev {
+  transition: transform 0.15s;
+}
+
+.items-disclosure[open] summary .chev {
+  transform: rotate(90deg);
+}
+
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.items-table th, .items-table td {
+  padding: 0.4rem 0.9rem;
+  text-align: left;
+  border-top: 1px solid var(--gold-tan-soft);
+}
+
+.items-table .num { text-align: right; }
+
+.order-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.order-row {
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 0.75rem;
+  padding: 0.6rem 0.5rem 0.6rem 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.order-row.voided {
+  opacity: 0.55;
+}
+
+.order-row .info {
+  flex: 1;
+  min-width: 0;
+}
+
+.order-row .num-line {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-weight: 700;
+}
+
+.order-row .order-num { font-size: 1.05rem; }
+.order-row .order-time { font-size: 0.78rem; font-weight: 400; opacity: 0.65; }
+
+.order-row .items-summary {
+  margin: 0.1rem 0 0;
+  font-size: 0.82rem;
+  opacity: 0.8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.order-row .total {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.order-row.voided .total {
+  text-decoration: line-through;
+}
+
+.badge-voided {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  background: var(--apple-red);
+  color: var(--cream);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  vertical-align: middle;
+}
+
+.overflow-btn {
+  inline-size: var(--tap);
+  block-size: var(--tap);
+  border: none;
+  background: transparent;
+  border-radius: 0.6rem;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.overflow-btn:active { background: var(--gold-tan-soft); }
+
+.void-btn {
+  flex-shrink: 0;
+  min-block-size: var(--tap);
+  padding: 0 0.9rem;
+  border: 1px solid var(--apple-red);
+  color: var(--apple-red);
+  background: var(--cream);
+  border-radius: 0.6rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.void-btn:active { background: var(--apple-red); color: var(--cream); }
+
+.sheet-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(51, 32, 15, 0.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 20;
+}
+
+.sheet {
+  width: 100%;
+  max-width: 26rem;
+  background: var(--cream);
+  border-radius: 1rem 1rem 0 0;
+  padding: 1rem 1.1rem calc(1rem + env(safe-area-inset-bottom));
+  box-shadow: 0 -8px 24px rgba(51, 32, 15, 0.25);
+}
+
+.sheet h2 {
+  margin: 0 0 0.3rem;
+  font-size: 1.05rem;
+}
+
+.sheet p {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.sheet-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.sheet-actions button {
+  flex: 1;
+  min-block-size: var(--tap);
+  border-radius: 0.6rem;
+  border: 1px solid var(--edge);
+  background: var(--panel);
+  font-weight: 700;
+}
+
+.sheet-actions .confirm {
+  background: var(--apple-red);
+  border-color: var(--apple-red-dark);
+  color: var(--cream);
+}
+
+.sheet-action-row {
+  min-block-size: var(--tap);
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border: none;
+  background: transparent;
+  color: var(--apple-red);
+  font-weight: 700;
+  border-radius: 0.6rem;
+  text-align: left;
+  padding: 0 0.4rem;
+}
+
+.sheet-action-row:active { background: var(--gold-tan-soft); }
+
+.tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0.85rem 1rem;
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 0.7rem;
+  padding: 0.25rem;
+}
+
+.tabs button {
+  flex: 1;
+  min-block-size: 2.6rem;
+  border: none;
+  background: transparent;
+  border-radius: 0.5rem;
+  font-weight: 700;
+  color: var(--orchard-brown);
+}
+
+.tabs button[aria-selected="true"] {
+  background: var(--leaf-green);
+  color: var(--cream);
+}
+
+.figures-panel {
+  margin: 0 1rem 0.9rem;
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 0.9rem;
+  padding: 1rem;
+}
+
+.figures-panel .total {
+  font-size: 2.4rem;
+  font-weight: 800;
+  margin: 0.1rem 0 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.swipe-wrap {
+  position: relative;
+  border-radius: 0.75rem;
+  overflow: clip;
+}
+
+.swipe-reveal {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: stretch;
+}
+
+.swipe-reveal button {
+  border: none;
+  background: var(--apple-red);
+  color: var(--cream);
+  font-weight: 700;
+  padding: 0 1.2rem;
+}
+
+.swipe-surface {
+  position: relative;
+  transition: transform 0.15s ease-out;
+  touch-action: pan-y;
+}
+
+.swipe-surface.open {
+  transform: translateX(-5.5rem);
+}
+
+.hint {
+  margin: 0 1rem 0.7rem;
+  font-size: 0.78rem;
+  opacity: 0.65;
+  text-align: center;
+}
+
+.empty {
+  margin: 1rem;
+  text-align: center;
+  opacity: 0.6;
+  font-size: 0.9rem;
+}
+
+.switcher {
+  position: fixed;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--orchard-night);
+  color: var(--cream);
+  border-radius: 999px;
+  padding: 0.4rem 0.5rem;
+  box-shadow: 0 6px 20px rgba(51, 32, 15, 0.35);
+  z-index: 30;
+}
+
+.switcher button {
+  inline-size: 2.4rem;
+  block-size: 2.4rem;
+  border-radius: 50%;
+  border: none;
+  background: var(--gold-tan);
+  color: var(--orchard-night);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.switcher .label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<nav class="switcher" id="switcher"></nav>
+<script>
+const businessDate = "Saturday Oct 3";
+
+function cents(c) {
+  return "$" + (c / 100).toFixed(2);
+}
+
+const seedOrders = [
+  { n: 41, time: "1:42 PM", voided: false, total: 1350, items: [["Plain pancake", 2], ["Cider", 1]] },
+  { n: 40, time: "1:39 PM", voided: false, total: 700, items: [["Applesauce pancake", 1]] },
+  { n: 39, time: "1:31 PM", voided: true, total: 900, items: [["Ham & cheese toastie", 1], ["Cider", 1]] },
+  { n: 38, time: "1:27 PM", voided: false, total: 2100, items: [["Sour cream pancake", 3]] },
+  { n: 37, time: "1:20 PM", voided: false, total: 700, items: [["Ketchup pancake", 1]] },
+  { n: 36, time: "1:12 PM", voided: false, total: 1400, items: [["Ham & cheese toastie", 2]] },
+  { n: 35, time: "1:05 PM", voided: false, total: 700, items: [["Plain pancake", 1]] },
+];
+
+// mutable so a Void in the prototype actually updates the figures
+let orders = seedOrders.map((o) => ({ ...o }));
+
+function itemBreakdown() {
+  const totals = new Map();
+  for (const o of orders) {
+    if (o.voided) continue;
+    for (const [name, qty] of o.items) {
+      totals.set(name, (totals.get(name) || 0) + qty);
+    }
+  }
+  return [...totals.entries()];
+}
+
+function summary() {
+  const live = orders.filter((o) => !o.voided);
+  return {
+    count: live.length,
+    revenue: live.reduce((sum, o) => sum + o.total, 0),
+  };
+}
+
+function itemsSummaryLine(items) {
+  return items.map(([name, qty]) => `${qty}× ${name}`).join(", ");
+}
+
+function voidOrder(n) {
+  const o = orders.find((o) => o.n === n);
+  if (o) o.voided = true;
+  render();
+}
+
+// -- shared pieces --------------------------------------------------
+
+function statBand() {
+  const s = summary();
+  return `
+    <section class="stat-band">
+      <div class="stat-card"><p class="label">Orders</p><p class="value">${s.count}</p></div>
+      <div class="stat-card"><p class="label">Revenue</p><p class="value">${cents(s.revenue)}</p></div>
+    </section>`;
+}
+
+function itemsTable() {
+  const rows = itemBreakdown()
+    .map(([name, qty]) => `<tr><td>${name}</td><td class="num">${qty}</td></tr>`)
+    .join("");
+  return `<table class="items-table"><thead><tr><th>Item</th><th class="num">Qty</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function orderRowInner(o) {
+  return `
+    <div class="info">
+      <div class="num-line">
+        <span class="order-num">#${o.n}</span>
+        <span class="order-time">${o.time}</span>
+        ${o.voided ? '<span class="badge-voided">Voided</span>' : ""}
+      </div>
+      <p class="items-summary">${itemsSummaryLine(o.items)}</p>
+    </div>
+    <span class="total">${cents(o.total)}</span>`;
+}
+
+// -- Variant A: sticky header, overflow-sheet Void ------------------
+
+let sheetOrder = null;
+
+function renderA() {
+  const rows = orders
+    .map(
+      (o) => `
+      <li class="order-row${o.voided ? " voided" : ""}">
+        ${orderRowInner(o)}
+        <button class="overflow-btn" aria-label="Order #${o.n} actions" ${o.voided ? "disabled" : ""}
+          onclick="sheetOrder=${o.n};render()">&#8942;</button>
+      </li>`
+    )
+    .join("");
+
+  return `
+    <header class="bar"><h1>Leader &middot; ${businessDate}</h1><time>1:47 PM</time></header>
+    ${statBand()}
+    <details class="items-disclosure">
+      <summary>Items sold <span class="chev">&#8250;</span></summary>
+      ${itemsTable()}
+    </details>
+    <ul class="order-list">${rows}</ul>
+    ${sheetOrder ? voidSheet(sheetOrder, () => { sheetOrder = null; render(); }) : ""}
+  `;
+}
+
+function voidSheet(n, onClose) {
+  window.__closeSheetA = onClose;
+  window.__confirmSheetA = () => { voidOrder(n); onClose(); };
+  return `
+    <div class="sheet-scrim" onclick="if(event.target===this) __closeSheetA()">
+      <div class="sheet">
+        <h2>Void order #${n}?</h2>
+        <p>Match this to the paper ticket at the booth before you confirm. This only corrects the sales figures — settle the till and the paper by hand.</p>
+        <div class="sheet-actions">
+          <button onclick="__closeSheetA()">Cancel</button>
+          <button class="confirm" onclick="__confirmSheetA()">Void #${n}</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+// -- Variant B: Figures/Orders tabs, swipe-to-void -------------------
+
+let tabB = "orders";
+let openSwipe = null;
+let swipeConfirm = null;
+
+function renderB() {
+  const body = tabB === "figures" ? figuresPanelB() : ordersPanelB();
+  return `
+    <header class="bar"><h1>Leader &middot; ${businessDate}</h1><time>1:47 PM</time></header>
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="${tabB === "figures"}" onclick="tabB='figures';render()">Figures</button>
+      <button role="tab" aria-selected="${tabB === "orders"}" onclick="tabB='orders';render()">Orders</button>
+    </div>
+    ${body}
+    ${swipeConfirm !== null ? voidSheet(swipeConfirm, () => { swipeConfirm = null; openSwipe = null; render(); }) : ""}
+  `;
+}
+
+function figuresPanelB() {
+  const s = summary();
+  return `
+    <section class="figures-panel">
+      <p class="label" style="margin:0">Revenue today</p>
+      <p class="total">${cents(s.revenue)}</p>
+      <p class="label" style="margin:0 0 .4rem">${s.count} orders</p>
+      ${itemsTable()}
+    </section>`;
+}
+
+function ordersPanelB() {
+  const rows = orders
+    .map((o) => {
+      if (o.voided) {
+        return `<li class="order-row voided">${orderRowInner(o)}</li>`;
+      }
+      const open = openSwipe === o.n;
+      return `
+        <li class="swipe-wrap">
+          <div class="swipe-reveal"><button onclick="swipeConfirm=${o.n};render()">Void</button></div>
+          <div class="order-row swipe-surface${open ? " open" : ""}"
+               onclick="openSwipe=${open ? "null" : o.n};render()">
+            ${orderRowInner(o)}
+          </div>
+        </li>`;
+    })
+    .join("");
+  return `<p class="hint">Swipe an order left to void it</p><ul class="order-list">${rows}</ul>`;
+}
+
+// -- Variant C: one continuous scroll, direct Void button ------------
+
+let confirmC = null;
+
+function renderC() {
+  const rows = orders
+    .map(
+      (o) => `
+      <li class="order-row${o.voided ? " voided" : ""}">
+        ${orderRowInner(o)}
+        ${o.voided ? "" : `<button class="void-btn" onclick="confirmC=${o.n};render()">Void</button>`}
+      </li>`
+    )
+    .join("");
+
+  return `
+    <header class="bar"><h1>Leader &middot; ${businessDate}</h1><time>1:47 PM</time></header>
+    ${statBand()}
+    ${itemsTable()}
+    <ul class="order-list" style="margin-top:.85rem">${rows}</ul>
+    ${confirmC !== null ? voidSheet(confirmC, () => { confirmC = null; render(); }) : ""}
+  `;
+}
+
+// -- switcher ---------------------------------------------------------
+
+const variants = {
+  A: { name: "Sticky header + overflow sheet", render: renderA },
+  B: { name: "Figures/Orders tabs + swipe", render: renderB },
+  C: { name: "One scroll + direct Void button", render: renderC },
+};
+const order = ["A", "B", "C"];
+
+function currentVariant() {
+  const v = new URLSearchParams(location.search).get("variant");
+  return variants[v] ? v : "A";
+}
+
+function setVariant(v) {
+  const url = new URL(location);
+  url.searchParams.set("variant", v);
+  history.replaceState(null, "", url);
+  sheetOrder = null;
+  openSwipe = null;
+  swipeConfirm = null;
+  confirmC = null;
+  tabB = "orders";
+  render();
+}
+
+function render() {
+  const v = currentVariant();
+  document.getElementById("app").innerHTML = variants[v].render();
+  document.getElementById("switcher").innerHTML = `
+    <button aria-label="Previous variant" onclick="cycle(-1)">&#8592;</button>
+    <span class="label">${v} &middot; ${variants[v].name}</span>
+    <button aria-label="Next variant" onclick="cycle(1)">&#8594;</button>`;
+}
+
+function cycle(delta) {
+  const i = order.indexOf(currentVariant());
+  setVariant(order[(i + delta + order.length) % order.length]);
+}
+
+document.addEventListener("keydown", (e) => {
+  const tag = document.activeElement.tagName;
+  if (tag === "INPUT" || tag === "TEXTAREA" || document.activeElement.isContentEditable) return;
+  if (e.key === "ArrowLeft") cycle(-1);
+  if (e.key === "ArrowRight") cycle(1);
+});
+
+render();
+</script>
+</body>
+</html>
