@@ -1,7 +1,7 @@
 {{define "content"}}
 <main class="pos">
   <div class="top-row">
-    <button type="button" class="clear-btn" id="clear" disabled>Clear</button>
+    <button type="button" class="more-btn" id="more" aria-expanded="false" aria-controls="more-sheet">More</button>
     <header class="band">
       <a class="home" href="/">Apple Fest POS</a>
       <p class="order-no">Last order <output class="n" id="last-order">—</output></p>
@@ -38,6 +38,14 @@
         <button type="button" class="submit-btn" id="submit" disabled>Submit</button>
       </div>
     </aside>
+  </div>
+
+  <div class="scrim" id="scrim" hidden></div>
+
+  <div class="sheet" id="more-sheet" role="dialog" aria-modal="true" aria-labelledby="more-title" hidden>
+    <h2 class="sheet-title" id="more-title">More</h2>
+    <button type="button" class="sheet-danger" id="clear" disabled>Clear order</button>
+    <button type="button" class="sheet-close" id="more-close">Close</button>
   </div>
 </main>
 <script src="{{asset "/static/pos.js"}}" defer></script>

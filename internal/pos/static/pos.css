@@ -177,6 +177,7 @@ button:disabled {
 
 .pos {
   --tap: 5.5rem;
+  position: relative;
   block-size: var(--app-height, 100dvh);
   overflow: hidden;
   display: flex;
@@ -189,12 +190,74 @@ button:disabled {
   align-items: stretch;
 }
 
-.clear-btn {
+.more-btn {
   flex: 0 0 auto;
   min-inline-size: var(--tap);
   min-block-size: var(--tap);
   border-radius: 0;
+  background: var(--parchment);
+  color: var(--gold-tan-ink);
+  border-inline-end: 2px solid var(--gold-tan);
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / 35%);
+  z-index: 10;
+}
+
+/* An author `display` beats the user agent's `[hidden] { display: none }`, so
+   the sheet needs this or it shows while hidden. */
+.sheet[hidden] {
+  display: none;
+}
+
+.sheet {
+  position: absolute;
+  inset-block-start: calc(var(--tap) + 0.9rem);
+  inset-inline-start: 0.9rem;
+  inline-size: 24rem;
+  max-inline-size: calc(100% - 1.8rem);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  border: 3px solid var(--gold-tan);
+  border-radius: 1rem;
+  background: var(--panel);
+  box-shadow: 0 1rem 2rem rgb(0 0 0 / 45%);
+}
+
+.sheet-title {
+  margin: 0 0 0.2rem;
+  color: var(--gold-tan-ink);
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.sheet-danger,
+.sheet-close {
+  min-block-size: 4rem;
+  border-radius: 0.8rem;
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.sheet-danger {
   background: var(--apple-red-dark);
+  text-align: start;
+  padding-inline: 1.1rem;
+}
+
+.sheet-close {
+  min-block-size: 3rem;
+  background: transparent;
+  color: var(--gold-tan-ink);
+  font-size: 1.1rem;
 }
 
 .band {

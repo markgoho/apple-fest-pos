@@ -10,6 +10,10 @@ const faultElement = document.getElementById("fault");
 const lastOrderElement = document.getElementById("last-order");
 const submitButton = document.getElementById("submit");
 const clearButton = document.getElementById("clear");
+const moreButton = document.getElementById("more");
+const moreSheet = document.getElementById("more-sheet");
+const moreClose = document.getElementById("more-close");
+const scrim = document.getElementById("scrim");
 const reprintButton = document.getElementById("reprint");
 
 let cart = [];
@@ -209,8 +213,22 @@ for (const tile of menuElement.querySelectorAll(".tile")) {
   });
 }
 
+// ADR-0005: Clear lives behind the More sheet, so the only destructive control
+// on /pos needs two deliberate taps and is never on the screen during a sale.
+function setMoreOpen(open) {
+  moreSheet.hidden = !open;
+  scrim.hidden = !open;
+  moreButton.setAttribute("aria-expanded", open ? "true" : "false");
+}
+
 submitButton.addEventListener("click", submitOrder);
-clearButton.addEventListener("click", clearCart);
+clearButton.addEventListener("click", () => {
+  clearCart();
+  setMoreOpen(false);
+});
 reprintButton.addEventListener("click", reprintOrder);
+moreButton.addEventListener("click", () => setMoreOpen(moreSheet.hidden));
+moreClose.addEventListener("click", () => setMoreOpen(false));
+scrim.addEventListener("click", () => setMoreOpen(false));
 
 draw();
