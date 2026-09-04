@@ -40,8 +40,8 @@ function drawTicket(ticket) {
     const lineItem = element("li");
     lineItem.append(element("span", "qty", line.quantity + "×"));
     lineItem.append(document.createTextNode(" " + line.name));
-    if (line.notes) {
-      lineItem.append(element("em", "", line.notes));
+    if (line.side) {
+      lineItem.append(element("em", "", line.side));
     }
     lines.append(lineItem);
   }

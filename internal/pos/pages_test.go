@@ -60,7 +60,7 @@ func TestScreensRenderWithAnOrder(t *testing.T) {
 		ClientOrderID: "screen-order",
 		DeviceID:      "tablet-1",
 		Payment:       Payment{Method: "cash"},
-		Items:         []CartLine{{MenuItemID: "potato-pancake", Quantity: 1, Notes: "Applesauce"}},
+		Items:         []CartLine{{MenuItemID: "potato-pancake", Quantity: 1, Side: "applesauce"}},
 	})
 	if recorder.Code != http.StatusCreated {
 		t.Fatalf("place order: got %d, want 201", recorder.Code)

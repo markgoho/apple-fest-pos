@@ -79,3 +79,40 @@ func TestFormatCurrency(t *testing.T) {
 		}
 	}
 }
+
+var sideOrder = ReceiptOrder{
+	OrderID:       "order-2",
+	OrderNumber:   102,
+	CreatedAt:     "2026-05-07T12:34:00.000Z",
+	SubtotalCents: 1000,
+	TotalCents:    1000,
+	Items:         []CartLine{{MenuItemID: "potato-pancake", Quantity: 1, Side: "sour-cream"}},
+}
+
+func TestBuildCustomerReceiptPrintsTheSideUnderItsLine(t *testing.T) {
+	payload := string(BuildCustomerReceipt(sideOrder, false))
+
+	if !strings.Contains(payload, "1 x Potato Pancake\r\n  Sour Cream\r\n  $10.00") {
+		t.Errorf("the side does not sit between the item and its price: %q", payload)
+	}
+}
+
+func TestBuildKitchenTicketPrintsTheSideUnderItsLine(t *testing.T) {
+	payload := string(BuildKitchenTicket(sideOrder, false))
+
+	if !strings.Contains(payload, "1  POTATO PANCAKE\r\n   SOUR CREAM") {
+		t.Errorf("the side does not sit under the item line: %q", payload)
+	}
+}
+
+func TestAPlainLinePrintsNoSide(t *testing.T) {
+	receipt := string(BuildCustomerReceipt(receiptOrder, false))
+	if !strings.Contains(receipt, "2 x Potato Pancake\r\n  $20.00") {
+		t.Errorf("a plain line must add no side line to the receipt: %q", receipt)
+	}
+
+	ticket := string(BuildKitchenTicket(receiptOrder, false))
+	if !strings.Contains(ticket, "2  POTATO PANCAKE\r\n\r\n") {
+		t.Errorf("a plain line must add no side line to the kitchen ticket: %q", ticket)
+	}
+}

@@ -16,7 +16,7 @@
         </div>
         <ul class="ticket-lines">
           {{range .Lines}}
-          <li><span class="qty">{{.Quantity}}&times;</span> {{.Name}}{{with .Notes}}<em>{{.}}</em>{{end}}</li>
+          <li><span class="qty">{{.Quantity}}&times;</span> {{.Name}}{{with .Side}}<em>{{.}}</em>{{end}}</li>
           {{end}}
         </ul>
         {{with .Notes}}<p class="ticket-notes">{{.}}</p>{{end}}

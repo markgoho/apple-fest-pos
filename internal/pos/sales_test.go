@@ -92,4 +92,23 @@ func TestKitchenBoardShowsTheNewestOrders(t *testing.T) {
 	if board.Tickets[0].Lines[0].Name != "Potato Pancake" {
 		t.Errorf("line name = %q", board.Tickets[0].Lines[0].Name)
 	}
+	if board.Tickets[0].Lines[0].Side != "" {
+		t.Errorf("a plain line must carry no side, got %q", board.Tickets[0].Lines[0].Side)
+	}
+}
+
+func TestKitchenBoardShowsTheSideOfALine(t *testing.T) {
+	service := newTestService(t)
+
+	request := validOrder()
+	request["items"] = []map[string]any{{"menuItemId": "potato-pancake", "quantity": 1, "side": "applesauce"}}
+	postOrder(t, service, request)
+
+	board, err := service.GetKitchenBoard()
+	if err != nil {
+		t.Fatalf("kitchen board: %v", err)
+	}
+	if board.Tickets[0].Lines[0].Side != "Applesauce" {
+		t.Errorf("side = %q, want \"Applesauce\"", board.Tickets[0].Lines[0].Side)
+	}
 }

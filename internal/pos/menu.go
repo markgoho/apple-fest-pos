@@ -88,3 +88,20 @@ func MenuItemName(id string) string {
 	}
 	return id
 }
+
+// SideLabel gives the label of one Side of a menu item. It gives an empty
+// string when the line carries no side, and the raw id when the item does not
+// know the side.
+func SideLabel(menuItemID, sideID string) string {
+	if sideID == "" {
+		return ""
+	}
+	if item, found := menuItemsByID[menuItemID]; found {
+		for _, side := range item.Sides {
+			if side.ID == sideID {
+				return side.Label
+			}
+		}
+	}
+	return sideID
+}
