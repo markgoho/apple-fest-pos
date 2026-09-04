@@ -16,7 +16,7 @@ var receiptOrder = ReceiptOrder{
 }
 
 func TestBuildCustomerReceiptHasTheCutCommand(t *testing.T) {
-	payload := BuildCustomerReceipt(receiptOrder, false)
+	payload := BuildCustomerReceipt(receiptOrder, HeaderNone)
 
 	if !bytes.HasPrefix(payload, []byte{0x1b, 0x40}) {
 		t.Errorf("payload does not start with the initialize command")
@@ -36,15 +36,26 @@ func TestBuildCustomerReceiptHasTheCutCommand(t *testing.T) {
 }
 
 func TestBuildCustomerReceiptReprintHasTheReprintHeader(t *testing.T) {
-	payload := BuildCustomerReceipt(receiptOrder, true)
+	payload := BuildCustomerReceipt(receiptOrder, HeaderReprint)
 
 	if !strings.Contains(string(payload), "REPRINT") {
 		t.Errorf("reprint payload has no REPRINT header: %q", string(payload))
 	}
 }
 
+func TestBuildCustomerReceiptTestHasTheTestHeaderAndNoOrderNumber(t *testing.T) {
+	payload := BuildCustomerReceipt(receiptOrder, HeaderTest)
+
+	if !strings.Contains(string(payload), "TEST") {
+		t.Errorf("test payload has no TEST header: %q", string(payload))
+	}
+	if strings.Contains(string(payload), "Order #") {
+		t.Errorf("test payload should carry no order number: %q", string(payload))
+	}
+}
+
 func TestBuildKitchenTicketHasEmphasisAndTheCutCommand(t *testing.T) {
-	payload := BuildKitchenTicket(receiptOrder, false)
+	payload := BuildKitchenTicket(receiptOrder, HeaderNone)
 
 	if !bytes.HasPrefix(payload, []byte{0x1b, 0x40}) {
 		t.Errorf("payload does not start with the initialize command")
@@ -64,10 +75,21 @@ func TestBuildKitchenTicketHasEmphasisAndTheCutCommand(t *testing.T) {
 }
 
 func TestBuildKitchenTicketReprintHasTheReprintHeader(t *testing.T) {
-	payload := BuildKitchenTicket(receiptOrder, true)
+	payload := BuildKitchenTicket(receiptOrder, HeaderReprint)
 
 	if !strings.Contains(string(payload), "REPRINT") {
 		t.Errorf("reprint payload has no REPRINT header: %q", string(payload))
+	}
+}
+
+func TestBuildKitchenTicketTestHasTheTestHeaderAndNoOrderNumber(t *testing.T) {
+	payload := BuildKitchenTicket(receiptOrder, HeaderTest)
+
+	if !strings.Contains(string(payload), "TEST") {
+		t.Errorf("test payload has no TEST header: %q", string(payload))
+	}
+	if strings.Contains(string(payload), "ORDER ") {
+		t.Errorf("test payload should carry no order number: %q", string(payload))
 	}
 }
 
@@ -90,7 +112,7 @@ var sideOrder = ReceiptOrder{
 }
 
 func TestBuildCustomerReceiptPrintsTheSideUnderItsLine(t *testing.T) {
-	payload := string(BuildCustomerReceipt(sideOrder, false))
+	payload := string(BuildCustomerReceipt(sideOrder, HeaderNone))
 
 	if !strings.Contains(payload, "1 x Potato Pancake\r\n  Sour Cream\r\n  $10.00") {
 		t.Errorf("the side does not sit between the item and its price: %q", payload)
@@ -98,7 +120,7 @@ func TestBuildCustomerReceiptPrintsTheSideUnderItsLine(t *testing.T) {
 }
 
 func TestBuildKitchenTicketPrintsTheSideUnderItsLine(t *testing.T) {
-	payload := string(BuildKitchenTicket(sideOrder, false))
+	payload := string(BuildKitchenTicket(sideOrder, HeaderNone))
 
 	if !strings.Contains(payload, "1  POTATO PANCAKE\r\n   SOUR CREAM") {
 		t.Errorf("the side does not sit under the item line: %q", payload)
@@ -106,12 +128,12 @@ func TestBuildKitchenTicketPrintsTheSideUnderItsLine(t *testing.T) {
 }
 
 func TestAPlainLinePrintsNoSide(t *testing.T) {
-	receipt := string(BuildCustomerReceipt(receiptOrder, false))
+	receipt := string(BuildCustomerReceipt(receiptOrder, HeaderNone))
 	if !strings.Contains(receipt, "2 x Potato Pancake\r\n  $20.00") {
 		t.Errorf("a plain line must add no side line to the receipt: %q", receipt)
 	}
 
-	ticket := string(BuildKitchenTicket(receiptOrder, false))
+	ticket := string(BuildKitchenTicket(receiptOrder, HeaderNone))
 	if !strings.Contains(ticket, "2  POTATO PANCAKE\r\n\r\n") {
 		t.Errorf("a plain line must add no side line to the kitchen ticket: %q", ticket)
 	}

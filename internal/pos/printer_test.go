@@ -132,6 +132,144 @@ func TestPrintReprintSendsOnlyWhatFailed(t *testing.T) {
 	}
 }
 
+func TestSendTestTicketMarksBothDocumentsTest(t *testing.T) {
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen: %v", err)
+	}
+	defer listener.Close()
+
+	received := acceptTwo(t, listener)
+	port := strconv.Itoa(listener.Addr().(*net.TCPAddr).Port)
+
+	result := SendTestTicket(PrinterConfig{
+		Enabled:     true,
+		WindowHost:  "127.0.0.1",
+		WindowPort:  port,
+		KitchenHost: "127.0.0.1",
+		KitchenPort: port,
+	}, receiptOrder)
+
+	if result.Customer != PrintSent || result.Kitchen != PrintSent {
+		t.Fatalf("result = %+v, want both sent", result)
+	}
+	for range 2 {
+		if payload := <-received; !strings.Contains(string(payload), "TEST") {
+			t.Errorf("test ticket payload has no TEST header: %q", payload)
+		}
+	}
+}
+
+func TestCheckPrintersReportsNotConfiguredWhenAHostIsEmpty(t *testing.T) {
+	result := CheckPrinters(PrinterConfig{Enabled: true, WindowHost: "", KitchenHost: "127.0.0.1", KitchenPort: "9100"})
+
+	if result.Window != StatusNotConfigured {
+		t.Errorf("window = %v, want not configured", result.Window)
+	}
+}
+
+func TestCheckPrintersReportsNotReachableWhenNoPrinterAnswers(t *testing.T) {
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen: %v", err)
+	}
+	address := listener.Addr().(*net.TCPAddr)
+	listener.Close()
+
+	port := strconv.Itoa(address.Port)
+	result := CheckPrinters(PrinterConfig{Enabled: true, WindowHost: "127.0.0.1", WindowPort: port, KitchenHost: "127.0.0.1", KitchenPort: port})
+
+	if result.Window != StatusNotReachable || result.Kitchen != StatusNotReachable {
+		t.Errorf("result = %+v, want both not reachable", result)
+	}
+}
+
+// serveStatus answers every DLE EOT n query on one connection with the given
+// byte for n, so a test can script a printer's status without real hardware.
+func serveStatus(t *testing.T, listener net.Listener, statusFor map[byte]byte) {
+	t.Helper()
+	go func() {
+		connection, err := listener.Accept()
+		if err != nil {
+			return
+		}
+		defer connection.Close()
+		for {
+			var query [3]byte
+			if _, err := io.ReadFull(connection, query[:]); err != nil {
+				return
+			}
+			if _, err := connection.Write([]byte{statusFor[query[2]]}); err != nil {
+				return
+			}
+		}
+	}()
+}
+
+func TestCheckPrintersReportsReady(t *testing.T) {
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen: %v", err)
+	}
+	defer listener.Close()
+	serveStatus(t, listener, map[byte]byte{1: 0x12, 2: 0x12, 4: 0x12})
+
+	port := strconv.Itoa(listener.Addr().(*net.TCPAddr).Port)
+	result := CheckPrinters(PrinterConfig{Enabled: true, WindowHost: "127.0.0.1", WindowPort: port, KitchenHost: "", KitchenPort: ""})
+
+	if result.Window != StatusReady {
+		t.Errorf("window = %v, want ready", result.Window)
+	}
+}
+
+func TestCheckPrintersReportsPaperOut(t *testing.T) {
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen: %v", err)
+	}
+	defer listener.Close()
+	serveStatus(t, listener, map[byte]byte{1: 0x12, 2: 0x12, 4: 0x72})
+
+	port := strconv.Itoa(listener.Addr().(*net.TCPAddr).Port)
+	result := CheckPrinters(PrinterConfig{Enabled: true, WindowHost: "127.0.0.1", WindowPort: port, KitchenHost: "", KitchenPort: ""})
+
+	if result.Window != StatusPaperOut {
+		t.Errorf("window = %v, want paper out", result.Window)
+	}
+}
+
+func TestCheckPrintersReportsCoverOpen(t *testing.T) {
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen: %v", err)
+	}
+	defer listener.Close()
+	serveStatus(t, listener, map[byte]byte{1: 0x12, 2: 0x16, 4: 0x12})
+
+	port := strconv.Itoa(listener.Addr().(*net.TCPAddr).Port)
+	result := CheckPrinters(PrinterConfig{Enabled: true, WindowHost: "127.0.0.1", WindowPort: port, KitchenHost: "", KitchenPort: ""})
+
+	if result.Window != StatusCoverOpen {
+		t.Errorf("window = %v, want cover open", result.Window)
+	}
+}
+
+func TestCheckPrintersReportsOffline(t *testing.T) {
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen: %v", err)
+	}
+	defer listener.Close()
+	serveStatus(t, listener, map[byte]byte{1: 0x1a, 2: 0x12, 4: 0x12})
+
+	port := strconv.Itoa(listener.Addr().(*net.TCPAddr).Port)
+	result := CheckPrinters(PrinterConfig{Enabled: true, WindowHost: "127.0.0.1", WindowPort: port, KitchenHost: "", KitchenPort: ""})
+
+	if result.Window != StatusOffline {
+		t.Errorf("window = %v, want offline", result.Window)
+	}
+}
+
 func TestPrintReprintSendsBothWhenNothingFailed(t *testing.T) {
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {

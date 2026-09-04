@@ -23,6 +23,8 @@ func (service *OrderService) Handler() http.Handler {
 	mux.HandleFunc("POST /system-admin", service.handleSystemAdminUnlock)
 	mux.HandleFunc("POST /system-admin/start-event", service.handleSystemAdminStartEvent)
 	mux.HandleFunc("POST /system-admin/reset", service.handleSystemAdminReset)
+	mux.HandleFunc("POST /system-admin/check-printers", service.handleSystemAdminCheckPrinters)
+	mux.HandleFunc("POST /system-admin/test-ticket", service.handleSystemAdminTestTicket)
 	mux.HandleFunc("POST /api/orders", service.handlePlaceOrder)
 	mux.HandleFunc("POST /api/orders/{id}/reprint", service.handleReprintOrder)
 	mux.HandleFunc("GET /api/kitchen", service.handleKitchen)
@@ -179,6 +181,67 @@ func (service *OrderService) handleSystemAdminReset(writer http.ResponseWriter, 
 		}
 	}
 	service.renderSystemAdmin(writer, pin, message)
+}
+
+// handleSystemAdminCheckPrinters dials both printers and reports their
+// status (ADR-0008). Neither this nor the test ticket is locked by Start
+// Event: both stay usable for troubleshooting all through the event.
+func (service *OrderService) handleSystemAdminCheckPrinters(writer http.ResponseWriter, request *http.Request) {
+	pin := request.FormValue("pin")
+	var message string
+	if service.systemAdminUnlocked(pin) {
+		check := CheckPrinters(service.Printer)
+		message = fmt.Sprintf("Window: %s. Kitchen: %s.", printerStatusLabel(check.Window), printerStatusLabel(check.Kitchen))
+	}
+	service.renderSystemAdmin(writer, pin, message)
+}
+
+// handleSystemAdminTestTicket prints a TEST-marked document through both
+// printers (ADR-0008). It writes no transactions row, so it is not an order.
+func (service *OrderService) handleSystemAdminTestTicket(writer http.ResponseWriter, request *http.Request) {
+	pin := request.FormValue("pin")
+	var message string
+	if service.systemAdminUnlocked(pin) {
+		result := SendTestTicket(service.Printer, TestOrder(service.Now()))
+		message = fmt.Sprintf("Test ticket - Window: %s. Kitchen: %s.", printStatusLabel(result.Customer), printStatusLabel(result.Kitchen))
+	}
+	service.renderSystemAdmin(writer, pin, message)
+}
+
+// printerStatusLabel turns a PrinterStatus into the label the System Admin
+// page shows.
+func printerStatusLabel(status PrinterStatus) string {
+	switch status {
+	case StatusNotConfigured:
+		return "Not configured"
+	case StatusNotReachable:
+		return "Not reachable"
+	case StatusReady:
+		return "Ready"
+	case StatusCoverOpen:
+		return "Cover open"
+	case StatusPaperOut:
+		return "Paper out"
+	case StatusOffline:
+		return "Offline"
+	default:
+		return string(status)
+	}
+}
+
+// printStatusLabel turns a PrintStatus into the label the System Admin page
+// shows for a test ticket's outcome.
+func printStatusLabel(status PrintStatus) string {
+	switch status {
+	case PrintSent:
+		return "Sent"
+	case PrintFailed:
+		return "Failed"
+	case PrintDisabled:
+		return "Not configured"
+	default:
+		return string(status)
+	}
 }
 
 // systemAdminUnlocked reports whether pin matches the configured PIN. An

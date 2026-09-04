@@ -68,6 +68,24 @@ type PrintResult struct {
 	Kitchen  PrintStatus `json:"kitchen"`
 }
 
+// PrinterStatus is the result of a status probe on one printer (ADR-0008).
+type PrinterStatus string
+
+const (
+	StatusNotConfigured PrinterStatus = "not_configured"
+	StatusNotReachable  PrinterStatus = "not_reachable"
+	StatusReady         PrinterStatus = "ready"
+	StatusCoverOpen     PrinterStatus = "cover_open"
+	StatusPaperOut      PrinterStatus = "paper_out"
+	StatusOffline       PrinterStatus = "offline"
+)
+
+// PrinterCheckResult holds the status of both printers from "Check printers".
+type PrinterCheckResult struct {
+	Window  PrinterStatus
+	Kitchen PrinterStatus
+}
+
 // PlaceOrderResponse is the body of a successful POST /api/orders.
 type PlaceOrderResponse struct {
 	Order PlacedOrder `json:"order"`

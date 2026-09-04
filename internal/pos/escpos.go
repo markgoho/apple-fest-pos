@@ -15,18 +15,28 @@ var (
 	cutPaper          = []byte{0x1d, 0x56, 0x42, 0x08}
 )
 
+// ReceiptHeader marks a document as something other than a first-time print
+// of a real order, so a reader never mistakes it for one.
+type ReceiptHeader string
+
+const (
+	HeaderNone    ReceiptHeader = ""
+	HeaderReprint ReceiptHeader = "REPRINT"
+	HeaderTest    ReceiptHeader = "TEST"
+)
+
 // BuildCustomerReceipt makes the ESC/POS bytes of the customer receipt. A
 // reprint carries a REPRINT header, so a second copy never looks like the
-// original.
-func BuildCustomerReceipt(order ReceiptOrder, reprint bool) []byte {
-	lines := []string{
-		"Apple Fest POS",
-		fmt.Sprintf("Order #%d", order.OrderNumber),
-		formatTimestamp(order.CreatedAt),
-		"",
+// original. A test ticket (CONTEXT.md's Test ticket) carries a TEST header
+// instead of an order number, so it never looks like a real sale.
+func BuildCustomerReceipt(order ReceiptOrder, header ReceiptHeader) []byte {
+	lines := []string{"Apple Fest POS"}
+	if header != HeaderTest {
+		lines = append(lines, fmt.Sprintf("Order #%d", order.OrderNumber))
 	}
-	if reprint {
-		lines = append([]string{"REPRINT", ""}, lines...)
+	lines = append(lines, formatTimestamp(order.CreatedAt), "")
+	if header != HeaderNone {
+		lines = append([]string{string(header), ""}, lines...)
 	}
 
 	for _, line := range order.Items {
@@ -54,15 +64,16 @@ func BuildCustomerReceipt(order ReceiptOrder, reprint bool) []byte {
 
 // BuildKitchenTicket makes the ESC/POS bytes of the kitchen ticket. A reprint
 // carries a REPRINT header, so the kitchen checks the order number instead of
-// cooking the order again.
-func BuildKitchenTicket(order ReceiptOrder, reprint bool) []byte {
-	lines := []string{
-		fmt.Sprintf("ORDER %d", order.OrderNumber),
-		formatTimestamp(order.CreatedAt),
-		"",
+// cooking the order again. A test ticket carries a TEST header instead of an
+// order number, so the kitchen never mistakes it for a real order.
+func BuildKitchenTicket(order ReceiptOrder, header ReceiptHeader) []byte {
+	var lines []string
+	if header != HeaderTest {
+		lines = append(lines, fmt.Sprintf("ORDER %d", order.OrderNumber))
 	}
-	if reprint {
-		lines = append([]string{"REPRINT", ""}, lines...)
+	lines = append(lines, formatTimestamp(order.CreatedAt), "")
+	if header != HeaderNone {
+		lines = append([]string{string(header), ""}, lines...)
 	}
 
 	for _, line := range order.Items {
