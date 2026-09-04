@@ -24,7 +24,7 @@ func (service *OrderService) Handler() http.Handler {
 }
 
 func handleHome(writer http.ResponseWriter, request *http.Request) {
-	render(writer, "home.html", page{Title: "Apple Fest POS", BodyClass: "theme"})
+	render(writer, "home.html", page{Title: "Apple Fest POS", BodyClass: "theme", Kiosk: true})
 }
 
 // handlePOSScreen draws the menu grid. The cart is client-side state, so the
@@ -49,7 +49,7 @@ func handlePOSScreen(writer http.ResponseWriter, request *http.Request) {
 		sections = append(sections, menuSection{Category: item.Category, Tiles: tiles})
 	}
 	render(writer, "pos.html", posPage{
-		page:         page{Title: "Cashier POS", BodyClass: "theme"},
+		page:         page{Title: "Cashier POS", BodyClass: "theme", Kiosk: true},
 		MenuSections: sections,
 	})
 }
@@ -65,7 +65,7 @@ func (service *OrderService) handleKitchenScreen(writer http.ResponseWriter, req
 		return
 	}
 	render(writer, "kitchen.html", kitchenPage{
-		page:         page{Title: "Kitchen display", BodyClass: "theme"},
+		page:         page{Title: "Kitchen display", BodyClass: "theme", Kiosk: true},
 		KitchenBoard: board,
 	})
 }

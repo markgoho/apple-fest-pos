@@ -63,10 +63,14 @@ func FormatClock(timestamp string) string {
 	return moment.In(time.Local).Format("3:04 PM")
 }
 
-// page holds what every screen puts in the shared layout.
+// page holds what every screen puts in the shared layout. Kiosk gates the
+// full-screen/wake-lock lock-down (issue #6): only the Operator's tablets
+// (Home, /pos, /kitchen) run it, not pages meant for a personal phone or
+// laptop.
 type page struct {
 	Title     string
 	BodyClass string
+	Kiosk     bool
 }
 
 // menuTile is one tile of the /pos grid. An item with Sides draws one tile
