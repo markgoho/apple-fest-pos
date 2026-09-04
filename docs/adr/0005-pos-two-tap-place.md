@@ -20,7 +20,7 @@ The guard is **time, not distance**. Both taps stay in the Home zone, because mo
 
 There is **no dialog and no Back**. A dialog would cover the cart lines, which are the thing being checked. With the lines left live there is no mode to leave, so there is nothing for a Back control to do; touching a quantity is both the correction and the exit.
 
-The **Guarded zone holds one More button** instead of Clear alone. Clear order and the Admin link live inside it, so nothing destructive is on screen during normal selling. Voiding a placed order is not on the Operator's screen at all: it cannot recall paper, and reconciling the till is the Leader's job. It waits behind the password in [#40](https://github.com/markgoho/apple-fest-pos/issues/40).
+The **Guarded zone holds one More button** instead of Clear alone. Clear order lives inside it, so nothing destructive is on screen during normal selling. An Admin link belongs there too, but it ships with the password rather than before it. Voiding a placed order is not on the Operator's screen at all: it cannot recall paper, and reconciling the till is the Leader's job. It waits behind the password in [#40](https://github.com/markgoho/apple-fest-pos/issues/40).
 
 ## Considered options
 
@@ -38,4 +38,4 @@ Two statements in ADR-0002 are superseded. "Submit is therefore the last tap of 
 
 Every sale costs one extra tap and about half a second. At a booth that is a real price, paid deliberately, on the judgement that a novice Operator's mis-tap costs more.
 
-The Admin row in the More sheet promises a password that `/admin` does not have yet. Until #40 lands, that link hands the sales screen to anyone holding the tablet.
+The More sheet has no Admin row yet, on purpose. A link on the scouts' screen to an `/admin` with no password is worse than no link, so the row waits for #40.
