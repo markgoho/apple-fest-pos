@@ -4,11 +4,11 @@ The glossary for the Apple Fest POS. Terms only, no implementation.
 
 ## Operator
 
-A person who runs the booth: takes orders on a tablet and watches for print failures. The Operator does not handle cash. The Operator uses `/pos`, `/kitchen`, and `/admin`. Most Operators are scouts between 11 and 17; an adult takes orders only occasionally. The Operator holds the tablet through a rotating hand strap, left hand in the strap and right index finger on the glass, and turns it to either orientation. The tablet is never docked and is not set down during a shift. Screens for the Operator are dense, work in landscape and in portrait, and assume a novice.
+A person who runs the booth: takes orders on a tablet and watches for print failures. The Operator does not handle cash. The Operator uses `/pos` and `/kitchen`. Most Operators are scouts between 11 and 17; an adult takes orders only occasionally. The Operator holds the tablet through a rotating hand strap, left hand in the strap and right index finger on the glass, and turns it to either orientation. The tablet is never docked and is not set down during a shift. Screens for the Operator are dense, work in landscape and in portrait, and assume a novice.
 
 ## Leader
 
-An adult scout leader who watches how the day is going but does not take orders. The Leader takes the cash from the customer and reconciles the till, and never touches the Operator's tablet. The Leader reads only, on a personal phone joined to the booth access point. Screens for the Leader are portrait, one-thumb, and never show print status or till controls.
+An adult scout leader who watches how the day is going but does not take orders. The Leader takes the cash from the customer and reconciles the till. Day to day the Leader only reads, on a personal phone joined to the booth access point; screens for the Leader are portrait, one-thumb, and never show print status. The one exception is voiding a Placed order: that happens on a PIN-gated Leader page reached from a link in the Operator's `/pos` screen, so the Leader may use the Operator's tablet for that one action. A void corrects the sales record only; it never touches the till or the printed paper, which are still settled by hand.
 
 An Operator and a Leader can be the same human at different moments. The distinction is the job, not the person.
 
