@@ -261,6 +261,19 @@ button:disabled {
   font-size: 1.1rem;
 }
 
+.sheet-link {
+  display: flex;
+  align-items: center;
+  min-block-size: 4rem;
+  border-radius: 0.8rem;
+  padding-inline: 1.1rem;
+  background: var(--gold-tan-soft);
+  color: var(--apple-red-dark);
+  font-size: 1.4rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
 .band {
   flex: 1;
   min-inline-size: 0;
@@ -794,4 +807,121 @@ tr.fail {
   font-weight: 900;
   color: white;
   background: var(--leaf-green);
+}
+
+/* The Leader screen: a phone-portrait, one-thumb read of the day
+   (CONTEXT.md's Leader entry). */
+
+.leader {
+  max-inline-size: 30rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.4rem;
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: 0.7rem;
+  padding: 0.25rem;
+}
+
+.tabs button {
+  flex: 1;
+  min-block-size: 2.6rem;
+  border: none;
+  background: transparent;
+  border-radius: 0.5rem;
+  font-weight: 700;
+  color: var(--orchard-brown);
+}
+
+.tabs button[aria-selected="true"] {
+  background: var(--leaf-green);
+  color: white;
+}
+
+.order-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.order-row {
+  background: var(--panel);
+  border-radius: 1rem;
+  padding: 0.75rem 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  box-shadow: 0 0.5rem 1.5rem #5f321718;
+}
+
+.order-row.voided {
+  opacity: 0.6;
+}
+
+.order-row .info {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.order-row .num-line {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-weight: 800;
+}
+
+.order-row .order-time {
+  font-size: 0.8rem;
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+.order-row .items-summary {
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.order-row .total {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+.order-row.voided .total {
+  text-decoration: line-through;
+}
+
+.badge-voided {
+  display: inline-block;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: var(--apple-red);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  vertical-align: middle;
+}
+
+.void-form {
+  flex-shrink: 0;
+}
+
+.void-btn {
+  min-block-size: var(--tap);
+  padding: 0 0.9rem;
+  border: 2px solid var(--apple-red);
+  background: white;
+  color: var(--apple-red);
+}
+
+.void-btn:active {
+  background: var(--apple-red);
+  color: white;
 }

@@ -1,0 +1,78 @@
+{{define "content"}}
+<main class="sales leader">
+  <header class="bar">
+    <a class="home" href="/">Apple Fest POS</a>
+  </header>
+
+  <h1>Leader{{if .Unlocked}} &middot; <span>{{.BusinessDate}}</span>{{end}}</h1>
+
+  {{if .Unlocked}}
+  {{if .Message}}<p class="notice">{{.Message}}</p>{{end}}
+
+  <div class="tabs" role="tablist">
+    <button type="button" role="tab" id="tab-figures" aria-selected="{{if eq .Tab "figures"}}true{{else}}false{{end}}">Figures</button>
+    <button type="button" role="tab" id="tab-orders" aria-selected="{{if eq .Tab "orders"}}true{{else}}false{{end}}">Orders</button>
+  </div>
+
+  <section class="panel" id="figures-panel"{{if ne .Tab "figures"}} hidden{{end}}>
+    <section class="cards">
+      <div class="card">
+        <p class="label">Orders</p>
+        <p class="value">{{.Summary.OrderCount}}</p>
+      </div>
+      <div class="card">
+        <p class="label">Revenue</p>
+        <p class="value">{{cents .Summary.TotalCents}}</p>
+      </div>
+    </section>
+
+    <h2>Items sold</h2>
+    {{if .Items}}
+    <table>
+      <thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Revenue</th></tr></thead>
+      <tbody>
+        {{range .Items}}
+        <tr><td>{{.Name}}</td><td class="num">{{.Quantity}}</td><td class="num">{{cents .RevenueCents}}</td></tr>
+        {{end}}
+      </tbody>
+    </table>
+    {{else}}<p class="empty">No items sold yet today.</p>{{end}}
+  </section>
+
+  <section class="panel" id="orders-panel"{{if ne .Tab "orders"}} hidden{{end}}>
+    {{if .Orders}}
+    <ul class="order-list">
+      {{range .Orders}}
+      <li class="order-row{{if eq .Status "voided"}} voided{{end}}">
+        <div class="info">
+          <div class="num-line">
+            <span class="order-num">#{{.OrderNumber}}</span>
+            <span class="order-time">{{clock .CreatedAt}}</span>
+            {{if eq .Status "voided"}}<span class="badge-voided">Voided</span>{{end}}
+          </div>
+          <p class="items-summary">{{range $index, $line := .Items}}{{if $index}}, {{end}}{{$line.Quantity}}&times; {{$line.Name}}{{end}}</p>
+        </div>
+        <span class="total">{{cents .TotalCents}}</span>
+        {{if ne .Status "voided"}}
+        <form method="post" action="/leader/orders/{{.ID}}/void" class="void-form" data-order-number="{{.OrderNumber}}">
+          <input type="hidden" name="pin" value="{{$.PIN}}">
+          <button type="submit" class="void-btn">Void</button>
+        </form>
+        {{end}}
+      </li>
+      {{end}}
+    </ul>
+    {{else}}<p class="empty">No orders yet today.</p>{{end}}
+  </section>
+
+  {{else}}
+  {{if .Error}}<p class="notice warn">{{.Error}}</p>{{end}}
+  <form method="post" action="/leader" class="pin-form">
+    <label for="pin">PIN</label>
+    <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="pin" name="pin" autofocus>
+    <button type="submit">Unlock</button>
+  </form>
+  {{end}}
+</main>
+{{if .Unlocked}}<script src="{{asset "/static/leader.js"}}" defer></script>{{end}}
+{{end}}

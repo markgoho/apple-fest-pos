@@ -26,6 +26,7 @@ func newTestService(t *testing.T) *OrderService {
 		Printer:             PrinterConfig{Enabled: false, WindowPort: "9100", KitchenPort: "9100"},
 		StartingOrderNumber: 100,
 		SystemAdminPIN:      "4242",
+		LeaderPIN:           "1234",
 		Now:                 time.Now,
 	}
 }
@@ -271,6 +272,30 @@ func TestReprintOrderRouteReturns404ForAnUnknownID(t *testing.T) {
 
 	if recorder.Code != http.StatusNotFound {
 		t.Fatalf("status = %d, want 404", recorder.Code)
+	}
+}
+
+func TestVoidOrderReturns404ForAnUnknownID(t *testing.T) {
+	service := newTestService(t)
+
+	_, err := service.VoidOrder("does-not-exist")
+	if !errors.Is(err, ErrNotFound) {
+		t.Fatalf("err = %v, want ErrNotFound", err)
+	}
+}
+
+func TestVoidOrderRejectsAnAlreadyVoidedOrder(t *testing.T) {
+	service := newTestService(t)
+	_, body := postOrder(t, service, validOrder())
+	orderID := body["order"].(map[string]any)["id"].(string)
+
+	if _, err := service.VoidOrder(orderID); err != nil {
+		t.Fatalf("void order: %v", err)
+	}
+
+	_, err := service.VoidOrder(orderID)
+	if !errors.Is(err, ErrValidation) {
+		t.Fatalf("err = %v, want ErrValidation", err)
 	}
 }
 

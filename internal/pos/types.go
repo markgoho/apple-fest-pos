@@ -22,6 +22,7 @@ const (
 	OrderAccepted    OrderStatus = "accepted"
 	OrderPrinted     OrderStatus = "printed"
 	OrderPrintFailed OrderStatus = "print_failed"
+	OrderVoided      OrderStatus = "voided"
 )
 
 // CartLine is one line of a cart.

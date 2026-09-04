@@ -3,6 +3,7 @@ package pos
 import (
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 )
@@ -71,9 +72,9 @@ func TestScreensRenderWithAnOrder(t *testing.T) {
 		t.Errorf("/kitchen misses the order: %s", kitchen)
 	}
 
-	sales := getPage(t, service, "/admin")
+	sales := postForm(t, service, "/leader", url.Values{"pin": {service.LeaderPIN}}).Body.String()
 	if !strings.Contains(sales, "$10") || !strings.Contains(sales, "Potato Pancake") {
-		t.Errorf("/admin misses the order: %s", sales)
+		t.Errorf("/leader misses the order: %s", sales)
 	}
 
 	home := getPage(t, service, "/")

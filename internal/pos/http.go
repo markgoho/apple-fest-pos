@@ -3,6 +3,7 @@ package pos
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -15,7 +16,9 @@ func (service *OrderService) Handler() http.Handler {
 	mux.HandleFunc("GET /{$}", handleHome)
 	mux.HandleFunc("GET /pos", handlePOSScreen)
 	mux.HandleFunc("GET /kitchen", service.handleKitchenScreen)
-	mux.HandleFunc("GET /admin", service.handleAdminScreen)
+	mux.HandleFunc("GET /leader", service.handleLeaderScreen)
+	mux.HandleFunc("POST /leader", service.handleLeaderUnlock)
+	mux.HandleFunc("POST /leader/orders/{id}/void", service.handleLeaderVoidOrder)
 	mux.HandleFunc("GET /system-admin", service.handleSystemAdminScreen)
 	mux.HandleFunc("POST /system-admin", service.handleSystemAdminUnlock)
 	mux.HandleFunc("POST /system-admin/start-event", service.handleSystemAdminStartEvent)
@@ -23,7 +26,6 @@ func (service *OrderService) Handler() http.Handler {
 	mux.HandleFunc("POST /api/orders", service.handlePlaceOrder)
 	mux.HandleFunc("POST /api/orders/{id}/reprint", service.handleReprintOrder)
 	mux.HandleFunc("GET /api/kitchen", service.handleKitchen)
-	mux.HandleFunc("GET /api/admin/sales", service.handleAdminSales)
 	return mux
 }
 
@@ -74,17 +76,68 @@ func (service *OrderService) handleKitchenScreen(writer http.ResponseWriter, req
 	})
 }
 
-// handleAdminScreen draws the sales of one event day. An empty date means
-// today.
-func (service *OrderService) handleAdminScreen(writer http.ResponseWriter, request *http.Request) {
-	sales, err := service.GetAdminSales(request.URL.Query().Get("date"))
+// handleLeaderScreen always shows the blank PIN form: ADR-0006 keeps no
+// session, so a fresh visit never remembers a prior unlock.
+func (service *OrderService) handleLeaderScreen(writer http.ResponseWriter, request *http.Request) {
+	render(writer, "leader.html", leaderPage{page: page{Title: "Leader", BodyClass: "theme"}})
+}
+
+func (service *OrderService) handleLeaderUnlock(writer http.ResponseWriter, request *http.Request) {
+	service.renderLeader(writer, request.FormValue("pin"), "", "figures")
+}
+
+// handleLeaderVoidOrder voids a Placed order (CONTEXT.md, issue #45) and
+// redraws the Leader page on the Orders tab, where every void starts.
+func (service *OrderService) handleLeaderVoidOrder(writer http.ResponseWriter, request *http.Request) {
+	pin := request.FormValue("pin")
+	var message string
+	if service.leaderUnlocked(pin) {
+		switch row, err := service.VoidOrder(request.PathValue("id")); {
+		case errors.Is(err, ErrNotFound):
+			message = "Order not found."
+		case errors.Is(err, ErrValidation):
+			message = validationMessage(err)
+		case err != nil:
+			log.Printf("void order: %v", err)
+			message = "Could not void the order."
+		default:
+			message = fmt.Sprintf("Order #%d voided.", row.OrderNumber)
+		}
+	}
+	service.renderLeader(writer, pin, message, "orders")
+}
+
+// leaderUnlocked reports whether pin matches the configured PIN. An unset
+// LEADER_PIN never unlocks, so a missing deploy config fails closed instead
+// of leaving sales and void open to an empty submit.
+func (service *OrderService) leaderUnlocked(pin string) bool {
+	return service.LeaderPIN != "" && pin == service.LeaderPIN
+}
+
+// renderLeader checks pin against the configured PIN and draws the Leader
+// page: the blank form again on a wrong PIN, or the unlocked sales figures
+// and order list with pin carried into every void form on a correct one.
+func (service *OrderService) renderLeader(writer http.ResponseWriter, pin string, message string, tab string) {
+	if !service.leaderUnlocked(pin) {
+		render(writer, "leader.html", leaderPage{
+			page:  page{Title: "Leader", BodyClass: "theme"},
+			Error: "Wrong PIN.",
+		})
+		return
+	}
+
+	sales, err := service.GetAdminSales("")
 	if err != nil {
-		log.Printf("admin sales: %v", err)
+		log.Printf("leader sales: %v", err)
 		http.Error(writer, "Could not read the sales", http.StatusInternalServerError)
 		return
 	}
-	render(writer, "admin.html", adminPage{
-		page:               page{Title: "Sales", BodyClass: "theme"},
+	render(writer, "leader.html", leaderPage{
+		page:               page{Title: "Leader", BodyClass: "theme"},
+		Unlocked:           true,
+		PIN:                pin,
+		Message:            message,
+		Tab:                tab,
 		AdminSalesResponse: sales,
 	})
 }
@@ -206,16 +259,6 @@ func (service *OrderService) handleKitchen(writer http.ResponseWriter, request *
 		return
 	}
 	writeJSON(writer, http.StatusOK, board)
-}
-
-func (service *OrderService) handleAdminSales(writer http.ResponseWriter, request *http.Request) {
-	sales, err := service.GetAdminSales(request.URL.Query().Get("date"))
-	if err != nil {
-		log.Printf("admin sales: %v", err)
-		writeError(writer, http.StatusInternalServerError, "Could not read the sales")
-		return
-	}
-	writeJSON(writer, http.StatusOK, sales)
 }
 
 // validationMessage removes the sentinel prefix, so the operator reads only

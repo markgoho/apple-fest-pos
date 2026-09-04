@@ -36,7 +36,7 @@ var pageTemplates = map[string]*template.Template{
 	"home.html":         parsePage("home.html"),
 	"pos.html":          parsePage("pos.html"),
 	"kitchen.html":      parsePage("kitchen.html"),
-	"admin.html":        parsePage("admin.html"),
+	"leader.html":       parsePage("leader.html"),
 	"system-admin.html": parsePage("system-admin.html"),
 }
 
@@ -102,8 +102,17 @@ type kitchenPage struct {
 	KitchenBoard
 }
 
-type adminPage struct {
+// leaderPage draws the Leader PIN gate and, once unlocked, the Figures/Orders
+// tabs. PIN carries the entered PIN back into every void form on the page, so
+// the visit stays unlocked with no session (ADR-0006): nothing is stored
+// server-side, but the browser resubmits it with each void.
+type leaderPage struct {
 	page
+	Unlocked bool
+	PIN      string
+	Error    string
+	Message  string
+	Tab      string
 	AdminSalesResponse
 }
 

@@ -31,6 +31,7 @@ func main() {
 		},
 		StartingOrderNumber: envInt("ORDER_NUMBER_START", 100),
 		SystemAdminPIN:      os.Getenv("SYSTEM_ADMIN_PIN"),
+		LeaderPIN:           os.Getenv("LEADER_PIN"),
 		Now:                 time.Now,
 	}
 

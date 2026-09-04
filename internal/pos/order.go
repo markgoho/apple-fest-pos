@@ -20,6 +20,7 @@ type OrderService struct {
 	Printer             PrinterConfig
 	StartingOrderNumber int
 	SystemAdminPIN      string
+	LeaderPIN           string
 	Now                 func() time.Time
 }
 
@@ -144,6 +145,28 @@ func (service *OrderService) ReprintOrder(orderID string) (PlaceOrderResponse, e
 	}
 
 	return row.response(status, print), nil
+}
+
+// VoidOrder reverses a Placed order into Voided (CONTEXT.md, issue #45): the
+// order drops out of the sales summary and the per-item breakdown but stays
+// in the order list, marked Voided.
+func (service *OrderService) VoidOrder(orderID string) (transactionRow, error) {
+	row, found, err := findByID(service.DB, orderID)
+	if err != nil {
+		return transactionRow{}, err
+	}
+	if !found {
+		return transactionRow{}, ErrNotFound
+	}
+	if row.Status == OrderVoided {
+		return transactionRow{}, fmt.Errorf("%w: Order is already voided", ErrValidation)
+	}
+
+	if _, err := service.DB.Exec(`UPDATE transactions SET status = ? WHERE id = ?`, string(OrderVoided), row.ID); err != nil {
+		return transactionRow{}, fmt.Errorf("void order: %w", err)
+	}
+	row.Status = OrderVoided
+	return row, nil
 }
 
 // ValidateOrder checks the request in the same order as the TypeScript server,

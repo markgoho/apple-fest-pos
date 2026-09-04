@@ -120,14 +120,16 @@ func (service *OrderService) GetAdminSales(date string) (AdminSalesResponse, err
 	}
 
 	orders := make([]AdminSalesOrder, 0, len(rows))
-	summary := AdminSalesSummary{OrderCount: len(rows)}
+	summary := AdminSalesSummary{}
 	quantities := map[string]int{}
 
 	for _, row := range rows {
 		request := parseStoredRequest(row.RequestJSON)
 		items := make([]AdminSalesOrderLine, 0, len(request.Items))
 		for _, line := range request.Items {
-			quantities[line.MenuItemID] += line.Quantity
+			if row.Status != OrderVoided {
+				quantities[line.MenuItemID] += line.Quantity
+			}
 			items = append(items, AdminSalesOrderLine{
 				MenuItemID: line.MenuItemID,
 				Name:       MenuItemName(line.MenuItemID),
@@ -135,7 +137,12 @@ func (service *OrderService) GetAdminSales(date string) (AdminSalesResponse, err
 			})
 		}
 
-		summary.TotalCents += row.TotalCents
+		// A Voided order drops out of the summary as if it were never sold,
+		// but stays in Orders below, marked Voided (CONTEXT.md, issue #45).
+		if row.Status != OrderVoided {
+			summary.OrderCount++
+			summary.TotalCents += row.TotalCents
+		}
 		if row.Status == OrderPrintFailed {
 			summary.PrintFailures++
 		}

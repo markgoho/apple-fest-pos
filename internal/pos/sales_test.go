@@ -50,6 +50,51 @@ func TestAdminSalesAggregatesTheDay(t *testing.T) {
 	}
 }
 
+func TestAdminSalesDropsAVoidedOrderFromTheSummary(t *testing.T) {
+	service := newTestService(t)
+
+	first := validOrder()
+	first["clientOrderId"] = "voided-sales-1"
+	_, body := postOrder(t, service, first)
+	orderID := body["order"].(map[string]any)["id"].(string)
+
+	second := validOrder()
+	second["clientOrderId"] = "voided-sales-2"
+	postOrder(t, service, second)
+
+	if _, err := service.VoidOrder(orderID); err != nil {
+		t.Fatalf("void order: %v", err)
+	}
+
+	sales, err := service.GetAdminSales("")
+	if err != nil {
+		t.Fatalf("admin sales: %v", err)
+	}
+
+	if sales.Summary.OrderCount != 1 {
+		t.Errorf("orderCount = %d, want 1", sales.Summary.OrderCount)
+	}
+	if sales.Summary.TotalCents != 2000 {
+		t.Errorf("totalCents = %d, want 2000", sales.Summary.TotalCents)
+	}
+	if len(sales.Items) != 1 || sales.Items[0].Quantity != 2 {
+		t.Errorf("items = %+v, want one line of quantity 2", sales.Items)
+	}
+
+	if len(sales.Orders) != 2 {
+		t.Fatalf("orders = %d, want 2", len(sales.Orders))
+	}
+	var voided AdminSalesOrder
+	for _, order := range sales.Orders {
+		if order.ID == orderID {
+			voided = order
+		}
+	}
+	if voided.Status != OrderVoided {
+		t.Errorf("voided order status = %q, want %q", voided.Status, OrderVoided)
+	}
+}
+
 func TestAdminSalesOfAnEmptyDate(t *testing.T) {
 	service := newTestService(t)
 
