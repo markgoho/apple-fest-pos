@@ -1,6 +1,32 @@
 package pos
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
+
+func TestCurrentBusinessDateUsesLocalTime(t *testing.T) {
+	// 9pm Eastern is already the next UTC day; the business date must still
+	// read as the local day, or a Leader checking Figures that evening sees
+	// an empty "today".
+	eastern, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		t.Fatalf("load America/New_York: %v", err)
+	}
+	nine := time.Date(2026, 10, 3, 21, 0, 0, 0, eastern)
+
+	original := time.Local
+	time.Local = eastern
+	defer func() { time.Local = original }()
+
+	got := CurrentBusinessDate(func() time.Time { return nine })
+	if want := "2026-10-03"; got != want {
+		t.Errorf("CurrentBusinessDate = %q, want %q", got, want)
+	}
+	if utcDate := nine.UTC().Format("2006-01-02"); utcDate == got {
+		t.Fatalf("test is not exercising the UTC/local boundary: both gave %q", utcDate)
+	}
+}
 
 func TestAdminSalesAggregatesTheDay(t *testing.T) {
 	service := newTestService(t)

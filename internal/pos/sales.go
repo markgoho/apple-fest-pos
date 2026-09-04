@@ -64,10 +64,16 @@ type storedRequest struct {
 	Notes string     `json:"notes"`
 }
 
-// CurrentBusinessDate gives today's business date. It is the UTC date, which
-// matches the TypeScript server exactly.
+// CurrentBusinessDate gives today's business date, read in local time (the
+// deploy unit sets TZ=America/New_York; time.Local honours it, the same way
+// pages.go's clock template func does). Written business dates stay UTC
+// (order_store.go's insertOrder): the event runs 8am-6pm Eastern, well
+// inside one UTC day, so a write-time UTC date always agrees with the local
+// date during those hours. Reading "today" in local time only matters for a
+// Leader who opens the page after the UTC day has rolled over but the local
+// day has not, around 8pm Eastern.
 func CurrentBusinessDate(now func() time.Time) string {
-	return now().UTC().Format("2006-01-02")
+	return now().In(time.Local).Format("2006-01-02")
 }
 
 // ReadSalesRows reads every order of one business date, newest order first.
