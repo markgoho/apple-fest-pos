@@ -20,6 +20,10 @@ You, the booth's technical owner. The System Admin page holds data reset and pri
 
 One selling day of Apple Fest. The 2026 event is a Saturday and a Sunday, roughly 8am to 6pm each. An event day is the unit that order numbers reset on and that sales screens select.
 
+## Start Event
+
+The one-way switch the System Admin sets from the System Admin page once pre-event setup and testing are finished. It exists to close off the data reset tool: the wipe that clears every order can run only before Start Event, never after, so a real Event day's sales can never be erased by mistake.
+
 ## Side
 
 The condiment served with a potato pancake: sour cream, applesauce or ketchup. A Side comes from this fixed set, and the Operator chooses it when the pancake goes into the order, not afterwards. A pancake with no Side is a normal order, not an incomplete one. A Side is not a Note: a Note is free text, and a Side is one of a known set that can be counted.
