@@ -34,6 +34,12 @@ type MenuItem struct {
 	// draws one tile per Side plus one Plain tile; the side rides on the cart
 	// line, not on a separate step.
 	Sides []Side `json:"sides,omitempty"`
+
+	// ChartColorVar names the pos.css custom property (without the leading
+	// "--") that draws this item's segment of the Leader Figures tab's hourly
+	// revenue chart (issue #12), so the chart and the rest of the theme share
+	// one palette.
+	ChartColorVar string `json:"-"`
 }
 
 // Label gives the text a /pos tile prints for the item.
@@ -57,14 +63,15 @@ func (item MenuItem) HasSide(id string) bool {
 // MenuItems holds the menu in sort order.
 var MenuItems = []MenuItem{
 	{ID: "potato-pancake", Name: "Potato Pancake", Category: "Potato Pancakes", PriceCents: 1000, SortOrder: 10, PrintGroup: PrintGroupKitchen,
+		ChartColorVar: "apple-red",
 		Sides: []Side{
 			{ID: "sour-cream", Label: "Sour Cream"},
 			{ID: "applesauce", Label: "Applesauce"},
 			{ID: "ketchup", Label: "Ketchup"},
 		}},
-	{ID: "og-toastie", Name: "OG Toastie", TileLabel: "OG", Category: "Grilled Cheese", PriceCents: 500, SortOrder: 20, PrintGroup: PrintGroupKitchen},
-	{ID: "pizza-toastie", Name: "Pizza Toastie", TileLabel: "Pizza", Category: "Grilled Cheese", PriceCents: 600, SortOrder: 30, PrintGroup: PrintGroupKitchen},
-	{ID: "harvest-toastie", Name: "Harvest Toastie", TileLabel: "Harvest", Category: "Grilled Cheese", PriceCents: 800, SortOrder: 40, PrintGroup: PrintGroupKitchen},
+	{ID: "og-toastie", Name: "OG Toastie", TileLabel: "OG", Category: "Grilled Cheese", PriceCents: 500, SortOrder: 20, PrintGroup: PrintGroupKitchen, ChartColorVar: "gold-tan"},
+	{ID: "pizza-toastie", Name: "Pizza Toastie", TileLabel: "Pizza", Category: "Grilled Cheese", PriceCents: 600, SortOrder: 30, PrintGroup: PrintGroupKitchen, ChartColorVar: "leaf-green"},
+	{ID: "harvest-toastie", Name: "Harvest Toastie", TileLabel: "Harvest", Category: "Grilled Cheese", PriceCents: 800, SortOrder: 40, PrintGroup: PrintGroupKitchen, ChartColorVar: "gold-tan-ink"},
 }
 
 var menuItemsByID = func() map[string]MenuItem {

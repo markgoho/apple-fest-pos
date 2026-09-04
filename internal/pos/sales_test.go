@@ -28,6 +28,90 @@ func TestCurrentBusinessDateUsesLocalTime(t *testing.T) {
 	}
 }
 
+func TestEventDayPairOnSaturdayGivesTodayAndTomorrow(t *testing.T) {
+	eastern, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		t.Fatalf("load America/New_York: %v", err)
+	}
+	original := time.Local
+	time.Local = eastern
+	defer func() { time.Local = original }()
+
+	saturday := time.Date(2026, 10, 3, 9, 0, 0, 0, eastern)
+	saturdayDate, sundayDate := eventDayPair(func() time.Time { return saturday })
+	if saturdayDate != "2026-10-03" || sundayDate != "2026-10-04" {
+		t.Errorf("eventDayPair = (%q, %q), want (2026-10-03, 2026-10-04)", saturdayDate, sundayDate)
+	}
+}
+
+func TestEventDayPairOnSundayGivesYesterdayAndToday(t *testing.T) {
+	eastern, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		t.Fatalf("load America/New_York: %v", err)
+	}
+	original := time.Local
+	time.Local = eastern
+	defer func() { time.Local = original }()
+
+	sunday := time.Date(2026, 10, 4, 9, 0, 0, 0, eastern)
+	saturdayDate, sundayDate := eventDayPair(func() time.Time { return sunday })
+	if saturdayDate != "2026-10-03" || sundayDate != "2026-10-04" {
+		t.Errorf("eventDayPair = (%q, %q), want (2026-10-03, 2026-10-04)", saturdayDate, sundayDate)
+	}
+}
+
+func TestAdminSalesChartBucketsRevenueByLocalHour(t *testing.T) {
+	service := newTestService(t)
+	eastern, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		t.Fatalf("load America/New_York: %v", err)
+	}
+	original := time.Local
+	time.Local = eastern
+	defer func() { time.Local = original }()
+
+	nineAM := time.Date(2026, 10, 3, 9, 0, 0, 0, eastern)
+	service.Now = func() time.Time { return nineAM }
+	first := validOrder()
+	first["clientOrderId"] = "chart-1"
+	postOrder(t, service, first)
+
+	elevenAM := time.Date(2026, 10, 3, 11, 0, 0, 0, eastern)
+	service.Now = func() time.Time { return elevenAM }
+	second := validOrder()
+	second["clientOrderId"] = "chart-2"
+	second["items"] = []map[string]any{{"menuItemId": "og-toastie", "quantity": 1}}
+	postOrder(t, service, second)
+
+	sales, err := service.GetAdminSales("2026-10-03")
+	if err != nil {
+		t.Fatalf("admin sales: %v", err)
+	}
+
+	// The bucket range runs 9a-11a: the earliest to the latest hour with a
+	// sale, not a hard-coded booth range (issue #12).
+	if len(sales.Chart.Bars) != 3 {
+		t.Fatalf("bars = %d, want 3 (9a, 10a, 11a)", len(sales.Chart.Bars))
+	}
+	if sales.Chart.Bars[0].Label != "9a" || sales.Chart.Bars[2].Label != "11a" {
+		t.Errorf("bar labels = %q, %q, want 9a, 11a", sales.Chart.Bars[0].Label, sales.Chart.Bars[2].Label)
+	}
+	if len(sales.Chart.Bars[1].Segments) != 0 {
+		t.Errorf("10a had no sales, so it must draw no segments, got %+v", sales.Chart.Bars[1].Segments)
+	}
+
+	// Potato Pancake x2 = $20, the day's tallest bar, so it fills the chart.
+	if len(sales.Chart.Bars[0].Segments) != 1 {
+		t.Fatalf("9a segments = %+v, want one", sales.Chart.Bars[0].Segments)
+	}
+	if got := sales.Chart.Bars[0].Segments[0].ColorVar; got != "apple-red" {
+		t.Errorf("9a colorVar = %q, want apple-red", got)
+	}
+	if got := sales.Chart.Bars[0].Segments[0].Height; got != chartHeight {
+		t.Errorf("tallest bar height = %v, want %v (full scale)", got, chartHeight)
+	}
+}
+
 func TestAdminSalesAggregatesTheDay(t *testing.T) {
 	service := newTestService(t)
 

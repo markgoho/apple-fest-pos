@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestLeaderAlwaysStartsLocked(t *testing.T) {
@@ -103,5 +104,79 @@ func TestLeaderVoidOfAnUnknownOrderReportsNotFound(t *testing.T) {
 	recorder := postForm(t, service, "/leader/orders/does-not-exist/void", url.Values{"pin": {service.LeaderPIN}})
 	if !strings.Contains(recorder.Body.String(), "Order not found") {
 		t.Error("voiding an unknown order does not report Order not found")
+	}
+}
+
+func TestLeaderShowsTheDayToggleAndEventTotal(t *testing.T) {
+	service := newTestService(t)
+	eastern, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		t.Fatalf("load America/New_York: %v", err)
+	}
+	original := time.Local
+	time.Local = eastern
+	defer func() { time.Local = original }()
+	service.Now = func() time.Time { return time.Date(2026, 10, 3, 9, 0, 0, 0, eastern) }
+	postOrder(t, service, validOrder())
+
+	body := postForm(t, service, "/leader", url.Values{"pin": {service.LeaderPIN}}).Body.String()
+	if !strings.Contains(body, `formaction="/leader?date=2026-10-03"`) {
+		t.Error("the day toggle does not offer Saturday, 2026-10-03")
+	}
+	if !strings.Contains(body, `formaction="/leader?date=2026-10-04"`) {
+		t.Error("the day toggle does not offer Sunday, 2026-10-04")
+	}
+	if !strings.Contains(body, "Event total") {
+		t.Error("the Figures tab does not show an event total")
+	}
+}
+
+func TestLeaderDayToggleSwitchesTheViewedDate(t *testing.T) {
+	service := newTestService(t)
+	eastern, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		t.Fatalf("load America/New_York: %v", err)
+	}
+	original := time.Local
+	time.Local = eastern
+	defer func() { time.Local = original }()
+	service.Now = func() time.Time { return time.Date(2026, 10, 3, 9, 0, 0, 0, eastern) }
+	postOrder(t, service, validOrder())
+
+	saturday := postForm(t, service, "/leader?date=2026-10-03", url.Values{"pin": {service.LeaderPIN}}).Body.String()
+	if !strings.Contains(saturday, "Potato Pancake") {
+		t.Error("2026-10-03 does not show the order placed that day")
+	}
+
+	sunday := postForm(t, service, "/leader?date=2026-10-04", url.Values{"pin": {service.LeaderPIN}}).Body.String()
+	if strings.Contains(sunday, "Potato Pancake") {
+		t.Error("2026-10-04 shows an order placed on 2026-10-03")
+	}
+	if !strings.Contains(sunday, "No items sold yet today") {
+		t.Error("2026-10-04 does not show an empty day")
+	}
+	if !strings.Contains(sunday, "Event total") {
+		t.Error("2026-10-04 does not show the event total")
+	}
+}
+
+func TestLeaderVoidPreservesTheViewedDate(t *testing.T) {
+	service := newTestService(t)
+	eastern, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		t.Fatalf("load America/New_York: %v", err)
+	}
+	original := time.Local
+	time.Local = eastern
+	defer func() { time.Local = original }()
+	service.Now = func() time.Time { return time.Date(2026, 10, 3, 9, 0, 0, 0, eastern) }
+	_, body := postOrder(t, service, validOrder())
+	orderID := body["order"].(map[string]any)["id"].(string)
+
+	recorder := postForm(t, service, "/leader/orders/"+orderID+"/void", url.Values{
+		"pin": {service.LeaderPIN}, "date": {"2026-10-03"},
+	})
+	if !strings.Contains(recorder.Body.String(), "<span>2026-10-03</span>") {
+		t.Error("voiding does not keep showing the date the Leader was viewing")
 	}
 }

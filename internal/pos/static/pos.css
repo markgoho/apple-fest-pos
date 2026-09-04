@@ -696,6 +696,46 @@ button:disabled {
   line-height: 1;
 }
 
+.card .sub {
+  margin-block-start: 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--gold-tan-ink);
+}
+
+.chart-block {
+  display: grid;
+  gap: 0.5rem;
+  margin-block-end: 1.5rem;
+}
+
+.chart-block svg {
+  display: block;
+  inline-size: 100%;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  font-size: 0.75rem;
+  color: var(--gold-tan-ink);
+  font-weight: 700;
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.legend i {
+  inline-size: 0.7rem;
+  block-size: 0.7rem;
+  border-radius: 0.2rem;
+  display: inline-block;
+}
+
 .panel {
   background: var(--panel);
   border-radius: 1.5rem;

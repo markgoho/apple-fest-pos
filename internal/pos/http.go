@@ -85,7 +85,7 @@ func (service *OrderService) handleLeaderScreen(writer http.ResponseWriter, requ
 }
 
 func (service *OrderService) handleLeaderUnlock(writer http.ResponseWriter, request *http.Request) {
-	service.renderLeader(writer, request.FormValue("pin"), "", "figures")
+	service.renderLeader(writer, request.FormValue("pin"), "", "figures", request.FormValue("date"))
 }
 
 // handleLeaderVoidOrder voids a Placed order (CONTEXT.md, issue #45) and
@@ -106,7 +106,7 @@ func (service *OrderService) handleLeaderVoidOrder(writer http.ResponseWriter, r
 			message = fmt.Sprintf("Order #%d voided.", row.OrderNumber)
 		}
 	}
-	service.renderLeader(writer, pin, message, "orders")
+	service.renderLeader(writer, pin, message, "orders", request.FormValue("date"))
 }
 
 // leaderUnlocked reports whether pin matches the configured PIN. An unset
@@ -119,7 +119,9 @@ func (service *OrderService) leaderUnlocked(pin string) bool {
 // renderLeader checks pin against the configured PIN and draws the Leader
 // page: the blank form again on a wrong PIN, or the unlocked sales figures
 // and order list with pin carried into every void form on a correct one.
-func (service *OrderService) renderLeader(writer http.ResponseWriter, pin string, message string, tab string) {
+// date picks the business date the Figures/Orders tabs show, defaulting to
+// today; it comes from the day toggle's ?date= or a void form's hidden field.
+func (service *OrderService) renderLeader(writer http.ResponseWriter, pin string, message string, tab string, date string) {
 	if !service.leaderUnlocked(pin) {
 		render(writer, "leader.html", leaderPage{
 			page:  page{Title: "Leader", BodyClass: "theme"},
@@ -128,9 +130,19 @@ func (service *OrderService) renderLeader(writer http.ResponseWriter, pin string
 		return
 	}
 
-	sales, err := service.GetAdminSales("")
+	if date == "" {
+		date = CurrentBusinessDate(service.Now)
+	}
+	sales, err := service.GetAdminSales(date)
 	if err != nil {
 		log.Printf("leader sales: %v", err)
+		http.Error(writer, "Could not read the sales", http.StatusInternalServerError)
+		return
+	}
+	saturday, sunday := eventDayPair(service.Now)
+	eventTotal, err := service.GetEventTotal(saturday, sunday)
+	if err != nil {
+		log.Printf("leader event total: %v", err)
 		http.Error(writer, "Could not read the sales", http.StatusInternalServerError)
 		return
 	}
@@ -140,6 +152,9 @@ func (service *OrderService) renderLeader(writer http.ResponseWriter, pin string
 		PIN:                pin,
 		Message:            message,
 		Tab:                tab,
+		Saturday:           saturday,
+		Sunday:             sunday,
+		EventTotal:         eventTotal,
 		AdminSalesResponse: sales,
 	})
 }

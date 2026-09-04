@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -24,9 +25,19 @@ var StaticFiles embed.FS
 var buildVersion = fmt.Sprintf("%d", time.Now().Unix())
 
 var templateFuncs = template.FuncMap{
-	"cents": FormatCents,
-	"clock": FormatClock,
-	"asset": func(path string) string { return path + "?v=" + buildVersion },
+	"cents":     FormatCents,
+	"clock":     FormatClock,
+	"asset":     func(path string) string { return path + "?v=" + buildVersion },
+	"menuItems": func() []MenuItem { return MenuItems },
+	"svgnum": func(value float64) string {
+		// Stacking segments by repeated subtraction can leave a segment a hair
+		// below zero (float division rarely lands exactly on the total), which
+		// rounds to "-0.0" here; SVG reads that fine, but it looks like a bug.
+		if formatted := strconv.FormatFloat(value, 'f', 1, 64); formatted != "-0.0" {
+			return formatted
+		}
+		return "0.0"
+	},
 }
 
 // pageTemplates holds one parsed template per screen, keyed by the template
@@ -113,6 +124,11 @@ type leaderPage struct {
 	Error    string
 	Message  string
 	Tab      string
+	// Saturday and Sunday are the event's two business dates (see
+	// eventDayPair), the day toggle's two choices.
+	Saturday   string
+	Sunday     string
+	EventTotal AdminSalesEventTotal
 	AdminSalesResponse
 }
 
