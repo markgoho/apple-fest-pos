@@ -30,6 +30,7 @@ func main() {
 			KitchenPort: envOrDefault("KITCHEN_PRINTER_PORT", "9100"),
 		},
 		StartingOrderNumber: envInt("ORDER_NUMBER_START", 100),
+		SystemAdminPIN:      os.Getenv("SYSTEM_ADMIN_PIN"),
 		Now:                 time.Now,
 	}
 

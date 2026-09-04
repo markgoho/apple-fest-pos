@@ -718,6 +718,60 @@ tr.fail {
   background: #fef2f2;
 }
 
+/* The System Admin screen */
+
+.admin {
+  min-block-size: var(--app-height, 100dvh);
+  padding: 1.5rem;
+  display: grid;
+  gap: 1.5rem;
+  align-content: start;
+  max-inline-size: 40rem;
+  margin-inline: auto;
+}
+
+.admin h1 {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  color: var(--apple-red-dark);
+}
+
+.notice {
+  background: var(--panel);
+  border-radius: 0.8rem;
+  padding: 0.9rem 1.1rem;
+  font-weight: 700;
+}
+
+.notice.warn {
+  background: #fee2e2;
+  color: var(--apple-red-dark);
+}
+
+.pin-form,
+.panel form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.pin-form label {
+  font-weight: 800;
+  color: var(--gold-tan-ink);
+}
+
+.pin-form input {
+  min-block-size: var(--tap);
+  border: 2px solid var(--gold-tan);
+  border-radius: 0.8rem;
+  padding: 0.5rem 0.9rem;
+  font-size: 1.5rem;
+  letter-spacing: 0.3em;
+  text-align: center;
+}
+
+.danger {
+  background: var(--apple-red-dark);
+}
+
 .kiosk-start {
   position: fixed;
   inset: 0;

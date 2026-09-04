@@ -25,6 +25,7 @@ func newTestService(t *testing.T) *OrderService {
 		DB:                  database,
 		Printer:             PrinterConfig{Enabled: false, WindowPort: "9100", KitchenPort: "9100"},
 		StartingOrderNumber: 100,
+		SystemAdminPIN:      "4242",
 		Now:                 time.Now,
 	}
 }

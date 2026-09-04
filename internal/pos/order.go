@@ -19,6 +19,7 @@ type OrderService struct {
 	DB                  *sql.DB
 	Printer             PrinterConfig
 	StartingOrderNumber int
+	SystemAdminPIN      string
 	Now                 func() time.Time
 }
 

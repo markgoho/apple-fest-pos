@@ -1,0 +1,48 @@
+{{define "content"}}
+<main class="admin">
+  <header class="bar">
+    <a class="home" href="/">Apple Fest POS</a>
+  </header>
+
+  <h1>System Admin</h1>
+
+  {{if .Unlocked}}
+  {{if .Message}}<p class="notice">{{.Message}}</p>{{end}}
+
+  <section class="panel">
+    <h2>Start Event</h2>
+    {{if .EventStarted}}
+    <p>Start Event is set. The data-reset tool is locked for the rest of the event.</p>
+    {{else}}
+    <p>Start Event locks the data-reset tool for the rest of the event. Set it once pre-event setup and testing are finished.</p>
+    <form method="post" action="/system-admin/start-event">
+      <input type="hidden" name="pin" value="{{.PIN}}">
+      <button type="submit">Set Start Event</button>
+    </form>
+    {{end}}
+  </section>
+
+  <section class="panel">
+    <h2>Data reset</h2>
+    {{if .EventStarted}}
+    <p class="empty">Locked: Start Event is set.</p>
+    {{else}}
+    <p>Wipe all orders deletes every order and restarts order numbers at the start. This cannot be undone.</p>
+    <form method="post" action="/system-admin/reset" id="reset-form">
+      <input type="hidden" name="pin" value="{{.PIN}}">
+      <button type="submit" class="danger">Wipe all orders</button>
+    </form>
+    {{end}}
+  </section>
+
+  {{else}}
+  {{if .Error}}<p class="notice warn">{{.Error}}</p>{{end}}
+  <form method="post" action="/system-admin" class="pin-form">
+    <label for="pin">PIN</label>
+    <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="pin" name="pin" autofocus>
+    <button type="submit">Unlock</button>
+  </form>
+  {{end}}
+</main>
+{{if .Unlocked}}<script src="{{asset "/static/system-admin.js"}}" defer></script>{{end}}
+{{end}}

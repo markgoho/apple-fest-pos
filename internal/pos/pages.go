@@ -33,10 +33,11 @@ var templateFuncs = template.FuncMap{
 // file name. html/template finds a missing field only when it runs, so every
 // screen has a test that renders it.
 var pageTemplates = map[string]*template.Template{
-	"home.html":    parsePage("home.html"),
-	"pos.html":     parsePage("pos.html"),
-	"kitchen.html": parsePage("kitchen.html"),
-	"admin.html":   parsePage("admin.html"),
+	"home.html":         parsePage("home.html"),
+	"pos.html":          parsePage("pos.html"),
+	"kitchen.html":      parsePage("kitchen.html"),
+	"admin.html":        parsePage("admin.html"),
+	"system-admin.html": parsePage("system-admin.html"),
 }
 
 func parsePage(name string) *template.Template {
@@ -104,6 +105,20 @@ type kitchenPage struct {
 type adminPage struct {
 	page
 	AdminSalesResponse
+}
+
+// systemAdminPage draws the System Admin PIN gate and, once unlocked, the
+// data-reset tool. PIN carries the entered PIN back into the page's own
+// action forms, so the visit stays unlocked with no session (ADR-0006):
+// nothing is stored server-side, but the browser resubmits it with each
+// action until the page is left and reloaded.
+type systemAdminPage struct {
+	page
+	Unlocked     bool
+	PIN          string
+	EventStarted bool
+	Error        string
+	Message      string
 }
 
 func render(writer http.ResponseWriter, name string, data any) {

@@ -16,6 +16,10 @@ func (service *OrderService) Handler() http.Handler {
 	mux.HandleFunc("GET /pos", handlePOSScreen)
 	mux.HandleFunc("GET /kitchen", service.handleKitchenScreen)
 	mux.HandleFunc("GET /admin", service.handleAdminScreen)
+	mux.HandleFunc("GET /system-admin", service.handleSystemAdminScreen)
+	mux.HandleFunc("POST /system-admin", service.handleSystemAdminUnlock)
+	mux.HandleFunc("POST /system-admin/start-event", service.handleSystemAdminStartEvent)
+	mux.HandleFunc("POST /system-admin/reset", service.handleSystemAdminReset)
 	mux.HandleFunc("POST /api/orders", service.handlePlaceOrder)
 	mux.HandleFunc("POST /api/orders/{id}/reprint", service.handleReprintOrder)
 	mux.HandleFunc("GET /api/kitchen", service.handleKitchen)
@@ -82,6 +86,79 @@ func (service *OrderService) handleAdminScreen(writer http.ResponseWriter, reque
 	render(writer, "admin.html", adminPage{
 		page:               page{Title: "Sales", BodyClass: "theme"},
 		AdminSalesResponse: sales,
+	})
+}
+
+// handleSystemAdminScreen always shows the blank PIN form: ADR-0006 keeps no
+// session, so a fresh visit never remembers a prior unlock.
+func (service *OrderService) handleSystemAdminScreen(writer http.ResponseWriter, request *http.Request) {
+	render(writer, "system-admin.html", systemAdminPage{page: page{Title: "System Admin", BodyClass: "theme"}})
+}
+
+func (service *OrderService) handleSystemAdminUnlock(writer http.ResponseWriter, request *http.Request) {
+	service.renderSystemAdmin(writer, request.FormValue("pin"), "")
+}
+
+func (service *OrderService) handleSystemAdminStartEvent(writer http.ResponseWriter, request *http.Request) {
+	pin := request.FormValue("pin")
+	var message string
+	if service.systemAdminUnlocked(pin) {
+		if err := service.StartEvent(); err != nil {
+			log.Printf("start event: %v", err)
+			message = "Could not set Start Event."
+		}
+	}
+	service.renderSystemAdmin(writer, pin, message)
+}
+
+func (service *OrderService) handleSystemAdminReset(writer http.ResponseWriter, request *http.Request) {
+	pin := request.FormValue("pin")
+	var message string
+	if service.systemAdminUnlocked(pin) {
+		switch err := service.ResetAllOrders(); {
+		case errors.Is(err, ErrEventStarted):
+			message = "Locked: Start Event is set."
+		case err != nil:
+			log.Printf("reset all orders: %v", err)
+			message = "Could not wipe orders."
+		default:
+			message = "All orders wiped."
+		}
+	}
+	service.renderSystemAdmin(writer, pin, message)
+}
+
+// systemAdminUnlocked reports whether pin matches the configured PIN. An
+// unset SYSTEM_ADMIN_PIN never unlocks, so a missing deploy config fails
+// closed instead of leaving the reset tool open to an empty submit.
+func (service *OrderService) systemAdminUnlocked(pin string) bool {
+	return service.SystemAdminPIN != "" && pin == service.SystemAdminPIN
+}
+
+// renderSystemAdmin checks pin against the configured PIN and draws the
+// System Admin page: the blank form again on a wrong PIN, or the unlocked
+// tool with pin carried into its action forms on a correct one.
+func (service *OrderService) renderSystemAdmin(writer http.ResponseWriter, pin string, message string) {
+	if !service.systemAdminUnlocked(pin) {
+		render(writer, "system-admin.html", systemAdminPage{
+			page:  page{Title: "System Admin", BodyClass: "theme"},
+			Error: "Wrong PIN.",
+		})
+		return
+	}
+
+	started, err := service.EventStarted()
+	if err != nil {
+		log.Printf("event started: %v", err)
+		http.Error(writer, "Could not read Start Event", http.StatusInternalServerError)
+		return
+	}
+	render(writer, "system-admin.html", systemAdminPage{
+		page:         page{Title: "System Admin", BodyClass: "theme"},
+		Unlocked:     true,
+		PIN:          pin,
+		EventStarted: started,
+		Message:      message,
 	})
 }
 
