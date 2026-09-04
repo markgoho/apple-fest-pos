@@ -14,7 +14,7 @@ An Operator and a Leader can be the same human at different moments. The distinc
 
 ## System Admin
 
-You, the booth's technical owner. The System Admin page holds data reset and printer network setup and diagnostics, sized for troubleshooting an air-gapped event with no internet. It is PIN-gated and is never linked from `/pos`: it is your own tool, not something discovered from the tablet.
+You, the booth's technical owner. The System Admin page holds data reset and printer diagnostics, sized for troubleshooting an air-gapped event with no internet. It is PIN-gated and is never linked from `/pos`: it is your own tool, not something discovered from the tablet. Printer addresses themselves are set at deploy time, not from this page.
 
 ## Event day
 
@@ -36,6 +36,10 @@ The paper the customer takes away. It carries the order number, which is how the
 
 The paper the cook works from. It lists what to make, and it prints on the Kitchen Printer. A Kitchen Ticket that is printed a second time carries a REPRINT mark, so the kitchen checks the order number instead of cooking the order again.
 
+## Test ticket
+
+A print sent from the System Admin page to prove a printer works, formatted like a real Customer Receipt or Kitchen Ticket but belonging to no order: it carries a TEST mark instead of an order number, and it never writes a row to `transactions`. Unlike a Customer Receipt or Kitchen Ticket, a Test ticket has no printed-once rule to follow, because it is never Placed and never a sale.
+
 ## Window Printer
 
 The thermal printer at the booth window. It prints the Customer Receipt only.
@@ -54,4 +58,4 @@ The state of a Placed order the Leader has reversed. A Voided order drops out of
 
 ## Sent
 
-The state of a document that left the tablet for its printer. Sent is not proof that paper came out: the printer answers nothing about paper, so an empty roll, an open cover and a jam all count as Sent. No state in this system proves a ticket exists. Only a human eye on the tray does.
+The state of a document that left the tablet for its printer. Sent is not proof that paper came out: placing or reprinting an order never reads the printer's reply, so an empty roll, an open cover and a jam all count as Sent. No state a Placed order goes through proves a ticket exists. Only a human eye on the tray does. The System Admin's printer check is the one place this system does ask the printer for its own status, and only there, as a stand-alone diagnostic outside the order flow.

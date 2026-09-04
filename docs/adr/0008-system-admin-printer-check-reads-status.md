@@ -1,0 +1,13 @@
+---
+status: accepted
+---
+
+# The System Admin printer check reads status bytes; placing and reprinting an order still don't
+
+The System Admin page's printer tooling ([#43](https://github.com/markgoho/apple-fest-pos/issues/43), [#50](https://github.com/markgoho/apple-fest-pos/issues/50)) adds two admin-only actions: "Check printers," which opens a socket to the Window and Kitchen printers and reads back their `DLE EOT`/`GS r` status bytes (online, cover, paper), and "Send test ticket," which prints a real, order-shaped document through the existing builders without writing a `transactions` row. Both are new code paths. `sendEscPos` (`internal/pos/printer.go`), the function every real order still goes through, is unchanged: it writes the payload and closes without reading a reply.
+
+This looks like it contradicts `CONTEXT.md`'s Sent entry: "the printer answers nothing about paper... No state in this system proves a ticket exists." It doesn't. That entry describes the live order-print path, and it was written against real-hardware evidence, from [#34](https://github.com/markgoho/apple-fest-pos/issues/34), that the printer originally in the booth, an ITPP068, answered its status queries inconsistently — a random subset came back `connection reset by peer`, and once its status bytes claimed "no error, paper present" during a fault it was visibly signaling. Trusting that printer's replies would have been a mistake. The booth's printers are now both Munbyn ITPP047(P) units ([#38](https://github.com/markgoho/apple-fest-pos/issues/38)), and the same #34 test found the ITPP047 answers all six status queries cleanly on every run. Status became trustworthy because the hardware changed, not because the original caution in #34 was wrong.
+
+The alternative was to skip status-reading and lean on "Send test ticket" alone, keeping to the existing rule that only a human eye on the tray proves a print worked. Rejected: #34's burst test showed even the reliable ITPP047 can accept a write over TCP and still silently lose the job, so a test ticket alone cannot tell "not configured," "unreachable," and "reachable but printing" apart before paper is spent on the question. The status check answers those cheaply, first; the test ticket remains the only proof that a document actually printed.
+
+This stays scoped to the System Admin's two manual troubleshooting actions. `PrintOrder` and `PrintReprint`, the paths every real order takes, keep firing and forgetting: Start Event's live order flow has no admin standing by to read a probe result, and paper in the customer's or cook's hand remains the only proof that matters there.
