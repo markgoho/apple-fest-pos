@@ -14,12 +14,41 @@ const moreButton = document.getElementById("more");
 const moreSheet = document.getElementById("more-sheet");
 const moreClose = document.getElementById("more-close");
 const scrim = document.getElementById("scrim");
+const readBackElement = document.getElementById("read-back");
 const reprintButton = document.getElementById("reprint");
 
 let cart = [];
 let clientOrderId = newId();
 let submitting = false;
 let lastOrderId = null;
+
+// ADR-0005: placing an order takes two taps. The first arms the control and
+// commits nothing; the second sends the order. Between them the control is
+// inert for half a second, which absorbs a fumbled double tap. Any change to
+// the cart disarms, so an Operator can never place an order that differs from
+// the one they just read back.
+const ARMING_MS = 500;
+const PLACE_LABELS = { review: "Review order", checking: "Check the order…", armed: "Place order" };
+let placeState = "review";
+let armingTimer = null;
+
+function disarm() {
+  if (armingTimer !== null) {
+    clearTimeout(armingTimer);
+    armingTimer = null;
+  }
+  placeState = "review";
+}
+
+function armPlace() {
+  placeState = "checking";
+  draw();
+  armingTimer = setTimeout(() => {
+    armingTimer = null;
+    placeState = "armed";
+    draw();
+  }, ARMING_MS);
+}
 
 function newId() {
   if (globalThis.crypto && globalThis.crypto.randomUUID) {
@@ -57,6 +86,7 @@ function showFault(message) {
 }
 
 function changeQuantity(key, quantity) {
+  disarm();
   cart = cart.filter((line) => {
     if (line.key !== key) {
       return true;
@@ -108,12 +138,17 @@ function drawLine(line) {
 function draw() {
   linesElement.replaceChildren(...cart.map(drawLine));
   totalElement.textContent = formatCents(totalCents());
-  submitButton.disabled = cart.length === 0 || submitting;
-  clearButton.disabled = cart.length === 0 || submitting;
-  submitButton.textContent = submitting ? "Sending…" : "Submit";
+  const empty = cart.length === 0;
+  if (empty) disarm();
+  submitButton.disabled = empty || submitting || placeState === "checking";
+  clearButton.disabled = empty || submitting;
+  submitButton.textContent = submitting ? "Sending…" : PLACE_LABELS[placeState];
+  submitButton.classList.toggle("is-armed", placeState === "armed" && !submitting);
+  readBackElement.hidden = empty || submitting || placeState === "review";
 }
 
 function clearCart() {
+  disarm();
   cart = [];
   clientOrderId = newId();
   draw();
@@ -160,7 +195,8 @@ async function submitOrder() {
     clearCart();
   } catch {
     // The cart and the clientOrderId stay, so the next tap is the same order.
-    showFault("Not sent. Tap Submit again.");
+    // The control stays armed, so the retry is one tap and not three.
+    showFault("Not sent. Tap Place order again.");
   } finally {
     submitting = false;
     draw();
@@ -202,6 +238,7 @@ for (const tile of menuElement.querySelectorAll(".tile")) {
     sideLabel: tile.dataset.sideLabel || ""
   };
   tile.addEventListener("click", () => {
+    disarm();
     const key = item.menuItemId + "|" + item.sideId;
     const existing = cart.find((line) => line.key === key);
     if (existing) {
@@ -221,7 +258,13 @@ function setMoreOpen(open) {
   moreButton.setAttribute("aria-expanded", open ? "true" : "false");
 }
 
-submitButton.addEventListener("click", submitOrder);
+submitButton.addEventListener("click", () => {
+  if (placeState === "armed") {
+    submitOrder();
+  } else if (placeState === "review") {
+    armPlace();
+  }
+});
 clearButton.addEventListener("click", () => {
   clearCart();
   setMoreOpen(false);

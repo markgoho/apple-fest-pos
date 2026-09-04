@@ -9,7 +9,7 @@ status: accepted
 The rail's primary control now has three states:
 
 - **Review order**, gold. The cart has items. This tap commits nothing.
-- **Check the order…**, grey and inert, for about half a second.
+- **Check the order…**, faded and inert, for about half a second.
 - **Place order**, green. This tap assigns the order number and sends both documents.
 
 Any change to the cart — a tile, a quantity — returns the control to **Review order**. An Operator therefore cannot Place an order that differs from the one they just read back.

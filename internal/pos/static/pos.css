@@ -5,6 +5,7 @@
   --leaf-green-dark: #225022;
   --cider-gold: #d97706;
   --gold-tan: #d9a441;
+  --gold-tan-soft: #f9db95;
   --gold-tan-edge: #e0b154;
   --gold-tan-shadow: #a9742a;
   --gold-tan-ink: #5f3217;
@@ -96,7 +97,7 @@ button:disabled {
 }
 
 .ghost {
-  background: #f9db95;
+  background: var(--gold-tan-soft);
   color: var(--apple-red-dark);
 }
 
@@ -534,9 +535,25 @@ button:disabled {
   inline-size: 100%;
   min-block-size: var(--tap);
   border-radius: 1rem;
-  background: var(--leaf-green-dark);
+  background: var(--gold-tan-soft);
+  color: var(--gold-tan-ink);
   font-size: 1.6rem;
   padding-block: 1.1rem;
+}
+
+.submit-btn.is-armed {
+  background: var(--leaf-green-dark);
+  color: white;
+}
+
+.read-back {
+  margin: 0 0 0.35rem;
+  color: var(--gold-tan-ink);
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 @media (orientation: portrait) {
