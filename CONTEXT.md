@@ -12,6 +12,10 @@ An adult scout leader who watches how the day is going but does not take orders.
 
 An Operator and a Leader can be the same human at different moments. The distinction is the job, not the person.
 
+## System Admin
+
+You, the booth's technical owner. The System Admin page holds data reset and printer network setup and diagnostics, sized for troubleshooting an air-gapped event with no internet. It is PIN-gated and is never linked from `/pos`: it is your own tool, not something discovered from the tablet.
+
 ## Event day
 
 One selling day of Apple Fest. The 2026 event is a Saturday and a Sunday, roughly 8am to 6pm each. An event day is the unit that order numbers reset on and that sales screens select.
