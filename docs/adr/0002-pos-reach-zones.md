@@ -22,7 +22,7 @@ The rule is: **frequent bottom-right, destructive top-left, held edge empty, eve
 
 ## Consequences
 
-The Operator does not handle cash. An adult stands beside them, takes the money, and never touches the tablet; the Operator then taps Submit. Submit is therefore the **last** tap of a sale, which is why it earns the largest target in the corner the finger already rests near. The `/pos` page title "Cashier POS" is wrong under this model and is corrected when the layout is built.
+The Operator does not handle cash. An adult stands beside them, takes the money, and never touches the tablet; the Operator then taps Submit. Submit is therefore the **last** tap of a sale, which is why it earns the largest target in the corner the finger already rests near. ([ADR-0005](./0005-pos-two-tap-place.md) splits that tap in two: Place order is now the last one, and the Guarded zone holds More rather than Clear alone. The zone rule itself is unchanged.) The `/pos` page title "Cashier POS" is wrong under this model and is corrected when the layout is built.
 
 Because the tablet is always in the hands, the screen is never read at the steep angle of a table-top device. That removes one argument from the colour and contrast decision, which still stands on daylight glare alone.
 

@@ -10,7 +10,7 @@ The three colours now track **risk**, not arithmetic direction or tap frequency:
 
 - **Red** means *destructive*, and nothing else. It covers only Remove (delete a line) and Clear (empty the cart). Both already sit apart from the rest of the screen: Remove lives in the Home zone next to its line, Clear lives alone in the Guarded zone (see [ADR-0002](./0002-pos-reach-zones.md)). Colour now reinforces that spatial signal instead of diluting it.
 - **Gold** (the neutral tan already in code, to become a named token) means *reversible adjustment*. It covers quantity plus, quantity minus, and side choice, both resting and chosen. A chosen side is shown by a non-colour cue (outline or checkmark; the exact glyph is [#22](https://github.com/markgoho/apple-fest-pos/issues/22)'s prototype work), not by switching to green, so gold stays one colour with one meaning regardless of state.
-- **Green** means *the order is going out*, and is used in exactly one place: Submit. Nothing else on the screen is ever green.
+- **Green** means *the order is going out*, and is used in exactly one place: Submit. Nothing else on the screen is ever green. ([ADR-0005](./0005-pos-two-tap-place.md) moves that one place to Place order and gives the Review order tap gold, which applies this rule more strictly rather than bending it.)
 
 The menu-tile price badge, currently red, moves off red to the neutral gold-tan: it sits on the most-tapped, purely additive control on the screen (tapping a tile adds an item), and a red badge there would teach the wrong association at the exact spot operators tap most.
 
