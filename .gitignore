@@ -26,3 +26,10 @@
 
 # local Pi credentials, never committed
 pi-access.local.md
+
+# pen.dev CLI, a design-time tool only. It drives docs/../design/pos.pen and
+# ships nothing: ADR-0003 keeps the POS one Go binary with no npm dependency,
+# and a tracked package.json at the root would read as that rule breaking.
+/node_modules
+/package.json
+/bun.lock
