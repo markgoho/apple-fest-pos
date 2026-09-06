@@ -18,7 +18,7 @@
         <ul class="tiles" aria-label="{{.Category}} items">
           {{range .Tiles}}
           <li>
-            <button type="button" class="tile" data-menu-item-id="{{.MenuItemID}}" data-name="{{.Name}}"
+            <button type="button" class="tile{{if .Minor}} tile-minor{{end}}" data-menu-item-id="{{.MenuItemID}}" data-name="{{.Name}}"
                     data-price-cents="{{.PriceCents}}" data-sides="{{.SidesAttribute}}">
               <strong>{{.Label}}</strong>
               <span class="price">{{cents .PriceCents}}</span>
@@ -42,6 +42,13 @@
   </div>
 
   <div class="scrim" id="scrim" hidden></div>
+
+  <div class="sheet sides-sheet" id="sides-sheet" role="dialog" aria-modal="true" aria-labelledby="sides-title" hidden>
+    <h2 class="sheet-title" id="sides-title">Toppings</h2>
+    <div class="sides" id="sides-choices"></div>
+    <button type="button" class="sides-add" id="sides-add" disabled>Add to cart</button>
+    <button type="button" class="sheet-close" id="sides-cancel">Cancel</button>
+  </div>
 
   <div class="sheet" id="more-sheet" role="dialog" aria-modal="true" aria-labelledby="more-title" hidden>
     <h2 class="sheet-title" id="more-title">More</h2>

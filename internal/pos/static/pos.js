@@ -15,6 +15,11 @@ const moreSheet = document.getElementById("more-sheet");
 const moreClose = document.getElementById("more-close");
 const scrim = document.getElementById("scrim");
 const readBackElement = document.getElementById("read-back");
+const sidesSheet = document.getElementById("sides-sheet");
+const sidesTitle = document.getElementById("sides-title");
+const sidesChoices = document.getElementById("sides-choices");
+const sidesAdd = document.getElementById("sides-add");
+const sidesCancel = document.getElementById("sides-cancel");
 const reprintButton = document.getElementById("reprint");
 
 let cart = [];
@@ -97,13 +102,36 @@ function changeQuantity(key, quantity) {
   draw();
 }
 
-// toggleSide adds or removes one Side of a cart line. The chosen Sides stay in
-// menu order, so the cart line, the receipt and the kitchen ticket all read the
-// same way whatever order the Operator tapped (ADR-0009).
+// lineKey identifies a cart line by what it is, not by when it was added, so
+// the same pancake with the same toppings is one line however many times the
+// Operator adds it. The chosen ids are already in menu order.
+function lineKey(menuItemId, chosen) {
+  return menuItemId + "|" + chosen.join(",");
+}
+
+// addToCart adds one of an item with its toppings already chosen, merging into
+// the matching line when there is one.
+function addToCart(item, chosen) {
+  disarm();
+  const key = lineKey(item.menuItemId, chosen);
+  const existing = cart.find((line) => line.key === key);
+  if (existing) {
+    existing.quantity += 1;
+  } else {
+    cart.push({ key, ...item, chosen, quantity: 1 });
+  }
+  draw();
+}
+
+// toggleSide adds or removes one Side of a cart line that is already in the
+// cart, so a topping asked for late is one tap and not a delete and a redo.
+// The Sides stay in menu order, so the cart line, the receipt and the kitchen
+// ticket all read the same way whatever order the Operator tapped.
 function toggleSide(key, sideId) {
   disarm();
   const line = cart.find((candidate) => candidate.key === key);
   if (!line) return;
+
   const chosen = new Set(line.chosen);
   if (chosen.has(sideId)) {
     chosen.delete(sideId);
@@ -111,6 +139,15 @@ function toggleSide(key, sideId) {
     chosen.add(sideId);
   }
   line.chosen = line.sides.filter((side) => chosen.has(side.id)).map((side) => side.id);
+  line.key = lineKey(line.menuItemId, line.chosen);
+
+  // The edit can make this line the twin of another one. Fold it in, or the
+  // cart shows the same pancake twice and the kitchen ticket prints it twice.
+  const twin = cart.find((candidate) => candidate !== line && candidate.key === line.key);
+  if (twin) {
+    twin.quantity += line.quantity;
+    cart = cart.filter((candidate) => candidate !== line);
+  }
   draw();
 }
 
@@ -141,6 +178,14 @@ function drawLine(line) {
   const name = document.createElement("p");
   name.className = "name";
   name.textContent = line.name;
+  // A line whose toggles are all resting is a Plain one, and the dialog made
+  // that a deliberate choice. Say so, or it reads as a pancake nobody was
+  // asked about.
+  if (line.sides.length > 0 && line.chosen.length === 0) {
+    const tag = document.createElement("small");
+    tag.textContent = "Plain";
+    name.append(tag);
+  }
   item.append(name);
 
   const quantity = document.createElement("div");
@@ -268,6 +313,68 @@ async function reprintOrder() {
   }
 }
 
+// The toppings dialog. ADR-0005 turned a dialog down for the Place order
+// checkpoint, because it would cover the cart lines at the moment they are
+// read back. This one opens at add time and is gone before the read-back, so
+// the checkpoint it protects is untouched.
+let pending = null;
+
+function setSidesOpen(open) {
+  sidesSheet.hidden = !open;
+  scrim.hidden = !open && moreSheet.hidden;
+  if (!open) pending = null;
+}
+
+// choice draws one button of the dialog. Plain and the toppings are the same
+// kind of tap and look the same; they differ only in that Plain means "none of
+// these" and so clears them, and any topping clears Plain.
+function choice(label, chosen, onPick) {
+  const toggle = document.createElement("button");
+  toggle.type = "button";
+  toggle.className = "side-toggle";
+  toggle.textContent = label;
+  toggle.setAttribute("aria-pressed", chosen ? "true" : "false");
+  toggle.addEventListener("click", onPick);
+  return toggle;
+}
+
+function drawSidesChoices() {
+  const plain = choice("Plain", pending.plain, () => {
+    pending.plain = !pending.plain;
+    if (pending.plain) pending.chosen = [];
+    drawSidesChoices();
+  });
+  plain.classList.add("side-plain");
+
+  const toppings = pending.item.sides.map((side) =>
+    choice(side.label, pending.chosen.includes(side.id), () => {
+      const picked = new Set(pending.chosen);
+      if (picked.has(side.id)) {
+        picked.delete(side.id);
+      } else {
+        picked.add(side.id);
+      }
+      pending.chosen = pending.item.sides.filter((one) => picked.has(one.id)).map((one) => one.id);
+      if (pending.chosen.length > 0) pending.plain = false;
+      drawSidesChoices();
+    })
+  );
+
+  sidesChoices.replaceChildren(plain, ...toppings);
+  // Add stays inert until the Operator has said which it is. A pancake with no
+  // toppings and a pancake nobody has been asked about look the same in the
+  // cart, and only one of them is an order.
+  sidesAdd.disabled = !pending.plain && pending.chosen.length === 0;
+}
+
+function openSides(item) {
+  setMoreOpen(false);
+  pending = { item, chosen: [], plain: false };
+  sidesTitle.textContent = item.name;
+  drawSidesChoices();
+  setSidesOpen(true);
+}
+
 // readSides unpacks the tile's "id:Label|id:Label" attribute. See
 // menuTile.SidesAttribute in pages.go.
 function readSides(packed) {
@@ -278,8 +385,6 @@ function readSides(packed) {
   });
 }
 
-let nextLineKey = 0;
-
 for (const tile of menuElement.querySelectorAll(".tile")) {
   const item = {
     menuItemId: tile.dataset.menuItemId,
@@ -288,23 +393,23 @@ for (const tile of menuElement.querySelectorAll(".tile")) {
     sides: readSides(tile.dataset.sides)
   };
   tile.addEventListener("click", () => {
-    disarm();
-    // An item with Sides opens a new line on every tap, because the toppings
-    // are chosen after the tap and two taps can mean two different pancakes.
-    // An item with no Sides has nothing to choose, so it merges as before.
-    if (item.sides.length === 0) {
-      const existing = cart.find((line) => line.menuItemId === item.menuItemId);
-      if (existing) {
-        existing.quantity += 1;
-        draw();
-        return;
-      }
+    // An item with Sides asks for them first: the toppings are part of what is
+    // being added, and a cart that has grown long is a poor place to hunt for
+    // the line that has just appeared.
+    if (item.sides.length > 0) {
+      openSides(item);
+      return;
     }
-    nextLineKey += 1;
-    cart.push({ key: "line-" + nextLineKey, ...item, chosen: [], quantity: 1 });
-    draw();
+    addToCart(item, []);
   });
 }
+
+sidesAdd.addEventListener("click", () => {
+  const { item, chosen } = pending;
+  setSidesOpen(false);
+  addToCart(item, chosen);
+});
+sidesCancel.addEventListener("click", () => setSidesOpen(false));
 
 // ADR-0005: Clear lives behind the More sheet, so the only destructive control
 // on /pos needs two deliberate taps and is never on the screen during a sale.
@@ -328,6 +433,9 @@ clearButton.addEventListener("click", () => {
 reprintButton.addEventListener("click", reprintOrder);
 moreButton.addEventListener("click", () => setMoreOpen(moreSheet.hidden));
 moreClose.addEventListener("click", () => setMoreOpen(false));
-scrim.addEventListener("click", () => setMoreOpen(false));
+scrim.addEventListener("click", () => {
+  setMoreOpen(false);
+  setSidesOpen(false);
+});
 
 draw();

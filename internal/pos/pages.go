@@ -95,6 +95,7 @@ type menuTile struct {
 	Name       string
 	Label      string
 	PriceCents int
+	Minor      bool
 	Sides      []Side
 }
 

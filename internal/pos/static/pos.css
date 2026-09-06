@@ -403,6 +403,15 @@ button:disabled {
   flex: 2;
 }
 
+/* An add-on is a strip under the item it belongs to, not a tile beside it.
+   The row it sits in is sized to its content, so the item above keeps the
+   height the equal-row grid would otherwise split with it. */
+.tiles:has(.tile-minor) {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr auto;
+  row-gap: 0.7rem;
+}
+
 /* The grid row stretches but the button inside it does not, so without these
    two the spare height turns into gaps between tiles instead of bigger taps. */
 .tiles > li {
@@ -443,6 +452,31 @@ button:disabled {
 
 .tile:active {
   transform: translateY(1px);
+}
+
+/* An add-on reads as a footnote to the item above it: one short row, the name
+   and the price on one line, no shadow lifting it off the board. It is still a
+   full-width target, because a small tile must not be a small tap. */
+.tile-minor {
+  min-block-size: var(--tap);
+  block-size: auto;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.5rem 1.1rem;
+  border-width: 2px;
+  border-radius: 0.8rem;
+  background: var(--parchment);
+  box-shadow: none;
+}
+
+.tile-minor strong {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.tile-minor .price {
+  font-size: 1.3rem;
 }
 
 .cart {
@@ -512,13 +546,11 @@ button:disabled {
   gap: 0.3rem;
 }
 
-/* The three toppings sit on one row, so a cart line stays short enough that
-   the Operator reads the whole order back without scrolling. The row is that
-   narrow, so the checkmark of a chosen topping sits in the corner instead of
-   in front of the word: an inline mark would push "Applesauce" onto a second
-   line, and the word cannot be broken. */
+/* A topping is a reversible adjustment, so both states are gold (ADR-0004).
+   A chosen one fills with the dark gold ink and reads in cream: 10.04:1, well
+   over the 7:1 daylight floor, and legible across the booth as a solid block
+   rather than a glyph the Operator has to look for. */
 .side-toggle {
-  position: relative;
   min-block-size: 3rem;
   padding: 0.25rem 0.1rem;
   border: 2px solid var(--gold-tan-edge);
@@ -534,17 +566,55 @@ button:disabled {
 }
 
 .side-toggle[aria-pressed="true"] {
-  border-color: var(--gold-tan-shadow);
-  box-shadow: inset 0 0 0 2px var(--gold-tan-shadow);
+  border-color: var(--gold-tan-ink);
+  background: var(--gold-tan-ink);
+  color: var(--cream);
+  font-weight: 800;
 }
 
-.side-toggle[aria-pressed="true"]::before {
-  content: "✓";
-  position: absolute;
-  inset-block-start: 0.1rem;
-  inset-inline-end: 0.25rem;
-  font-size: 0.7rem;
+.side-toggle:active {
+  transform: translateY(1px);
+}
+
+/* The toppings dialog sits in the Home zone (ADR-0002), where the finger
+   already rests, because it opens on every pancake. Add to cart is its last
+   tap and takes the bottom, and it is gold: the tap is reversible, and green
+   belongs to Place order alone (ADR-0004). */
+.sides-sheet {
+  inset-block-start: auto;
+  inset-block-end: 0.9rem;
+  inset-inline-start: auto;
+  inset-inline-end: 0.9rem;
+  inline-size: 22rem;
+}
+
+.sides-sheet .sides {
+  gap: 0.5rem;
+}
+
+.sides-sheet .side-toggle {
+  min-block-size: var(--tap);
+  padding: 0.4rem 0.2rem;
+  font-size: 0.95rem;
+}
+
+/* Plain is not a topping, so it takes the row above them on its own. */
+.sides-sheet .side-plain {
+  grid-column: 1 / -1;
+}
+
+.sides-add {
+  min-block-size: 4rem;
+  border-radius: 0.8rem;
+  background: var(--gold-tan-soft);
+  color: var(--gold-tan-ink);
+  border: 3px solid var(--gold-tan-edge);
+  font-size: 1.4rem;
   font-weight: 800;
+}
+
+.sides-add:disabled {
+  opacity: 0.45;
 }
 
 .side-toggle:active {
@@ -620,12 +690,45 @@ button:disabled {
 @media (orientation: portrait) {
   .body {
     grid-template-columns: 1fr;
-    grid-template-rows: 1fr 15.5rem;
+    grid-template-rows: 1fr 26rem;
   }
 
   .cart {
     border-inline-start: 0;
     border-block-start: 3px solid var(--gold-tan);
+  }
+
+  /* The cart runs the full width here, so a line reads across instead of down:
+     name, toppings, quantity on one row. Stacked, three topping toggles make a
+     line tall enough that the strip shows one order line, and the Operator has
+     to scroll to read back an order they can otherwise see at a glance. */
+  .cart-line {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.9rem;
+  }
+
+  .cart-line .name {
+    flex: 1 1 9rem;
+  }
+
+  /* The quantity stays on the outer edge, nearest the resting finger, with
+     the toppings between it and the name (ADR-0002). */
+  .cart-line .sides {
+    order: 2;
+    flex: 2 1 20rem;
+  }
+
+  .stepper {
+    order: 3;
+  }
+
+  .cart-line .side-toggle {
+    font-size: 0.95rem;
+  }
+
+  .stepper {
+    flex: 0 0 auto;
   }
 }
 

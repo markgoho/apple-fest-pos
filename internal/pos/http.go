@@ -45,6 +45,7 @@ func handlePOSScreen(writer http.ResponseWriter, request *http.Request) {
 			Name:       item.Name,
 			Label:      item.Label(),
 			PriceCents: item.PriceCents,
+			Minor:      item.Minor,
 			Sides:      item.Sides,
 		}}
 

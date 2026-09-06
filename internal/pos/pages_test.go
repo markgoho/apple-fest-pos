@@ -44,7 +44,11 @@ func TestPOSScreenShowsTheMenu(t *testing.T) {
 		t.Error("/pos does not draw exactly one potato-pancake tile")
 	}
 	if !strings.Contains(body, `data-sides="sour-cream:Sour Cream|applesauce:Applesauce|ketchup:Ketchup"`) {
-		t.Error("/pos does not pass the pancake toppings to the cart script")
+		t.Error("/pos does not pass the pancake toppings to the toppings dialog")
+	}
+	// An add-on draws a smaller tile than the item it belongs to.
+	if !strings.Contains(body, `class="tile tile-minor" data-menu-item-id="extra-sour-cream"`) {
+		t.Error("/pos does not draw Extra Sour Cream as a minor tile")
 	}
 	if !strings.Contains(body, "/static/pos.js") {
 		t.Error("/pos does not load the cart script")

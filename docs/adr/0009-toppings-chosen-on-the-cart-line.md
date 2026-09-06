@@ -2,26 +2,32 @@
 status: accepted
 ---
 
-# Toppings are chosen on the cart line, and an extra sour cream packet is a menu item
+# Toppings are chosen in a dialog on the way into the cart, and an extra sour cream packet is a menu item
 
 A leader set the topping rule at the booth: a potato pancake carries any number of the three condiments, from none to all three, and none of them adds to the price. The sour cream a pancake comes with is one packet. A customer who wants more pays one dollar for each further packet.
 
 The old model could not say this. `CONTEXT.md` defined a Side as **the** condiment of a pancake, one per line, and [ADR-0005](./0005-pos-two-tap-place.md) built the tile grid on it: the pancake drew four tiles, Plain plus one per Side, and the tap that chose the item also chose the condiment. One tap cannot choose a set.
 
-The pancake now draws **one tile**, and the Sides move onto the **cart line** as three toggles. The Operator taps the pancake, then taps the toppings the customer asked for, in any order and as many as they want.
+The pancake now draws **one tile**, and tapping it opens a **dialog** that asks for the toppings before the pancake reaches the cart. The dialog offers **Plain** and the three toppings. Plain and the toppings are mutually exclusive: choosing Plain clears the toppings, and choosing a topping clears Plain. **Add to cart** stays inert until one of them is chosen, because a pancake nobody was asked about and a plain pancake look the same in the cart and only one of them is an order.
 
-The toggles sit **inline on the line, not in a step or a dialog**. ADR-0005 already settled this shape for the checkpoint that follows: the cart lines stay live, there is no mode to leave, and touching a line is both the correction and the exit. A topping toggle is a change to the cart, so it disarms Place order exactly like a quantity tap, and the Operator reads back an order that includes the toppings.
+The choice is a **dialog and not a row on the cart line**. The first build put the toggles on the line and nowhere else, which meant the only place to choose a topping was a list that grows all day: by the tenth order the Operator is hunting down the cart for the line that just appeared, while a customer waits. Choosing the toppings on the way in puts the choice where the attention already is, at the tile that was just tapped.
 
-The toggles are **gold, resting and chosen alike**, and a chosen topping is marked by a checkmark, a heavier weight and a darker edge. [ADR-0004](./0004-pos-colour-meaning.md) gives gold to every reversible adjustment and reserves green for Place order alone; a chosen topping is reversible, so it never earns a second colour.
+The **cart line keeps the toggles too**, so a topping asked for late is one tap on the line and not a delete and a redo. Editing a line re-keys it, and a line that becomes the twin of another folds into it.
 
-A tap on an item that has Sides **opens a new cart line** instead of adding to the one above it. The toppings are chosen after the tap, so two taps can mean two different pancakes, and merging them would force the Operator to undo a choice they have not made yet. An item with no Sides has nothing to choose and merges as before.
+This does not reopen [ADR-0005](./0005-pos-two-tap-place.md). That decision turned a dialog down for the **Place order checkpoint**, because a dialog there would cover the cart lines at the exact moment they are being read back. This dialog opens at add time and is gone before the read-back; the lines stay live and editable through the checkpoint exactly as ADR-0005 requires, and a topping toggle on a line is a cart change, so it disarms Place order like a quantity tap.
+
+The toggles are **gold, resting and chosen alike** ([ADR-0004](./0004-pos-colour-meaning.md) gives gold to every reversible adjustment and reserves green for Place order alone). A chosen topping is a **solid fill**: the dark gold ink behind cream text, 10.04:1, well over ADR-0004's 7:1 daylight floor. An earlier build marked it with a checkmark in the corner of a pale button; the mark was small, it read as decoration rather than state, and it was one more thing to hunt for. A filled block is legible from across the booth and needs no glyph. The gold-tan fill was measured first and rejected: `--gold-tan` behind `--gold-tan-ink` is 4.78:1, short of the floor.
+
+Because the toppings are known before the line exists, a line is keyed by its item and its topping set, so **six taps on the pancake tile with the same toppings make one line reading `6`**, and the kitchen ticket says `6 POTATO PANCAKE` rather than printing the same thing six times.
+
+**Extra Sour Cream draws a minor tile**: one short strip under the pancake, name and price on one line, no shadow. It is an add-on to a pancake, not something anyone comes to the booth to buy, and a tile the size of the pancake's said otherwise. It stays a full-width target, because a small tile must not be a small tap.
 
 **Extra Sour Cream is a menu item at one dollar**, not a packet count on the pancake line. The price of an order stays the sum of its menu items, so `insertOrder`, the per-item breakdown and the hourly revenue chart need no rule of their own, and the item joins the chart legend on its own. It also puts the "one packet is included" judgement where it belongs: the Operator applies it by tapping the tile a second time, and the software never has to know whether the free packet is counted per pancake or per order.
 
 ## Considered options
 
 - **A packet count on the cart line, priced as `max(0, packets - 1) * 100`.** It models the rule literally. Rejected: it puts a price rule in three places (`order_store.go`, the per-item breakdown, the hourly chart), it needs a new chart series, and it forces the software to answer a question the booth has not answered — whether the free packet is per pancake or per order.
-- **A step between the tile and the cart: choose the pancake, then a topping screen.** It is what the request describes literally, and it makes the topping choice unmissable. Rejected: it is the dialog ADR-0005 turned down, on the same grounds. It covers the cart at the moment the cart is being read, and it puts a mode in front of the fastest tap on the screen.
+- **Toggles on the cart line and nowhere else.** No dialog, no mode, and the fastest possible tile tap. Built first and rejected in use: it makes the toppings reachable only through a list that grows all day, so the choice gets further from the tap that caused it with every order. It also forces every tile tap to open a new line, since the toppings are not yet known, which puts the same pancake on the ticket several times over.
 - **Keep one tile per combination.** No new interaction at all. Rejected: three condiments make eight combinations, so the pancake would need eight tiles on a grid built for four.
 - **A separate `sour-cream-packet` Side with its own price.** It keeps everything on one line. Rejected: a Side that costs money breaks the sentence "a Side is a condiment, free with the pancake", and it reopens the same three pricing sites.
 
@@ -31,6 +37,10 @@ Two statements elsewhere are superseded. `CONTEXT.md`'s Side entry no longer rea
 
 The `/pos` grid loses three tiles and gains one, so the Potato Pancakes section holds two tiles rather than four. The API cart line carries `sides` as an array; the old `side` field is still read, because a reprint of an order placed before this decision is built from its stored request.
 
-Six pancakes with six different topping sets are six lines, which is the honest count: the kitchen has to be told six different things. Six pancakes with the *same* toppings are one line only if the Operator uses the quantity stepper. Six taps on the tile — the habit the old four-tile grid taught — make six lines, and the kitchen ticket then prints `1 POTATO PANCAKE` six times instead of `6 POTATO PANCAKE`. That is a real cost on paper, and it is the first thing to watch on the tablet. If it bites, the fix is to coalesce lines that share an item and a topping set when the ticket and the board are built, not to merge them in the cart, where the Operator is still choosing.
+Six pancakes with six different topping sets are six lines, which is the honest count: the kitchen has to be told six different things. Six with the same toppings are one line, whether the Operator taps the tile six times or uses the quantity stepper.
+
+Every pancake now costs one extra tap, on top of the one ADR-0005 already added: tile, topping, Add to cart. That is the price of asking a question that has four right answers.
+
+In portrait the cart runs the full width of the screen, so a line reads across — name, toppings, quantity — rather than down. Stacked, three topping toggles make a line tall enough that the strip shows a single order line, and the Operator has to scroll to read back an order they should see at a glance.
 
 The kitchen ticket prints **one topping per line**, not a joined list. It prints at double width, so an 80mm roll holds about 24 characters and nothing in the builder wraps them; a joined list of two toppings already overflows, and a break mid-word is the one thing the cook must not read. The customer receipt prints at normal width and keeps the joined form.

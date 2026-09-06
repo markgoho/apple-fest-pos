@@ -14,7 +14,7 @@ The rail's primary control now has three states:
 
 Any change to the cart — a tile, a quantity — returns the control to **Review order**. An Operator therefore cannot Place an order that differs from the one they just read back.
 
-The checkpoint exists to catch the **wrong item**, not the wrong total. The total is on the rail the whole time and the Operator reads it aloud anyway; a scout who taps Sour Cream for Applesauce has no other moment to notice. ([ADR-0009](./0009-toppings-chosen-on-the-cart-line.md) moves that mis-tap from a menu tile to a toggle on the cart line. The checkpoint is unchanged and still covers it, because a toggle is a cart change and disarms Place order.)
+The checkpoint exists to catch the **wrong item**, not the wrong total. The total is on the rail the whole time and the Operator reads it aloud anyway; a scout who taps Sour Cream for Applesauce has no other moment to notice. ([ADR-0009](./0009-toppings-chosen-on-the-cart-line.md) moves that mis-tap from a menu tile to a dialog that opens on the tap and to a toggle on the cart line. The checkpoint is unchanged and still covers it: the dialog closes before the read-back, and a toggle is a cart change and disarms Place order.)
 
 The guard is **time, not distance**. Both taps stay in the Home zone, because moving the second one into the Read zone would put a per-order tap outside comfortable reach on a strap-held tablet, against ADR-0002's rule. Two taps in one place are defeated by a fumbled double tap, so the inert half second absorbs it.
 

@@ -35,6 +35,12 @@ type MenuItem struct {
 	// chosen Sides ride on the cart line.
 	Sides []Side `json:"sides,omitempty"`
 
+	// Minor marks an item whose tile is a short strip under the item it
+	// belongs to, rather than a full tile of its own. Extra Sour Cream is an
+	// add-on to a pancake, not a thing anyone comes to the booth to buy, and
+	// a tile the size of the pancake's would say otherwise.
+	Minor bool `json:"minor,omitempty"`
+
 	// ChartColorVar names the pos.css custom property (without the leading
 	// "--") that draws this item's segment of the Leader Figures tab's hourly
 	// revenue chart (issue #12), so the chart and the rest of the theme share
@@ -69,7 +75,7 @@ var MenuItems = []MenuItem{
 			{ID: "applesauce", Label: "Applesauce"},
 			{ID: "ketchup", Label: "Ketchup"},
 		}},
-	{ID: "extra-sour-cream", Name: "Extra Sour Cream", TileLabel: "Extra Sour Cream", Category: "Potato Pancakes", PriceCents: 100, SortOrder: 15, PrintGroup: PrintGroupKitchen, ChartColorVar: "cider-gold"},
+	{ID: "extra-sour-cream", Name: "Extra Sour Cream", TileLabel: "Extra Sour Cream", Category: "Potato Pancakes", PriceCents: 100, SortOrder: 15, PrintGroup: PrintGroupKitchen, Minor: true, ChartColorVar: "cider-gold"},
 	{ID: "og-toastie", Name: "OG Toastie", TileLabel: "OG", Category: "Grilled Cheese", PriceCents: 500, SortOrder: 20, PrintGroup: PrintGroupKitchen, ChartColorVar: "gold-tan"},
 	{ID: "pizza-toastie", Name: "Pizza Toastie", TileLabel: "Pizza", Category: "Grilled Cheese", PriceCents: 600, SortOrder: 30, PrintGroup: PrintGroupKitchen, ChartColorVar: "leaf-green"},
 	{ID: "harvest-toastie", Name: "Harvest Toastie", TileLabel: "Harvest", Category: "Grilled Cheese", PriceCents: 800, SortOrder: 40, PrintGroup: PrintGroupKitchen, ChartColorVar: "gold-tan-ink"},
