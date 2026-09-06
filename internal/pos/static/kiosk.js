@@ -112,6 +112,27 @@ endShiftButton?.addEventListener("click", async () => {
   location.reload();
 });
 
+// Cashier POS and Kitchen display are plain links to a full page load, which
+// can take a few seconds on a slow Pi or thin Wi-Fi. A link gives no feedback
+// of its own between the tap and the new page painting, so a slow load reads
+// exactly like a tap that missed and the Operator taps again. The link still
+// navigates itself; this only holds the pressed look and, if the page never
+// actually leaves, says so instead of leaving the tablet looking stuck.
+const modeFault = document.getElementById("mode-fault");
+document.querySelectorAll(".modes a").forEach((link) => {
+  link.addEventListener("click", () => {
+    if (modeFault) modeFault.textContent = "";
+    link.classList.add("is-busy");
+    const label = link.textContent;
+    link.textContent = "Opening…";
+    setTimeout(() => {
+      link.classList.remove("is-busy");
+      link.textContent = label;
+      if (modeFault) modeFault.textContent = "Could not open " + label + ". Check the connection and try again.";
+    }, 8000);
+  });
+});
+
 document.addEventListener("fullscreenchange", () => {
   resumeButton.hidden = isImmersive();
 });
