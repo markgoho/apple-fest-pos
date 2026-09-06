@@ -154,11 +154,16 @@ type leaderPage struct {
 // action until the page is left and reloaded.
 type systemAdminPage struct {
 	page
-	Unlocked     bool
-	PIN          string
-	EventStarted bool
-	Error        string
-	Message      string
+	Unlocked      bool
+	PIN           string
+	EventStarted  bool
+	Error         string
+	Message       string
+	WindowHost    string
+	WindowPort    string
+	KitchenHost   string
+	KitchenPort   string
+	FoundPrinters []string
 }
 
 func render(writer http.ResponseWriter, name string, data any) {

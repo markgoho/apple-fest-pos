@@ -23,6 +23,35 @@
   </section>
 
   <section class="panel">
+    <h2>Printer addresses</h2>
+    <p>Assign which printer on the network is the Window Printer and which is the Kitchen Printer. This takes effect immediately and survives a restart.</p>
+    <form method="post" action="/system-admin/printers/discover">
+      <input type="hidden" name="pin" value="{{.PIN}}">
+      <button type="submit">Discover printers on network</button>
+    </form>
+    {{if .FoundPrinters}}
+    <ul class="found-printers" id="found-printers">
+      {{range .FoundPrinters}}
+      <li><button type="button" class="use-as-window" data-host="{{.}}">{{.}} &rarr; Use as Window</button>
+        <button type="button" class="use-as-kitchen" data-host="{{.}}">{{.}} &rarr; Use as Kitchen</button></li>
+      {{end}}
+    </ul>
+    {{end}}
+    <form method="post" action="/system-admin/printers/save" id="printer-assignment-form">
+      <input type="hidden" name="pin" value="{{.PIN}}">
+      <label for="window_host">Window Printer host</label>
+      <input type="text" id="window_host" name="window_host" value="{{.WindowHost}}" placeholder="192.168.8.200">
+      <label for="window_port">Window Printer port</label>
+      <input type="text" id="window_port" name="window_port" value="{{.WindowPort}}" placeholder="9100">
+      <label for="kitchen_host">Kitchen Printer host</label>
+      <input type="text" id="kitchen_host" name="kitchen_host" value="{{.KitchenHost}}" placeholder="192.168.8.201">
+      <label for="kitchen_port">Kitchen Printer port</label>
+      <input type="text" id="kitchen_port" name="kitchen_port" value="{{.KitchenPort}}" placeholder="9100">
+      <button type="submit">Save printer settings</button>
+    </form>
+  </section>
+
+  <section class="panel">
     <h2>Start Event</h2>
     {{if .EventStarted}}
     <p>Start Event is set. The data-reset tool is locked for the rest of the event.</p>

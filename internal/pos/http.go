@@ -25,6 +25,8 @@ func (service *OrderService) Handler() http.Handler {
 	mux.HandleFunc("POST /system-admin/reset", service.handleSystemAdminReset)
 	mux.HandleFunc("POST /system-admin/check-printers", service.handleSystemAdminCheckPrinters)
 	mux.HandleFunc("POST /system-admin/test-ticket", service.handleSystemAdminTestTicket)
+	mux.HandleFunc("POST /system-admin/printers/discover", service.handleSystemAdminDiscoverPrinters)
+	mux.HandleFunc("POST /system-admin/printers/save", service.handleSystemAdminSavePrinters)
 	mux.HandleFunc("POST /api/orders", service.handlePlaceOrder)
 	mux.HandleFunc("POST /api/orders/{id}/reprint", service.handleReprintOrder)
 	mux.HandleFunc("GET /api/kitchen", service.handleKitchen)
@@ -165,7 +167,7 @@ func (service *OrderService) handleSystemAdminScreen(writer http.ResponseWriter,
 }
 
 func (service *OrderService) handleSystemAdminUnlock(writer http.ResponseWriter, request *http.Request) {
-	service.renderSystemAdmin(writer, request.FormValue("pin"), "")
+	service.renderSystemAdmin(writer, request.FormValue("pin"), "", nil)
 }
 
 func (service *OrderService) handleSystemAdminStartEvent(writer http.ResponseWriter, request *http.Request) {
@@ -177,7 +179,7 @@ func (service *OrderService) handleSystemAdminStartEvent(writer http.ResponseWri
 			message = "Could not set Start Event."
 		}
 	}
-	service.renderSystemAdmin(writer, pin, message)
+	service.renderSystemAdmin(writer, pin, message, nil)
 }
 
 func (service *OrderService) handleSystemAdminReset(writer http.ResponseWriter, request *http.Request) {
@@ -194,7 +196,7 @@ func (service *OrderService) handleSystemAdminReset(writer http.ResponseWriter, 
 			message = "All orders wiped."
 		}
 	}
-	service.renderSystemAdmin(writer, pin, message)
+	service.renderSystemAdmin(writer, pin, message, nil)
 }
 
 // handleSystemAdminCheckPrinters dials both printers and reports their
@@ -204,10 +206,10 @@ func (service *OrderService) handleSystemAdminCheckPrinters(writer http.Response
 	pin := request.FormValue("pin")
 	var message string
 	if service.systemAdminUnlocked(pin) {
-		check := CheckPrinters(service.Printer)
+		check := CheckPrinters(service.printerConfig())
 		message = fmt.Sprintf("Window: %s. Kitchen: %s.", printerStatusLabel(check.Window), printerStatusLabel(check.Kitchen))
 	}
-	service.renderSystemAdmin(writer, pin, message)
+	service.renderSystemAdmin(writer, pin, message, nil)
 }
 
 // handleSystemAdminTestTicket prints a TEST-marked document through both
@@ -216,10 +218,63 @@ func (service *OrderService) handleSystemAdminTestTicket(writer http.ResponseWri
 	pin := request.FormValue("pin")
 	var message string
 	if service.systemAdminUnlocked(pin) {
-		result := SendTestTicket(service.Printer, TestOrder(service.Now()))
+		result := SendTestTicket(service.printerConfig(), TestOrder(service.Now()))
 		message = fmt.Sprintf("Test ticket - Window: %s. Kitchen: %s.", printStatusLabel(result.Customer), printStatusLabel(result.Kitchen))
 	}
-	service.renderSystemAdmin(writer, pin, message)
+	service.renderSystemAdmin(writer, pin, message, nil)
+}
+
+// handleSystemAdminDiscoverPrinters scans the booth network for ESC/POS
+// printers (ADR-0010), so the admin can assign one as Window or Kitchen
+// without knowing its address in advance.
+func (service *OrderService) handleSystemAdminDiscoverPrinters(writer http.ResponseWriter, request *http.Request) {
+	pin := request.FormValue("pin")
+	var message string
+	var found []string
+	if service.systemAdminUnlocked(pin) {
+		found = DiscoverPrinters()
+		switch len(found) {
+		case 0:
+			message = "Found no printers on the network."
+		case 1:
+			message = "Found 1 printer."
+		default:
+			message = fmt.Sprintf("Found %d printers.", len(found))
+		}
+	}
+	service.renderSystemAdmin(writer, pin, message, found)
+}
+
+// handleSystemAdminSavePrinters assigns the Window and Kitchen printer
+// addresses and persists them (ADR-0010), so the assignment survives a
+// restart and takes effect immediately with no redeploy.
+func (service *OrderService) handleSystemAdminSavePrinters(writer http.ResponseWriter, request *http.Request) {
+	pin := request.FormValue("pin")
+	var message string
+	if service.systemAdminUnlocked(pin) {
+		config := PrinterConfig{
+			WindowHost:  strings.TrimSpace(request.FormValue("window_host")),
+			WindowPort:  printerPortOrDefault(request.FormValue("window_port")),
+			KitchenHost: strings.TrimSpace(request.FormValue("kitchen_host")),
+			KitchenPort: printerPortOrDefault(request.FormValue("kitchen_port")),
+		}
+		if err := service.SavePrinterConfig(config); err != nil {
+			log.Printf("save printer config: %v", err)
+			message = "Could not save printer settings."
+		} else {
+			message = "Printer settings saved."
+		}
+	}
+	service.renderSystemAdmin(writer, pin, message, nil)
+}
+
+// printerPortOrDefault trims value and falls back to the ESC/POS raw port
+// every ITPP047(P) listens on, so leaving a port field blank still works.
+func printerPortOrDefault(value string) string {
+	if trimmed := strings.TrimSpace(value); trimmed != "" {
+		return trimmed
+	}
+	return "9100"
 }
 
 // printerStatusLabel turns a PrinterStatus into the label the System Admin
@@ -267,8 +322,10 @@ func (service *OrderService) systemAdminUnlocked(pin string) bool {
 
 // renderSystemAdmin checks pin against the configured PIN and draws the
 // System Admin page: the blank form again on a wrong PIN, or the unlocked
-// tool with pin carried into its action forms on a correct one.
-func (service *OrderService) renderSystemAdmin(writer http.ResponseWriter, pin string, message string) {
+// tool with pin carried into its action forms on a correct one. found is the
+// last "Discover printers" result, nil outside that action, so the page
+// keeps showing it lets an admin pick an address without a second scan.
+func (service *OrderService) renderSystemAdmin(writer http.ResponseWriter, pin string, message string, found []string) {
 	if !service.systemAdminUnlocked(pin) {
 		render(writer, "system-admin.html", systemAdminPage{
 			page:  page{Title: "System Admin", BodyClass: "theme"},
@@ -283,12 +340,18 @@ func (service *OrderService) renderSystemAdmin(writer http.ResponseWriter, pin s
 		http.Error(writer, "Could not read Start Event", http.StatusInternalServerError)
 		return
 	}
+	printer := service.printerConfig()
 	render(writer, "system-admin.html", systemAdminPage{
-		page:         page{Title: "System Admin", BodyClass: "theme"},
-		Unlocked:     true,
-		PIN:          pin,
-		EventStarted: started,
-		Message:      message,
+		page:          page{Title: "System Admin", BodyClass: "theme"},
+		Unlocked:      true,
+		PIN:           pin,
+		EventStarted:  started,
+		Message:       message,
+		WindowHost:    printer.WindowHost,
+		WindowPort:    printer.WindowPort,
+		KitchenHost:   printer.KitchenHost,
+		KitchenPort:   printer.KitchenPort,
+		FoundPrinters: found,
 	})
 }
 

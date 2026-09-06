@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -18,10 +19,29 @@ const timestampLayout = "2006-01-02T15:04:05.000Z07:00"
 type OrderService struct {
 	DB                  *sql.DB
 	Printer             PrinterConfig
+	printerMu           sync.RWMutex
 	StartingOrderNumber int
 	SystemAdminPIN      string
 	LeaderPIN           string
 	Now                 func() time.Time
+}
+
+// printerConfig reads the live printer configuration. ADR-0010: the System
+// Admin page can reassign Printer at runtime, so every read past startup
+// goes through here instead of the Printer field directly.
+func (service *OrderService) printerConfig() PrinterConfig {
+	service.printerMu.RLock()
+	defer service.printerMu.RUnlock()
+	return service.Printer
+}
+
+// setPrinterConfig replaces the live printer configuration in memory. It
+// does not touch the database; callers that need the change to survive a
+// restart call SavePrinterConfig instead.
+func (service *OrderService) setPrinterConfig(config PrinterConfig) {
+	service.printerMu.Lock()
+	defer service.printerMu.Unlock()
+	service.Printer = config
 }
 
 // ErrValidation marks a request the operator can correct. It maps to 400.
@@ -65,7 +85,7 @@ func (service *OrderService) PlaceOrder(request PlaceOrderRequest) (PlaceOrderRe
 		}), nil
 	}
 
-	print := PrintOrder(service.Printer, ReceiptOrder{
+	print := PrintOrder(service.printerConfig(), ReceiptOrder{
 		OrderID:       row.ID,
 		OrderNumber:   row.OrderNumber,
 		CreatedAt:     row.CreatedAt,
@@ -125,7 +145,7 @@ func (service *OrderService) ReprintOrder(orderID string) (PlaceOrderResponse, e
 	}
 
 	request := parseStoredRequest(row.RequestJSON)
-	print := PrintReprint(service.Printer, ReceiptOrder{
+	print := PrintReprint(service.printerConfig(), ReceiptOrder{
 		OrderID:       row.ID,
 		OrderNumber:   row.OrderNumber,
 		CreatedAt:     row.CreatedAt,

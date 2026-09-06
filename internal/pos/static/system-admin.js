@@ -10,3 +10,17 @@ if (resetForm) {
     }
   });
 }
+
+// ADR-0010: a discovered address fills the matching field in the printer
+// assignment form. The admin still presses Save; nothing here writes state.
+const foundPrinters = document.getElementById("found-printers");
+if (foundPrinters) {
+  foundPrinters.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-host]");
+    if (!button) {
+      return;
+    }
+    const fieldID = button.classList.contains("use-as-window") ? "window_host" : "kitchen_host";
+    document.getElementById(fieldID).value = button.dataset.host;
+  });
+}

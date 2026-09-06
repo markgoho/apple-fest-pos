@@ -14,7 +14,7 @@ An Operator and a Leader can be the same human at different moments. The distinc
 
 ## System Admin
 
-You, the booth's technical owner. The System Admin page holds data reset and printer diagnostics, sized for troubleshooting an air-gapped event with no internet. It is PIN-gated. It is never linked from `/pos`, so it is not something an Operator finds mid-shift; the one way in from a tablet is a link on the home screen, because the tablet runs full screen and has no URL bar to type into. The PIN is what guards it, not the absence of a link. Printer addresses themselves are set at deploy time, not from this page.
+You, the booth's technical owner. The System Admin page holds data reset, printer diagnostics, and printer address assignment, sized for troubleshooting an air-gapped event with no internet. It is PIN-gated. It is never linked from `/pos`, so it is not something an Operator finds mid-shift; the one way in from a tablet is a link on the home screen, because the tablet runs full screen and has no URL bar to type into. The PIN is what guards it, not the absence of a link. Printer addresses are seeded at deploy time but can be discovered and reassigned from this page at runtime (ADR-0010): the booth network is air-gapped, so this page is the only troubleshooting tool that works there at all.
 
 ## Event day
 

@@ -34,6 +34,9 @@ func main() {
 		LeaderPIN:           os.Getenv("LEADER_PIN"),
 		Now:                 time.Now,
 	}
+	if err := service.LoadPrinterConfig(); err != nil {
+		log.Fatalf("load printer config: %v", err)
+	}
 
 	certificate := os.Getenv("TLS_CERT")
 	key := os.Getenv("TLS_KEY")
