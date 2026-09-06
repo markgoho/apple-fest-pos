@@ -30,9 +30,9 @@ type MenuItem struct {
 	TileLabel string `json:"tileLabel,omitempty"`
 
 	// Sides is the fixed set of condiments the item can carry. The Operator
-	// chooses the Side on the menu tile at add time, so an item with Sides
-	// draws one tile per Side plus one Plain tile; the side rides on the cart
-	// line, not on a separate step.
+	// chooses any number of them, none to all, on the cart line after the
+	// tile tap (ADR-0009), so an item with Sides draws one tile and the
+	// chosen Sides ride on the cart line.
 	Sides []Side `json:"sides,omitempty"`
 
 	// ChartColorVar names the pos.css custom property (without the leading
@@ -69,6 +69,7 @@ var MenuItems = []MenuItem{
 			{ID: "applesauce", Label: "Applesauce"},
 			{ID: "ketchup", Label: "Ketchup"},
 		}},
+	{ID: "extra-sour-cream", Name: "Extra Sour Cream", TileLabel: "Extra Sour Cream", Category: "Potato Pancakes", PriceCents: 100, SortOrder: 15, PrintGroup: PrintGroupKitchen, ChartColorVar: "cider-gold"},
 	{ID: "og-toastie", Name: "OG Toastie", TileLabel: "OG", Category: "Grilled Cheese", PriceCents: 500, SortOrder: 20, PrintGroup: PrintGroupKitchen, ChartColorVar: "gold-tan"},
 	{ID: "pizza-toastie", Name: "Pizza Toastie", TileLabel: "Pizza", Category: "Grilled Cheese", PriceCents: 600, SortOrder: 30, PrintGroup: PrintGroupKitchen, ChartColorVar: "leaf-green"},
 	{ID: "harvest-toastie", Name: "Harvest Toastie", TileLabel: "Harvest", Category: "Grilled Cheese", PriceCents: 800, SortOrder: 40, PrintGroup: PrintGroupKitchen, ChartColorVar: "gold-tan-ink"},
@@ -96,19 +97,33 @@ func MenuItemName(id string) string {
 	return id
 }
 
-// SideLabel gives the label of one Side of a menu item. It gives an empty
-// string when the line carries no side, and the raw id when the item does not
-// know the side.
-func SideLabel(menuItemID, sideID string) string {
-	if sideID == "" {
-		return ""
+// SideLabels gives the labels of the Sides of one cart line, in the order the
+// menu lists them, so a receipt and a kitchen ticket read the same way whatever
+// order the Operator tapped.
+func SideLabels(menuItemID string, sideIDs []string) []string {
+	if len(sideIDs) == 0 {
+		return nil
 	}
-	if item, found := menuItemsByID[menuItemID]; found {
-		for _, side := range item.Sides {
-			if side.ID == sideID {
-				return side.Label
-			}
+	labels := make([]string, 0, len(sideIDs))
+	item, found := menuItemsByID[menuItemID]
+	if !found {
+		return append(labels, sideIDs...)
+	}
+	chosen := make(map[string]bool, len(sideIDs))
+	for _, id := range sideIDs {
+		chosen[id] = true
+	}
+	for _, side := range item.Sides {
+		if chosen[side.ID] {
+			labels = append(labels, side.Label)
+			delete(chosen, side.ID)
 		}
 	}
-	return sideID
+	for _, id := range sideIDs {
+		if chosen[id] {
+			labels = append(labels, id)
+			delete(chosen, id)
+		}
+	}
+	return labels
 }

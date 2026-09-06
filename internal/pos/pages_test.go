@@ -38,15 +38,13 @@ func TestPOSScreenShowsTheMenu(t *testing.T) {
 			t.Errorf("/pos does not show %q", item.Name)
 		}
 	}
-	// The pancake draws one tile per side plus Plain: 4 pancake tiles + 3
-	// toasties = 7 tiles for 4 menu items, per issue #19.
-	for _, tag := range []string{"Plain", "Sour Cream", "Applesauce", "Ketchup"} {
-		if !strings.Contains(body, `data-side-label="`+tag+`"`) {
-			t.Errorf("/pos does not draw a %q tile", tag)
-		}
+	// Every item draws exactly one tile (ADR-0009): the toppings are chosen on
+	// the cart line, so the tile only carries the set the line may offer.
+	if strings.Count(body, `data-menu-item-id="potato-pancake"`) != 1 {
+		t.Error("/pos does not draw exactly one potato-pancake tile")
 	}
-	if strings.Count(body, `data-menu-item-id="potato-pancake"`) != 4 {
-		t.Error("/pos does not draw 4 potato-pancake tiles")
+	if !strings.Contains(body, `data-sides="sour-cream:Sour Cream|applesauce:Applesauce|ketchup:Ketchup"`) {
+		t.Error("/pos does not pass the pancake toppings to the cart script")
 	}
 	if !strings.Contains(body, "/static/pos.js") {
 		t.Error("/pos does not load the cart script")
@@ -61,7 +59,7 @@ func TestScreensRenderWithAnOrder(t *testing.T) {
 		ClientOrderID: "screen-order",
 		DeviceID:      "tablet-1",
 		Payment:       Payment{Method: "cash"},
-		Items:         []CartLine{{MenuItemID: "potato-pancake", Quantity: 1, Side: "applesauce"}},
+		Items:         []CartLine{{MenuItemID: "potato-pancake", Quantity: 1, Sides: []string{"applesauce"}}},
 	})
 	if recorder.Code != http.StatusCreated {
 		t.Fatalf("place order: got %d, want 201", recorder.Code)

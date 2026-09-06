@@ -113,10 +113,10 @@ func TestPlaceOrderRejectsUnknownMenuItems(t *testing.T) {
 	}
 }
 
-func TestPlaceOrderAcceptsAKnownSide(t *testing.T) {
+func TestPlaceOrderAcceptsKnownSides(t *testing.T) {
 	service := newTestService(t)
 	request := validOrder()
-	request["items"] = []map[string]any{{"menuItemId": "potato-pancake", "quantity": 1, "side": "applesauce"}}
+	request["items"] = []map[string]any{{"menuItemId": "potato-pancake", "quantity": 1, "sides": []string{"applesauce", "ketchup"}}}
 
 	recorder, body := postOrder(t, service, request)
 
@@ -125,10 +125,56 @@ func TestPlaceOrderAcceptsAKnownSide(t *testing.T) {
 	}
 }
 
+func TestPlaceOrderRejectsARepeatedSide(t *testing.T) {
+	service := newTestService(t)
+	request := validOrder()
+	request["items"] = []map[string]any{{"menuItemId": "potato-pancake", "quantity": 1, "sides": []string{"ketchup", "ketchup"}}}
+
+	recorder, body := postOrder(t, service, request)
+
+	if recorder.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want 400", recorder.Code)
+	}
+	if body["error"] != "Repeated side for Potato Pancake: ketchup" {
+		t.Errorf("error = %v", body["error"])
+	}
+}
+
+// An order stored before ADR-0009 carries "side", not "sides". A reprint reads
+// the stored request back, so the decoder must still find the condiment.
+func TestACartLineReadsTheLegacySingleSideField(t *testing.T) {
+	var line CartLine
+	if err := json.Unmarshal([]byte(`{"menuItemId":"potato-pancake","quantity":1,"side":"applesauce"}`), &line); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if len(line.Sides) != 1 || line.Sides[0] != "applesauce" {
+		t.Errorf("sides = %v, want [applesauce]", line.Sides)
+	}
+}
+
+// Extra Sour Cream is a menu item, not a price rule on the line: the first
+// packet rides free on the pancake's Sides and each further packet is a $1
+// item, so every total, breakdown and chart already counts it (ADR-0009).
+func TestAnExtraSourCreamIsAOneDollarLine(t *testing.T) {
+	item, found := MenuItemByID("extra-sour-cream")
+	if !found {
+		t.Fatal("the menu has no extra-sour-cream item")
+	}
+	if item.PriceCents != 100 {
+		t.Errorf("priceCents = %d, want 100", item.PriceCents)
+	}
+	if len(item.Sides) != 0 {
+		t.Errorf("an extra packet takes no condiment of its own, got %v", item.Sides)
+	}
+	if item.PrintGroup != PrintGroupKitchen {
+		t.Errorf("printGroup = %q, want kitchen", item.PrintGroup)
+	}
+}
+
 func TestPlaceOrderRejectsAnUnknownSide(t *testing.T) {
 	service := newTestService(t)
 	request := validOrder()
-	request["items"] = []map[string]any{{"menuItemId": "potato-pancake", "quantity": 1, "side": "hot-sauce"}}
+	request["items"] = []map[string]any{{"menuItemId": "potato-pancake", "quantity": 1, "sides": []string{"hot-sauce"}}}
 
 	recorder, body := postOrder(t, service, request)
 
@@ -143,7 +189,7 @@ func TestPlaceOrderRejectsAnUnknownSide(t *testing.T) {
 func TestPlaceOrderRejectsASideOnAnItemWithNoSides(t *testing.T) {
 	service := newTestService(t)
 	request := validOrder()
-	request["items"] = []map[string]any{{"menuItemId": "og-toastie", "quantity": 1, "side": "ketchup"}}
+	request["items"] = []map[string]any{{"menuItemId": "og-toastie", "quantity": 1, "sides": []string{"ketchup"}}}
 
 	recorder, body := postOrder(t, service, request)
 

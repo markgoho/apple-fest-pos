@@ -108,22 +108,24 @@ var sideOrder = ReceiptOrder{
 	CreatedAt:     "2026-05-07T12:34:00.000Z",
 	SubtotalCents: 1000,
 	TotalCents:    1000,
-	Items:         []CartLine{{MenuItemID: "potato-pancake", Quantity: 1, Side: "sour-cream"}},
+	Items:         []CartLine{{MenuItemID: "potato-pancake", Quantity: 1, Sides: []string{"ketchup", "sour-cream"}}},
 }
 
-func TestBuildCustomerReceiptPrintsTheSideUnderItsLine(t *testing.T) {
+// The sides print in menu order (Sour Cream, Applesauce, Ketchup), not in the
+// order the Operator tapped, so the paper always reads the same way.
+func TestBuildCustomerReceiptPrintsEverySideUnderItsLine(t *testing.T) {
 	payload := string(BuildCustomerReceipt(sideOrder, HeaderNone))
 
-	if !strings.Contains(payload, "1 x Potato Pancake\r\n  Sour Cream\r\n  $10.00") {
-		t.Errorf("the side does not sit between the item and its price: %q", payload)
+	if !strings.Contains(payload, "1 x Potato Pancake\r\n  Sour Cream, Ketchup\r\n  $10.00") {
+		t.Errorf("the sides do not sit between the item and its price: %q", payload)
 	}
 }
 
-func TestBuildKitchenTicketPrintsTheSideUnderItsLine(t *testing.T) {
+func TestBuildKitchenTicketPrintsEverySideUnderItsLine(t *testing.T) {
 	payload := string(BuildKitchenTicket(sideOrder, HeaderNone))
 
-	if !strings.Contains(payload, "1  POTATO PANCAKE\r\n   SOUR CREAM") {
-		t.Errorf("the side does not sit under the item line: %q", payload)
+	if !strings.Contains(payload, "1  POTATO PANCAKE\r\n   SOUR CREAM, KETCHUP") {
+		t.Errorf("the sides do not sit under the item line: %q", payload)
 	}
 }
 

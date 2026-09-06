@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -27,6 +28,7 @@ var buildVersion = fmt.Sprintf("%d", time.Now().Unix())
 var templateFuncs = template.FuncMap{
 	"cents":     FormatCents,
 	"clock":     FormatClock,
+	"join":      strings.Join,
 	"asset":     func(path string) string { return path + "?v=" + buildVersion },
 	"menuItems": func() []MenuItem { return MenuItems },
 	"svgnum": func(value float64) string {
@@ -85,15 +87,27 @@ type page struct {
 	Kiosk     bool
 }
 
-// menuTile is one tile of the /pos grid. An item with Sides draws one tile
-// per Side plus one Plain tile; an item with no Sides draws a single tile.
+// menuTile is one tile of the /pos grid. Every item draws exactly one tile:
+// the Sides of an item are chosen on the cart line after the tap (ADR-0009),
+// so the tile only carries the set the line may offer.
 type menuTile struct {
 	MenuItemID string
 	Name       string
 	Label      string
 	PriceCents int
-	SideID     string
-	SideLabel  string
+	Sides      []Side
+}
+
+// SidesAttribute packs the tile's Sides into one data attribute, as
+// "id:Label" pairs separated by "|". The ids and labels are hard-coded in
+// menu.go and hold neither character, so the browser splits it back with no
+// escaping and the page needs no inline JSON.
+func (tile menuTile) SidesAttribute() string {
+	pairs := make([]string, 0, len(tile.Sides))
+	for _, side := range tile.Sides {
+		pairs = append(pairs, side.ID+":"+side.Label)
+	}
+	return strings.Join(pairs, "|")
 }
 
 // menuSection is one labeled group of tiles on the /pos grid, so the Operator

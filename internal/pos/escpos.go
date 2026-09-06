@@ -47,8 +47,8 @@ func BuildCustomerReceipt(order ReceiptOrder, header ReceiptHeader) []byte {
 		lines = append(lines,
 			fmt.Sprintf("%d x %s", line.Quantity, MenuItemName(line.MenuItemID)),
 		)
-		if label := SideLabel(line.MenuItemID, line.Side); label != "" {
-			lines = append(lines, "  "+label)
+		if labels := SideLabels(line.MenuItemID, line.Sides); len(labels) > 0 {
+			lines = append(lines, "  "+strings.Join(labels, ", "))
 		}
 		lines = append(lines, "  "+total)
 	}
@@ -78,8 +78,8 @@ func BuildKitchenTicket(order ReceiptOrder, header ReceiptHeader) []byte {
 
 	for _, line := range order.Items {
 		lines = append(lines, fmt.Sprintf("%d  %s", line.Quantity, strings.ToUpper(MenuItemName(line.MenuItemID))))
-		if label := SideLabel(line.MenuItemID, line.Side); label != "" {
-			lines = append(lines, "   "+strings.ToUpper(label))
+		if labels := SideLabels(line.MenuItemID, line.Sides); len(labels) > 0 {
+			lines = append(lines, "   "+strings.ToUpper(strings.Join(labels, ", ")))
 		}
 	}
 

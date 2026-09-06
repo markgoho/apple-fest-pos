@@ -503,6 +503,54 @@ button:disabled {
   text-transform: uppercase;
 }
 
+/* The topping row of a cart line. ADR-0004 gives every reversible adjustment
+   gold, resting and chosen alike, so a chosen topping is marked by weight, a
+   darker edge and a checkmark, never by a second colour. */
+.sides {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.3rem;
+}
+
+/* The three toppings sit on one row, so a cart line stays short enough that
+   the Operator reads the whole order back without scrolling. The row is that
+   narrow, so the checkmark of a chosen topping sits in the corner instead of
+   in front of the word: an inline mark would push "Applesauce" onto a second
+   line, and the word cannot be broken. */
+.side-toggle {
+  position: relative;
+  min-block-size: 3rem;
+  padding: 0.25rem 0.1rem;
+  border: 2px solid var(--gold-tan-edge);
+  border-radius: 0.7rem;
+  background: var(--gold-tan-soft);
+  color: var(--gold-tan-ink);
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.1;
+  word-break: keep-all;
+  overflow-wrap: normal;
+}
+
+.side-toggle[aria-pressed="true"] {
+  border-color: var(--gold-tan-shadow);
+  box-shadow: inset 0 0 0 2px var(--gold-tan-shadow);
+}
+
+.side-toggle[aria-pressed="true"]::before {
+  content: "✓";
+  position: absolute;
+  inset-block-start: 0.1rem;
+  inset-inline-end: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.side-toggle:active {
+  transform: translateY(1px);
+}
+
 .stepper {
   display: flex;
   align-items: center;

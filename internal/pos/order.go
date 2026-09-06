@@ -196,8 +196,15 @@ func ValidateOrder(request PlaceOrderRequest) error {
 		if !found {
 			return fmt.Errorf("%w: Unknown menu item: %s", ErrValidation, line.MenuItemID)
 		}
-		if line.Side != "" && !item.HasSide(line.Side) {
-			return fmt.Errorf("%w: Unknown side for %s: %s", ErrValidation, item.Name, line.Side)
+		seen := make(map[string]bool, len(line.Sides))
+		for _, side := range line.Sides {
+			if !item.HasSide(side) {
+				return fmt.Errorf("%w: Unknown side for %s: %s", ErrValidation, item.Name, side)
+			}
+			if seen[side] {
+				return fmt.Errorf("%w: Repeated side for %s: %s", ErrValidation, item.Name, side)
+			}
+			seen[side] = true
 		}
 	}
 

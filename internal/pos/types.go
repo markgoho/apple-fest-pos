@@ -27,10 +27,10 @@ const (
 
 // CartLine is one line of a cart.
 type CartLine struct {
-	MenuItemID string `json:"menuItemId"`
-	Quantity   int    `json:"quantity"`
-	Side       string `json:"side,omitempty"`
-	Notes      string `json:"notes,omitempty"`
+	MenuItemID string   `json:"menuItemId"`
+	Quantity   int      `json:"quantity"`
+	Sides      []string `json:"sides,omitempty"`
+	Notes      string   `json:"notes,omitempty"`
 
 	// fractionalQuantity is true when the request sent a quantity that is not
 	// a whole number. The zero value therefore keeps hand-built lines valid.
@@ -108,8 +108,13 @@ type ReceiptOrder struct {
 type cartLineJSON struct {
 	MenuItemID string      `json:"menuItemId"`
 	Quantity   json.Number `json:"quantity"`
-	Side       string      `json:"side,omitempty"`
+	Sides      []string    `json:"sides,omitempty"`
 	Notes      string      `json:"notes,omitempty"`
+
+	// Side is the one-side field this API carried before ADR-0009. Orders
+	// stored under it are still reprinted from their stored request, so the
+	// decoder keeps reading it.
+	Side string `json:"side,omitempty"`
 }
 
 // UnmarshalJSON reads a cart line and marks a non-integer quantity as invalid.
@@ -120,7 +125,10 @@ func (line *CartLine) UnmarshalJSON(data []byte) error {
 	}
 
 	line.MenuItemID = raw.MenuItemID
-	line.Side = raw.Side
+	line.Sides = raw.Sides
+	if len(line.Sides) == 0 && raw.Side != "" {
+		line.Sides = []string{raw.Side}
+	}
 	line.Notes = raw.Notes
 	quantity, err := strconv.ParseInt(raw.Quantity.String(), 10, 32)
 	line.Quantity = int(quantity)

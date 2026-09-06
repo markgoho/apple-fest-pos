@@ -97,6 +97,43 @@ function changeQuantity(key, quantity) {
   draw();
 }
 
+// toggleSide adds or removes one Side of a cart line. The chosen Sides stay in
+// menu order, so the cart line, the receipt and the kitchen ticket all read the
+// same way whatever order the Operator tapped (ADR-0009).
+function toggleSide(key, sideId) {
+  disarm();
+  const line = cart.find((candidate) => candidate.key === key);
+  if (!line) return;
+  const chosen = new Set(line.chosen);
+  if (chosen.has(sideId)) {
+    chosen.delete(sideId);
+  } else {
+    chosen.add(sideId);
+  }
+  line.chosen = line.sides.filter((side) => chosen.has(side.id)).map((side) => side.id);
+  draw();
+}
+
+// drawSides draws the topping row of a cart line. Every Side is one gold
+// toggle, resting or chosen, because a Side costs nothing and is reversible
+// (ADR-0004); a chosen Side is marked by aria-pressed and a checkmark, never
+// by a second colour.
+function drawSides(line) {
+  const row = document.createElement("div");
+  row.className = "sides";
+  for (const side of line.sides) {
+    const chosen = line.chosen.includes(side.id);
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "side-toggle";
+    toggle.textContent = side.label;
+    toggle.setAttribute("aria-pressed", chosen ? "true" : "false");
+    toggle.addEventListener("click", () => toggleSide(line.key, side.id));
+    row.append(toggle);
+  }
+  return row;
+}
+
 function drawLine(line) {
   const item = document.createElement("li");
   item.className = "cart-line";
@@ -104,11 +141,6 @@ function drawLine(line) {
   const name = document.createElement("p");
   name.className = "name";
   name.textContent = line.name;
-  if (line.sideLabel) {
-    const tag = document.createElement("small");
-    tag.textContent = line.sideLabel;
-    name.append(tag);
-  }
   item.append(name);
 
   const quantity = document.createElement("div");
@@ -117,7 +149,7 @@ function drawLine(line) {
   const less = document.createElement("button");
   less.type = "button";
   less.textContent = "−";
-  less.setAttribute("aria-label", "Remove one " + line.name + (line.sideLabel ? " " + line.sideLabel : ""));
+  less.setAttribute("aria-label", "Remove one " + line.name);
   less.addEventListener("click", () => changeQuantity(line.key, line.quantity - 1));
 
   const count = document.createElement("output");
@@ -127,11 +159,14 @@ function drawLine(line) {
   const more = document.createElement("button");
   more.type = "button";
   more.textContent = "+";
-  more.setAttribute("aria-label", "Add one " + line.name + (line.sideLabel ? " " + line.sideLabel : ""));
+  more.setAttribute("aria-label", "Add one " + line.name);
   more.addEventListener("click", () => changeQuantity(line.key, line.quantity + 1));
 
   quantity.append(less, count, more);
   item.append(quantity);
+  if (line.sides.length > 0) {
+    item.append(drawSides(line));
+  }
   return item;
 }
 
@@ -172,7 +207,11 @@ async function submitOrder() {
     clientOrderId: clientOrderId,
     deviceId: deviceId(),
     payment: { method: "cash" },
-    items: cart.map((line) => ({ menuItemId: line.menuItemId, quantity: line.quantity, side: line.sideId || undefined }))
+    items: cart.map((line) => ({
+      menuItemId: line.menuItemId,
+      quantity: line.quantity,
+      sides: line.chosen.length > 0 ? line.chosen : undefined
+    }))
   };
 
   try {
@@ -229,23 +268,40 @@ async function reprintOrder() {
   }
 }
 
+// readSides unpacks the tile's "id:Label|id:Label" attribute. See
+// menuTile.SidesAttribute in pages.go.
+function readSides(packed) {
+  if (!packed) return [];
+  return packed.split("|").map((pair) => {
+    const cut = pair.indexOf(":");
+    return { id: pair.slice(0, cut), label: pair.slice(cut + 1) };
+  });
+}
+
+let nextLineKey = 0;
+
 for (const tile of menuElement.querySelectorAll(".tile")) {
   const item = {
     menuItemId: tile.dataset.menuItemId,
     name: tile.dataset.name,
     priceCents: Number(tile.dataset.priceCents),
-    sideId: tile.dataset.sideId || "",
-    sideLabel: tile.dataset.sideLabel || ""
+    sides: readSides(tile.dataset.sides)
   };
   tile.addEventListener("click", () => {
     disarm();
-    const key = item.menuItemId + "|" + item.sideId;
-    const existing = cart.find((line) => line.key === key);
-    if (existing) {
-      existing.quantity += 1;
-    } else {
-      cart.push({ key, ...item, quantity: 1 });
+    // An item with Sides opens a new line on every tap, because the toppings
+    // are chosen after the tap and two taps can mean two different pancakes.
+    // An item with no Sides has nothing to choose, so it merges as before.
+    if (item.sides.length === 0) {
+      const existing = cart.find((line) => line.menuItemId === item.menuItemId);
+      if (existing) {
+        existing.quantity += 1;
+        draw();
+        return;
+      }
     }
+    nextLineKey += 1;
+    cart.push({ key: "line-" + nextLineKey, ...item, chosen: [], quantity: 1 });
     draw();
   });
 }

@@ -62,7 +62,7 @@ func TestSystemAdminResetWipesOrdersAndRestartsNumbering(t *testing.T) {
 		ClientOrderID: "reset-order",
 		DeviceID:      "tablet-1",
 		Payment:       Payment{Method: "cash"},
-		Items:         []CartLine{{MenuItemID: "potato-pancake", Quantity: 1, Side: "applesauce"}},
+		Items:         []CartLine{{MenuItemID: "potato-pancake", Quantity: 1, Sides: []string{"applesauce"}}},
 	})
 
 	recorder := postForm(t, service, "/system-admin/reset", url.Values{"pin": {service.SystemAdminPIN}})
@@ -82,7 +82,7 @@ func TestSystemAdminResetWipesOrdersAndRestartsNumbering(t *testing.T) {
 		ClientOrderID: "post-reset-order",
 		DeviceID:      "tablet-1",
 		Payment:       Payment{Method: "cash"},
-		Items:         []CartLine{{MenuItemID: "potato-pancake", Quantity: 1, Side: "applesauce"}},
+		Items:         []CartLine{{MenuItemID: "potato-pancake", Quantity: 1, Sides: []string{"applesauce"}}},
 	})
 	order := body["order"].(map[string]any)
 	if int(order["orderNumber"].(float64)) != service.StartingOrderNumber {

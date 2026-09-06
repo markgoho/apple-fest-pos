@@ -6,10 +6,10 @@ type KitchenTicketLine struct {
 	Name       string `json:"name"`
 	Quantity   int    `json:"quantity"`
 
-	// Side is the label of the chosen condiment, empty when the line carries
-	// none. The scouts assemble the food from this screen and the printed
-	// ticket, so the Side rides on the line itself, not in free text.
-	Side string `json:"side,omitempty"`
+	// Sides holds the labels of the chosen condiments, empty when the line
+	// carries none. The scouts assemble the food from this screen and the
+	// printed ticket, so the Sides ride on the line itself, not in free text.
+	Sides []string `json:"sides,omitempty"`
 }
 
 // KitchenTicket is one order on the kitchen display.
@@ -52,7 +52,7 @@ func (service *OrderService) GetKitchenBoard() (KitchenBoard, error) {
 				MenuItemID: line.MenuItemID,
 				Name:       MenuItemName(line.MenuItemID),
 				Quantity:   line.Quantity,
-				Side:       SideLabel(line.MenuItemID, line.Side),
+				Sides:      SideLabels(line.MenuItemID, line.Sides),
 			})
 		}
 

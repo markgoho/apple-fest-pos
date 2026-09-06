@@ -40,15 +40,13 @@ func handleHome(writer http.ResponseWriter, request *http.Request) {
 func handlePOSScreen(writer http.ResponseWriter, request *http.Request) {
 	var sections []menuSection
 	for _, item := range MenuItems {
-		var tiles []menuTile
-		if len(item.Sides) == 0 {
-			tiles = append(tiles, menuTile{MenuItemID: item.ID, Name: item.Name, Label: item.Label(), PriceCents: item.PriceCents})
-		} else {
-			tiles = append(tiles, menuTile{MenuItemID: item.ID, Name: item.Name, Label: item.Label(), PriceCents: item.PriceCents, SideLabel: "Plain"})
-			for _, side := range item.Sides {
-				tiles = append(tiles, menuTile{MenuItemID: item.ID, Name: item.Name, Label: item.Label(), PriceCents: item.PriceCents, SideID: side.ID, SideLabel: side.Label})
-			}
-		}
+		tiles := []menuTile{{
+			MenuItemID: item.ID,
+			Name:       item.Name,
+			Label:      item.Label(),
+			PriceCents: item.PriceCents,
+			Sides:      item.Sides,
+		}}
 
 		if len(sections) > 0 && sections[len(sections)-1].Category == item.Category {
 			sections[len(sections)-1].Tiles = append(sections[len(sections)-1].Tiles, tiles...)

@@ -26,7 +26,11 @@ The one-way switch the System Admin sets from the System Admin page once pre-eve
 
 ## Side
 
-The condiment served with a potato pancake: sour cream, applesauce or ketchup. A Side comes from this fixed set, and the Operator chooses it when the pancake goes into the order, not afterwards. A pancake with no Side is a normal order, not an incomplete one. A Side is not a Note: a Note is free text, and a Side is one of a known set that can be counted.
+A condiment served with a potato pancake: sour cream, applesauce or ketchup. A Side comes from this fixed set, and one pancake carries any number of them, none to all three. The Operator chooses the pancake first and the Sides after, on the cart line. A pancake with no Side is a normal order, not an incomplete one. A Side is not a Note: a Note is free text, and a Side is one of a known set that can be counted. A Side costs nothing, because the sour cream a pancake comes with is one packet: see Extra Sour Cream.
+
+## Extra Sour Cream
+
+A second or later packet of sour cream on an order, sold at one dollar. It is a menu item, not a property of a pancake: the packet that comes with a pancake is the sour cream Side, and every packet beyond it is one of these. This keeps the price of an order the sum of its menu items, so the day's total, the per-item breakdown and the hourly chart count extra packets without a rule of their own.
 
 ## Customer Receipt
 

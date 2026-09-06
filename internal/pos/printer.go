@@ -61,7 +61,7 @@ func TestOrder(now time.Time) ReceiptOrder {
 		CreatedAt:     now.UTC().Format(timestampLayout),
 		SubtotalCents: 1000,
 		TotalCents:    1000,
-		Items:         []CartLine{{MenuItemID: "potato-pancake", Quantity: 1, Side: "sour-cream"}},
+		Items:         []CartLine{{MenuItemID: "potato-pancake", Quantity: 1, Sides: []string{"sour-cream", "applesauce"}}},
 	}
 }
 
