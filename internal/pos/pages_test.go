@@ -46,10 +46,16 @@ func TestHomeLinksToSystemAdmin(t *testing.T) {
 func TestPOSScreenShowsTheMenu(t *testing.T) {
 	body := getPage(t, newTestService(t), "/pos")
 
+	// The screen shows the short label, not the full name: the section header
+	// already says "Potato Pancakes" and "Grilled Cheese". The full name is for
+	// paper, which has no headers.
 	for _, item := range MenuItems {
-		if !strings.Contains(body, item.Name) {
-			t.Errorf("/pos does not show %q", item.Name)
+		if !strings.Contains(body, `data-label="`+item.Label()+`"`) {
+			t.Errorf("/pos does not show %q", item.Label())
 		}
+	}
+	if strings.Contains(body, "Toastie") {
+		t.Error(`/pos repeats "Toastie", which the Grilled Cheese header already says`)
 	}
 	// Every item draws exactly one tile (ADR-0009): the toppings are chosen on
 	// the cart line, so the tile only carries the set the line may offer.

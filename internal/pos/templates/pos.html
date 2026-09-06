@@ -18,7 +18,7 @@
         <ul class="tiles" aria-label="{{.Category}} items">
           {{range .Tiles}}
           <li>
-            <button type="button" class="tile{{if .Minor}} tile-minor{{end}}" data-menu-item-id="{{.MenuItemID}}" data-name="{{.Name}}"
+            <button type="button" class="tile{{if .Minor}} tile-minor{{end}}" data-menu-item-id="{{.MenuItemID}}" data-label="{{.Label}}"
                     data-price-cents="{{.PriceCents}}" data-sides="{{.SidesAttribute}}">
               <strong>{{.Label}}</strong>
               <span class="price">{{cents .PriceCents}}</span>

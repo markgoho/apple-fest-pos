@@ -23,10 +23,13 @@ type MenuItem struct {
 	SortOrder  int        `json:"sortOrder"`
 	PrintGroup PrintGroup `json:"printGroup"`
 
-	// TileLabel is what the /pos tile prints instead of Name. It exists so a
-	// tile can drop a word the section header already says ("Toastie" under
-	// GRILLED CHEESE) without shortening the name on the kitchen ticket or
-	// the cart line. Empty means the tile prints Name.
+	// TileLabel is what /pos shows instead of Name, on the tile and on the cart
+	// line. It drops a word the screen says elsewhere — "Toastie" under the
+	// GRILLED CHEESE header, "Potato" under POTATO PANCAKES — so the word that
+	// tells the items apart gets the size. The Customer Receipt and the Kitchen
+	// Ticket still print Name: paper carries no section headers, so a ticket
+	// reading HARVEST alone would have dropped real information. Empty means
+	// the screen shows Name.
 	TileLabel string `json:"tileLabel,omitempty"`
 
 	// Sides is the fixed set of condiments the item can carry. The Operator
@@ -68,7 +71,7 @@ func (item MenuItem) HasSide(id string) bool {
 
 // MenuItems holds the menu in sort order.
 var MenuItems = []MenuItem{
-	{ID: "potato-pancake", Name: "Potato Pancake", Category: "Potato Pancakes", PriceCents: 1000, SortOrder: 10, PrintGroup: PrintGroupKitchen,
+	{ID: "potato-pancake", Name: "Potato Pancake", TileLabel: "Pancake", Category: "Potato Pancakes", PriceCents: 1000, SortOrder: 10, PrintGroup: PrintGroupKitchen,
 		ChartColorVar: "apple-red",
 		Sides: []Side{
 			{ID: "sour-cream", Label: "Sour Cream"},

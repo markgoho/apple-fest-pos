@@ -521,9 +521,13 @@ button:disabled {
   font-weight: 600;
 }
 
+/* The name and the quantity read as one line, with the toppings wrapping onto
+   the row below. The name carries the word that tells the items apart, so it
+   takes the size the stepper already has. */
 .cart-line {
   display: flex;
-  flex-direction: column;
+  flex-flow: row wrap;
+  align-items: center;
   gap: 0.4rem;
   min-inline-size: 0;
   background: var(--panel);
@@ -533,12 +537,13 @@ button:disabled {
 }
 
 .cart-line .name {
+  flex: 1 1 auto;
   min-inline-size: 0;
   margin: 0;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--apple-red-dark);
-  font-size: 1rem;
-  line-height: 1.2;
+  font-size: 1.45rem;
+  line-height: 1.15;
 }
 
 .cart-line .name small {
@@ -633,7 +638,15 @@ button:disabled {
   transform: translateY(1px);
 }
 
+.cart-line .sides {
+  flex: 1 0 100%;
+}
+
 .stepper {
+  flex: 0 0 auto;
+  /* Holds the outer edge even when a long name wraps the row, so the quantity
+     is always in the same place under the finger. */
+  margin-inline-start: auto;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -767,6 +780,10 @@ button:disabled {
   .cart-line .sides {
     order: 2;
     flex: 2 1 20rem;
+  }
+
+  .cart-line {
+    flex-wrap: nowrap;
   }
 
   .stepper {

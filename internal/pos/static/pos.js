@@ -177,7 +177,7 @@ function drawLine(line) {
 
   const name = document.createElement("p");
   name.className = "name";
-  name.textContent = line.name;
+  name.textContent = line.label;
   // A line whose toggles are all resting is a Plain one, and the dialog made
   // that a deliberate choice. Say so, or it reads as a pancake nobody was
   // asked about.
@@ -194,17 +194,17 @@ function drawLine(line) {
   const less = document.createElement("button");
   less.type = "button";
   less.textContent = "−";
-  less.setAttribute("aria-label", "Remove one " + line.name);
+  less.setAttribute("aria-label", "Remove one " + line.label);
   less.addEventListener("click", () => changeQuantity(line.key, line.quantity - 1));
 
   const count = document.createElement("output");
   count.textContent = String(line.quantity);
-  count.setAttribute("aria-label", line.name + " quantity");
+  count.setAttribute("aria-label", line.label + " quantity");
 
   const more = document.createElement("button");
   more.type = "button";
   more.textContent = "+";
-  more.setAttribute("aria-label", "Add one " + line.name);
+  more.setAttribute("aria-label", "Add one " + line.label);
   more.addEventListener("click", () => changeQuantity(line.key, line.quantity + 1));
 
   quantity.append(less, count, more);
@@ -370,7 +370,7 @@ function drawSidesChoices() {
 function openSides(item) {
   setMoreOpen(false);
   pending = { item, chosen: [], plain: false };
-  sidesTitle.textContent = item.name;
+  sidesTitle.textContent = item.label;
   drawSidesChoices();
   setSidesOpen(true);
 }
@@ -388,7 +388,7 @@ function readSides(packed) {
 for (const tile of menuElement.querySelectorAll(".tile")) {
   const item = {
     menuItemId: tile.dataset.menuItemId,
-    name: tile.dataset.name,
+    label: tile.dataset.label,
     priceCents: Number(tile.dataset.priceCents),
     sides: readSides(tile.dataset.sides)
   };
