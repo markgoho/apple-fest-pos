@@ -186,6 +186,13 @@ function drawLine(line) {
     tag.textContent = "Plain";
     name.append(tag);
   }
+  // A charge with no line of its own, like Extra Sour Cream, looks like a
+  // double charge to anyone who did not place the order. Say what it buys.
+  if (line.note) {
+    const tag = document.createElement("small");
+    tag.textContent = line.note;
+    name.append(tag);
+  }
   item.append(name);
 
   const quantity = document.createElement("div");
@@ -390,7 +397,8 @@ for (const tile of menuElement.querySelectorAll(".tile")) {
     menuItemId: tile.dataset.menuItemId,
     label: tile.dataset.label,
     priceCents: Number(tile.dataset.priceCents),
-    sides: readSides(tile.dataset.sides)
+    sides: readSides(tile.dataset.sides),
+    note: tile.dataset.note || ""
   };
   tile.addEventListener("click", () => {
     // An item with Sides asks for them first: the toppings are part of what is

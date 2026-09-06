@@ -101,6 +101,28 @@ button:disabled {
   color: var(--apple-red-dark);
 }
 
+/* The chooser's controls had no press state at all, so a tap that started a
+   reload looked the same as a tap that missed. The cue is movement and a
+   pressed rim rather than a new fill: a fill dark enough to read as pressed
+   would have to clear the 7:1 daylight floor all over again (ADR-0004), and
+   this says the same thing without touching the palette. */
+.ghost:active,
+.modes a:active {
+  transform: translateY(2px);
+  box-shadow: inset 0 0 0 3px var(--gold-tan-shadow);
+}
+
+.modes a:active {
+  box-shadow: inset 0 0 0 3px var(--apple-red-dark);
+}
+
+/* Held from the tap until the new page paints. */
+.ghost.is-busy {
+  transform: translateY(2px);
+  box-shadow: inset 0 0 0 3px var(--gold-tan-shadow);
+  opacity: 0.75;
+}
+
 @media (pointer: coarse) {
   :root {
     --tap: 3.5rem;

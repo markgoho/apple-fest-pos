@@ -49,6 +49,13 @@ type MenuItem struct {
 	// revenue chart (issue #12), so the chart and the rest of the theme share
 	// one palette.
 	ChartColorVar string `json:"-"`
+
+	// Note is a short line the cart shows under the item's name, for a charge
+	// that would otherwise look like a mistake. Extra Sour Cream costs a
+	// dollar because the packet a pancake comes with is a Side, not this item
+	// (ADR-0009); without the Note, an Operator who did not place the order
+	// has no way to tell a real extra from a double charge.
+	Note string `json:"note,omitempty"`
 }
 
 // Label gives the text a /pos tile prints for the item.
@@ -78,7 +85,8 @@ var MenuItems = []MenuItem{
 			{ID: "applesauce", Label: "Applesauce"},
 			{ID: "ketchup", Label: "Ketchup"},
 		}},
-	{ID: "extra-sour-cream", Name: "Extra Sour Cream", TileLabel: "Extra Sour Cream", Category: "Potato Pancakes", PriceCents: 100, SortOrder: 15, PrintGroup: PrintGroupKitchen, Minor: true, ChartColorVar: "cider-gold"},
+	{ID: "extra-sour-cream", Name: "Extra Sour Cream", TileLabel: "Extra Sour Cream", Category: "Potato Pancakes", PriceCents: 100, SortOrder: 15, PrintGroup: PrintGroupKitchen, Minor: true, ChartColorVar: "cider-gold",
+		Note: "Each pancake includes 1 free packet"},
 	{ID: "og-toastie", Name: "OG Toastie", TileLabel: "OG", Category: "Grilled Cheese", PriceCents: 500, SortOrder: 20, PrintGroup: PrintGroupKitchen, ChartColorVar: "gold-tan"},
 	{ID: "pizza-toastie", Name: "Pizza Toastie", TileLabel: "Pizza", Category: "Grilled Cheese", PriceCents: 600, SortOrder: 30, PrintGroup: PrintGroupKitchen, ChartColorVar: "leaf-green"},
 	{ID: "harvest-toastie", Name: "Harvest Toastie", TileLabel: "Harvest", Category: "Grilled Cheese", PriceCents: 800, SortOrder: 40, PrintGroup: PrintGroupKitchen, ChartColorVar: "gold-tan-ink"},

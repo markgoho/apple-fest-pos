@@ -82,9 +82,22 @@ resumeButton.addEventListener("click", () => {
 const refreshButton = document.getElementById("kiosk-refresh");
 const endShiftButton = document.getElementById("kiosk-end-shift");
 
-refreshButton?.addEventListener("click", () => location.reload());
+// A reload on the Pi takes a beat, and until it lands the screen is unchanged.
+// Without this the Operator cannot tell a slow reload from a tap that missed,
+// so they tap again. The button says what it is doing and stops taking taps.
+function markBusy(button, label) {
+  button.disabled = true;
+  button.textContent = label;
+  button.classList.add("is-busy");
+}
+
+refreshButton?.addEventListener("click", () => {
+  markBusy(refreshButton, "Refreshing…");
+  location.reload();
+});
 
 endShiftButton?.addEventListener("click", async () => {
+  markBusy(endShiftButton, "Ending shift…");
   if (document.fullscreenElement) {
     await document.exitFullscreen();
   }

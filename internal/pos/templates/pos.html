@@ -19,7 +19,7 @@
           {{range .Tiles}}
           <li>
             <button type="button" class="tile{{if .Minor}} tile-minor{{end}}" data-menu-item-id="{{.MenuItemID}}" data-label="{{.Label}}"
-                    data-price-cents="{{.PriceCents}}" data-sides="{{.SidesAttribute}}">
+                    data-price-cents="{{.PriceCents}}" data-sides="{{.SidesAttribute}}" data-note="{{.Note}}">
               <strong>{{.Label}}</strong>
               <span class="price">{{cents .PriceCents}}</span>
             </button>

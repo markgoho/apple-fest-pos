@@ -97,6 +97,7 @@ type menuTile struct {
 	PriceCents int
 	Minor      bool
 	Sides      []Side
+	Note       string
 }
 
 // SidesAttribute packs the tile's Sides into one data attribute, as

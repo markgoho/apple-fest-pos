@@ -49,6 +49,7 @@ func handlePOSScreen(writer http.ResponseWriter, request *http.Request) {
 			PriceCents: item.PriceCents,
 			Minor:      item.Minor,
 			Sides:      item.Sides,
+			Note:       item.Note,
 		}}
 
 		if len(sections) > 0 && sections[len(sections)-1].Category == item.Category {
