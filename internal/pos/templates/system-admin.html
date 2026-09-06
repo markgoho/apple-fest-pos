@@ -25,7 +25,7 @@
   <section class="panel">
     <h2>Printer addresses</h2>
     <p>Assign which printer on the network is the Window Printer and which is the Kitchen Printer. This takes effect immediately and survives a restart.</p>
-    <form method="post" action="/system-admin/printers/discover">
+    <form method="post" action="/system-admin/printers/discover" id="discover-printers-form">
       <input type="hidden" name="pin" value="{{.PIN}}">
       <button type="submit">Discover printers on network</button>
     </form>

@@ -11,6 +11,19 @@ if (resetForm) {
   });
 }
 
+// ADR-0010: the scan can take real time on a large network, and a plain
+// form POST gives no sign it's running until the page reloads. Disable the
+// button and say so immediately, so a press is never mistaken for nothing
+// happening.
+const discoverForm = document.getElementById("discover-printers-form");
+if (discoverForm) {
+  discoverForm.addEventListener("submit", () => {
+    const button = discoverForm.querySelector("button[type=submit]");
+    button.disabled = true;
+    button.textContent = "Scanning the network…";
+  });
+}
+
 // ADR-0010: a discovered address fills the matching field in the printer
 // assignment form. The admin still presses Save; nothing here writes state.
 const foundPrinters = document.getElementById("found-printers");

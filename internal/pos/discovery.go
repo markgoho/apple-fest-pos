@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	discoveryDialTimeout = 300 * time.Millisecond
-	discoveryConcurrency = 128
+	discoveryDialTimeout = 200 * time.Millisecond
+	discoveryConcurrency = 512
 	// A subnet bigger than /22 (1022 hosts) is not a booth network, and
 	// scanning it host by host would make the button hang. Skip it.
 	discoveryMinPrefixBits = 22
