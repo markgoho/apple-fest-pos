@@ -688,9 +688,65 @@ button:disabled {
 }
 
 @media (orientation: portrait) {
+  /* The menu takes the height its tiles need and the cart takes the rest.
+     Landscape gives the cart a fixed column because the menu grid has to fill
+     the width; here the screen is tall, the cart is the thing that runs out of
+     room first, and every row the menu gives up is a line of the order the
+     Operator can read without scrolling. */
   .body {
     grid-template-columns: 1fr;
-    grid-template-rows: 1fr 26rem;
+    grid-template-rows: auto 1fr;
+  }
+
+  .menu-section,
+  .menu-section:has(.tiles > li:nth-child(3):last-child),
+  .menu-section:has(.tiles > li:nth-child(4)) {
+    flex: 0 0 auto;
+  }
+
+  .tiles {
+    flex: 0 0 auto;
+    grid-auto-rows: auto;
+  }
+
+  .tiles > li {
+    block-size: 12rem;
+  }
+
+  /* A tile is wider than it is tall here, so the name and the price do not
+     need the size they take when a tile is a tall square. */
+  .tile strong {
+    font-size: 1.6rem;
+  }
+
+  .tile .price {
+    font-size: 2.4rem;
+  }
+
+  /* The add-on rides beside the pancake rather than under it: one row, the
+     pancake taking four fifths of it. A strip of its own would cost a row of
+     the cart, and the two belong together anyway. */
+  .tiles:has(.tile-minor) {
+    grid-template-columns: 4fr 1fr;
+    grid-template-rows: auto;
+    column-gap: 0.7rem;
+  }
+
+  .tile-minor {
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.2rem;
+    padding: 0.5rem 0.35rem;
+    border-radius: 1.1rem;
+  }
+
+  .tile-minor strong {
+    font-size: 0.95rem;
+    line-height: 1.15;
+  }
+
+  .tile-minor .price {
+    font-size: 1.6rem;
   }
 
   .cart {
