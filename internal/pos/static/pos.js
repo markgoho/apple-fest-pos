@@ -123,40 +123,6 @@ function addToCart(item, chosen) {
   draw();
 }
 
-// addExtraSourCream gives the packet to a pancake that has not chosen Sour
-// Cream yet, instead of charging for it: the booth's rule is one free packet
-// per pancake, and a plain pancake (or one carrying only Applesauce or
-// Ketchup) already sitting in the cart has not used its packet. Only a cart
-// with no such pancake pays the dollar (ADR-0009, ADR-0011).
-function addExtraSourCream(item) {
-  const target = cart.find(
-    (line) => line.sides.some((side) => side.id === "sour-cream") && !line.chosen.includes("sour-cream")
-  );
-  if (!target) {
-    addToCart(item, []);
-    return;
-  }
-
-  disarm();
-  const chosen = target.sides
-    .filter((side) => target.chosen.includes(side.id) || side.id === "sour-cream")
-    .map((side) => side.id);
-  const key = lineKey(target.menuItemId, chosen);
-
-  target.quantity -= 1;
-  if (target.quantity === 0) {
-    cart = cart.filter((line) => line !== target);
-  }
-
-  const twin = cart.find((line) => line.key === key);
-  if (twin) {
-    twin.quantity += 1;
-  } else {
-    cart.push({ ...target, key, chosen, quantity: 1 });
-  }
-  draw();
-}
-
 // toggleSide adds or removes one Side of a cart line that is already in the
 // cart, so a topping asked for late is one tap and not a delete and a redo.
 // The Sides stay in menu order, so the cart line, the receipt and the kitchen
@@ -440,10 +406,6 @@ for (const tile of menuElement.querySelectorAll(".tile")) {
     // the line that has just appeared.
     if (item.sides.length > 0) {
       openSides(item);
-      return;
-    }
-    if (item.menuItemId === "extra-sour-cream") {
-      addExtraSourCream(item);
       return;
     }
     addToCart(item, []);

@@ -35,7 +35,7 @@ Because the toppings are known before the line exists, a line is keyed by its it
 
 Two statements elsewhere are superseded. `CONTEXT.md`'s Side entry no longer reads "the condiment" or "chosen when the pancake goes into the order", and ADR-0005's aside that "a scout who taps Sour Cream for Applesauce has no other moment to notice" now describes a toggle on the line rather than a tile in the grid. The checkpoint it defends is unchanged and covers the toppings too, because a toggle disarms Place order.
 
-[ADR-0011](./0011-extra-sour-cream-fills-an-unused-packet-first.md) supersedes this ADR's line that "the software never has to know whether the free packet is counted per pancake or per order": the booth answered per pancake, and the Extra Sour Cream tap now acts on it before it charges.
+[ADR-0011](./0011-extra-sour-cream-fills-an-unused-packet-first.md) tried to supersede this ADR's line that "the software never has to know whether the free packet is counted per pancake or per order," having the Extra Sour Cream tap search the cart before charging. It was reverted: the search merged different customers' pancakes onto one cart line, which the existing per-line Side toggle and quantity stepper then edited as a unit, no longer matching what any one customer had ordered. This ADR's original line stands.
 
 The `/pos` grid loses three tiles and gains one, so the Potato Pancakes section holds two tiles rather than four. The API cart line carries `sides` as an array; the old `side` field is still read, because a reprint of an order placed before this decision is built from its stored request.
 

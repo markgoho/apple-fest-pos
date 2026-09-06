@@ -31,9 +31,6 @@ A condiment served with a potato pancake: sour cream, applesauce or ketchup. A S
 ## Extra Sour Cream
 
 A second or later packet of sour cream on an order, sold at one dollar. It is a menu item, not a property of a pancake: the packet that comes with a pancake is the sour cream Side, and every packet beyond it is one of these. This keeps the price of an order the sum of its menu items, so the day's total, the per-item breakdown and the hourly chart count extra packets without a rule of their own.
-
-Tapping the tile does not always sell one. It first looks for a pancake in the cart that has not chosen the Sour Cream Side and gives that pancake the Side for free instead, because that pancake's own included packet is what the customer is actually asking for. It sells the dollar packet only once every pancake in the cart already has Sour Cream (see [ADR-0011](./docs/adr/0011-extra-sour-cream-fills-an-unused-packet-first.md)).
-
 ## Customer Receipt
 
 The paper the customer takes away. It carries the order number, which is how the customer collects the food and how the booth finds the order again. One order makes exactly one Customer Receipt, and it prints on the Window Printer.
