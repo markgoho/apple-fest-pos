@@ -20,6 +20,11 @@ type PrinterConfig struct {
 const (
 	printerDialTimeout  = 2 * time.Second
 	printerWriteTimeout = 2 * time.Second
+	// escposPort is the RAW/JetDirect socket port every ITPP047(P) listens on
+	// out of the box. Every booth printer uses it; nothing in this codebase
+	// has ever needed another port, so ADR-0010's discovery and System Admin
+	// assignment don't ask for one.
+	escposPort = "9100"
 )
 
 // PrintOrder sends the customer receipt to the Window Printer and the kitchen

@@ -161,9 +161,7 @@ type systemAdminPage struct {
 	Error         string
 	Message       string
 	WindowHost    string
-	WindowPort    string
 	KitchenHost   string
-	KitchenPort   string
 	FoundPrinters []string
 }
 

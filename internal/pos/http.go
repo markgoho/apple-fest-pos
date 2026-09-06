@@ -255,9 +255,9 @@ func (service *OrderService) handleSystemAdminSavePrinters(writer http.ResponseW
 	if service.systemAdminUnlocked(pin) {
 		config := PrinterConfig{
 			WindowHost:  strings.TrimSpace(request.FormValue("window_host")),
-			WindowPort:  printerPortOrDefault(request.FormValue("window_port")),
+			WindowPort:  escposPort,
 			KitchenHost: strings.TrimSpace(request.FormValue("kitchen_host")),
-			KitchenPort: printerPortOrDefault(request.FormValue("kitchen_port")),
+			KitchenPort: escposPort,
 		}
 		if err := service.SavePrinterConfig(config); err != nil {
 			log.Printf("save printer config: %v", err)
@@ -267,15 +267,6 @@ func (service *OrderService) handleSystemAdminSavePrinters(writer http.ResponseW
 		}
 	}
 	service.renderSystemAdmin(writer, pin, message, nil)
-}
-
-// printerPortOrDefault trims value and falls back to the ESC/POS raw port
-// every ITPP047(P) listens on, so leaving a port field blank still works.
-func printerPortOrDefault(value string) string {
-	if trimmed := strings.TrimSpace(value); trimmed != "" {
-		return trimmed
-	}
-	return "9100"
 }
 
 // printerStatusLabel turns a PrinterStatus into the label the System Admin
@@ -349,9 +340,7 @@ func (service *OrderService) renderSystemAdmin(writer http.ResponseWriter, pin s
 		EventStarted:  started,
 		Message:       message,
 		WindowHost:    printer.WindowHost,
-		WindowPort:    printer.WindowPort,
 		KitchenHost:   printer.KitchenHost,
-		KitchenPort:   printer.KitchenPort,
 		FoundPrinters: found,
 	})
 }

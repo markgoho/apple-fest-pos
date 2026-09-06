@@ -20,7 +20,7 @@ const (
 // listens on out of the box. ADR-0010: this is what makes the System Admin
 // page's printer assignment usable without knowing an address in advance.
 func DiscoverPrinters() []string {
-	return scanForPrinters(localIPv4Subnets(), "9100")
+	return scanForPrinters(localIPv4Subnets(), escposPort)
 }
 
 // localIPv4Subnets lists the private IPv4 networks this machine has an
