@@ -34,7 +34,12 @@ func (service *OrderService) Handler() http.Handler {
 }
 
 func handleHome(writer http.ResponseWriter, request *http.Request) {
-	render(writer, "home.html", page{Title: "Apple Fest POS", BodyClass: "theme", Kiosk: true})
+	revision, dirty := BuildRevision()
+	render(writer, "home.html", homePage{
+		page:    page{Title: "Apple Fest POS", BodyClass: "theme", Kiosk: true},
+		Version: revision,
+		Dirty:   dirty,
+	})
 }
 
 // handlePOSScreen draws the menu grid. The cart is client-side state, so the

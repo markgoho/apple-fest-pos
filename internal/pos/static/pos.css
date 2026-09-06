@@ -146,6 +146,17 @@ button:disabled {
   box-shadow: 0 1rem 3rem #5f321733;
 }
 
+/* The commit running on this tablet, so a stale deploy is visible on the
+   landing page itself rather than something only SSH into the Pi can tell
+   you. Small and out of the way: nobody working a shift needs to read it. */
+.chooser .build {
+  margin-block-start: 1.5rem;
+  color: var(--gold-tan-ink);
+  font-size: 0.75rem;
+  font-family: ui-monospace, monospace;
+  text-align: center;
+}
+
 .eyebrow {
   color: var(--cider-gold);
   font-weight: 900;

@@ -119,6 +119,15 @@ type menuSection struct {
 	Tiles    []menuTile
 }
 
+// homePage draws the booth's landing page. Version and Dirty name the build
+// actually running on the tablet (see BuildRevision), so the Operator or
+// Leader can tell which commit is live without SSHing into the Pi.
+type homePage struct {
+	page
+	Version string
+	Dirty   bool
+}
+
 type posPage struct {
 	page
 	MenuSections []menuSection
