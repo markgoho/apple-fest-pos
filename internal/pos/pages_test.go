@@ -30,6 +30,19 @@ func TestFormatCents(t *testing.T) {
 	}
 }
 
+// The tablet runs full screen with no URL bar, so the home screen is the only
+// way in to System Admin from it. It is still never linked from /pos.
+func TestHomeLinksToSystemAdmin(t *testing.T) {
+	body := getPage(t, newTestService(t), "/")
+
+	if !strings.Contains(body, `href="/system-admin"`) {
+		t.Error("the home screen has no System Admin link")
+	}
+	if strings.Contains(getPage(t, newTestService(t), "/pos"), `href="/system-admin"`) {
+		t.Error("/pos links to System Admin, which CONTEXT.md forbids")
+	}
+}
+
 func TestPOSScreenShowsTheMenu(t *testing.T) {
 	body := getPage(t, newTestService(t), "/pos")
 

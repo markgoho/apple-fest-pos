@@ -20,7 +20,7 @@ The toggles are **gold, resting and chosen alike** ([ADR-0004](./0004-pos-colour
 
 Because the toppings are known before the line exists, a line is keyed by its item and its topping set, so **six taps on the pancake tile with the same toppings make one line reading `6`**, and the kitchen ticket says `6 POTATO PANCAKE` rather than printing the same thing six times.
 
-**Extra Sour Cream draws a minor tile**: a short muted block beside the pancake, taking a fifth of its row, sat on the base of it. It is an add-on to a pancake, not something anyone comes to the booth to buy, and a tile the size of the pancake's said otherwise. It keeps a full tap target, because a small tile must not be a small tap.
+**Extra Sour Cream draws a minor tile**: as tall as the pancake beside it and a fifth as wide, but muted — parchment rather than cream, small text, no shadow. The demotion is done with colour and type, not with size. It is an add-on to a pancake, not something anyone comes to the booth to buy, and a tile the size of the pancake's said otherwise. It keeps a full tap target, because a small tile must not be a small tap.
 
 **Extra Sour Cream is a menu item at one dollar**, not a packet count on the pancake line. The price of an order stays the sum of its menu items, so `insertOrder`, the per-item breakdown and the hourly revenue chart need no rule of their own, and the item joins the chart legend on its own. It also puts the "one packet is included" judgement where it belongs: the Operator applies it by tapping the tile a second time, and the software never has to know whether the free packet is counted per pancake or per order.
 

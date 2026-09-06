@@ -162,12 +162,24 @@ button:disabled {
   margin-block-start: 1rem;
 }
 
-.kiosk-controls button {
+.kiosk-controls button,
+.kiosk-controls a {
   flex: 1;
   min-block-size: var(--tap);
   border-radius: 1rem;
   font-size: 1rem;
   font-weight: 700;
+}
+
+/* System Admin is reached from here and from nowhere else on a tablet: it is
+   never linked from /pos (CONTEXT.md), and the tablet runs full screen, so
+   without this row the only way in is a URL bar the Operator cannot see. It
+   sits with the kiosk controls rather than with the modes, because it is not
+   a mode anyone works a shift in, and the PIN is what actually guards it. */
+.kiosk-controls a {
+  display: grid;
+  place-items: center;
+  text-decoration: none;
 }
 
 /* The cashier screen: a fixed top strip (Clear in the Guarded corner, the
@@ -461,11 +473,7 @@ button:disabled {
    and the price on one line, no shadow lifting it off the board. It is still a
    full-width target, because a small tile must not be a small tap. */
 .tile-minor {
-  /* Sat on the base of its row, so its bottom edge lines up with the pancake's
-     and it does not float in the middle of the Home zone. */
-  align-self: end;
   min-block-size: var(--tap);
-  block-size: auto;
   gap: 0.2rem;
   padding: 0.7rem 0.4rem;
   border-width: 2px;
@@ -725,12 +733,6 @@ button:disabled {
 
   .tile .price {
     font-size: 2.4rem;
-  }
-
-  /* The portrait row is short enough that the add-on can fill it without
-     reading as a tile of its own. */
-  .tile-minor {
-    align-self: stretch;
   }
 
   .tile-minor strong {
