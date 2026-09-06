@@ -78,8 +78,12 @@ func BuildKitchenTicket(order ReceiptOrder, header ReceiptHeader) []byte {
 
 	for _, line := range order.Items {
 		lines = append(lines, fmt.Sprintf("%d  %s", line.Quantity, strings.ToUpper(MenuItemName(line.MenuItemID))))
-		if labels := SideLabels(line.MenuItemID, line.Sides); len(labels) > 0 {
-			lines = append(lines, "   "+strings.ToUpper(strings.Join(labels, ", ")))
+		// One topping per line. The kitchen ticket prints at double width, so
+		// an 80mm roll holds about 24 characters and nothing here wraps them:
+		// "SOUR CREAM, APPLESAUCE" already overflows, and a break mid-word is
+		// the one thing the cook must not read.
+		for _, label := range SideLabels(line.MenuItemID, line.Sides) {
+			lines = append(lines, "   "+strings.ToUpper(label))
 		}
 	}
 

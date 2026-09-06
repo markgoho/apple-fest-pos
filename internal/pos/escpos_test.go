@@ -124,8 +124,9 @@ func TestBuildCustomerReceiptPrintsEverySideUnderItsLine(t *testing.T) {
 func TestBuildKitchenTicketPrintsEverySideUnderItsLine(t *testing.T) {
 	payload := string(BuildKitchenTicket(sideOrder, HeaderNone))
 
-	if !strings.Contains(payload, "1  POTATO PANCAKE\r\n   SOUR CREAM, KETCHUP") {
-		t.Errorf("the sides do not sit under the item line: %q", payload)
+	// One per line: the ticket prints at double width and nothing wraps it.
+	if !strings.Contains(payload, "1  POTATO PANCAKE\r\n   SOUR CREAM\r\n   KETCHUP") {
+		t.Errorf("the sides do not sit under the item line, one each: %q", payload)
 	}
 }
 
