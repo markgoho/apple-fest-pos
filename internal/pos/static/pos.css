@@ -321,7 +321,9 @@ button:disabled {
   flex: 1;
   min-block-size: 0;
   display: grid;
-  grid-template-columns: 1fr 15.5rem;
+  /* Three quarters menu, one quarter cart. The cart holds the order lines the
+     Operator reads back, and a topping row on a line needs the width. */
+  grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
 }
 
 /* The menu is a column of labeled sections (Potato Pancakes, Grilled Cheese),
@@ -403,13 +405,14 @@ button:disabled {
   flex: 2;
 }
 
-/* An add-on is a strip under the item it belongs to, not a tile beside it.
-   The row it sits in is sized to its content, so the item above keeps the
-   height the equal-row grid would otherwise split with it. */
+/* An add-on rides beside the item it belongs to, taking a fifth of the row.
+   It is a footnote to the pancake, so it is short, muted, and centred in the
+   row rather than stretched to fill it — but still a full-height-enough
+   target, because a small tile must not be a small tap. */
 .tiles:has(.tile-minor) {
-  grid-template-columns: 1fr;
-  grid-template-rows: 1fr auto;
-  row-gap: 0.7rem;
+  grid-template-columns: 4fr 1fr;
+  grid-template-rows: auto;
+  column-gap: 0.7rem;
 }
 
 /* The grid row stretches but the button inside it does not, so without these
@@ -458,25 +461,26 @@ button:disabled {
    and the price on one line, no shadow lifting it off the board. It is still a
    full-width target, because a small tile must not be a small tap. */
 .tile-minor {
+  /* Sat on the base of its row, so its bottom edge lines up with the pancake's
+     and it does not float in the middle of the Home zone. */
+  align-self: end;
   min-block-size: var(--tap);
   block-size: auto;
-  flex-direction: row;
-  justify-content: space-between;
-  gap: 0.6rem;
-  padding: 0.5rem 1.1rem;
+  gap: 0.2rem;
+  padding: 0.7rem 0.4rem;
   border-width: 2px;
-  border-radius: 0.8rem;
   background: var(--parchment);
   box-shadow: none;
 }
 
 .tile-minor strong {
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 700;
+  line-height: 1.15;
 }
 
 .tile-minor .price {
-  font-size: 1.3rem;
+  font-size: 1.7rem;
 }
 
 .cart {
@@ -723,26 +727,14 @@ button:disabled {
     font-size: 2.4rem;
   }
 
-  /* The add-on rides beside the pancake rather than under it: one row, the
-     pancake taking four fifths of it. A strip of its own would cost a row of
-     the cart, and the two belong together anyway. */
-  .tiles:has(.tile-minor) {
-    grid-template-columns: 4fr 1fr;
-    grid-template-rows: auto;
-    column-gap: 0.7rem;
-  }
-
+  /* The portrait row is short enough that the add-on can fill it without
+     reading as a tile of its own. */
   .tile-minor {
-    flex-direction: column;
-    justify-content: center;
-    gap: 0.2rem;
-    padding: 0.5rem 0.35rem;
-    border-radius: 1.1rem;
+    align-self: stretch;
   }
 
   .tile-minor strong {
     font-size: 0.95rem;
-    line-height: 1.15;
   }
 
   .tile-minor .price {
