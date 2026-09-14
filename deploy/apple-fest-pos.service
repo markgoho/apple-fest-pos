@@ -18,7 +18,9 @@ Environment=HTTP_PORT=80
 Environment=TLS_CERT=/etc/pos/pos.crt
 Environment=TLS_KEY=/etc/pos/pos.key
 Environment=SQLITE_PATH=/var/lib/pos/pos.sqlite
-Environment=PRINTER_ENABLED=false
+Environment=PRINTER_ENABLED=true
+Environment=WINDOW_PRINTER_HOST=192.168.8.200
+Environment=KITCHEN_PRINTER_HOST=192.168.8.201
 # Binding :443 and :80 needs this capability; setcap on the binary does not
 # survive scp, so the unit grants it instead.
 AmbientCapabilities=CAP_NET_BIND_SERVICE
