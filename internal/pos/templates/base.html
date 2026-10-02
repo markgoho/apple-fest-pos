@@ -11,7 +11,6 @@
   </head>
   <body class="{{.BodyClass}}">
     {{if .Kiosk}}
-    <button type="button" id="kiosk-start" class="kiosk-start" hidden>Start shift</button>
     <button type="button" id="kiosk-resume" class="kiosk-resume" hidden>Resume full screen</button>
     {{end}}
     {{template "content" .}}

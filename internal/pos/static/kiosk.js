@@ -3,8 +3,6 @@
 // lock and fullscreen navigationUI hide both need HTTPS to work at all.
 "use strict";
 
-const SHIFT_KEY = "apple-fest-pos-shift-started";
-const startButton = document.getElementById("kiosk-start");
 const resumeButton = document.getElementById("kiosk-resume");
 
 let wakeLock = null;
@@ -18,22 +16,6 @@ function setAppHeight() {
 }
 setAppHeight();
 window.addEventListener("resize", setAppHeight);
-
-function shiftStarted() {
-  try {
-    return localStorage.getItem(SHIFT_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
-function markShiftStarted() {
-  try {
-    localStorage.setItem(SHIFT_KEY, "1");
-  } catch {
-    // Worst case the start screen shows again on the next load.
-  }
-}
 
 async function takeWakeLock() {
   if (wakeLock || !("wakeLock" in navigator)) return;
@@ -66,13 +48,6 @@ function isImmersive() {
   );
 }
 
-startButton.addEventListener("click", async () => {
-  await enterFullscreen();
-  await takeWakeLock();
-  markShiftStarted();
-  startButton.hidden = true;
-});
-
 resumeButton.addEventListener("click", () => {
   enterFullscreen();
 });
@@ -80,7 +55,6 @@ resumeButton.addEventListener("click", () => {
 // Only present on the mode-chooser screen, not on the transaction screens,
 // so a stray tap mid-shift cannot force a reload or drop full screen.
 const refreshButton = document.getElementById("kiosk-refresh");
-const endShiftButton = document.getElementById("kiosk-end-shift");
 
 // A reload on the Pi takes a beat, and until it lands the screen is unchanged.
 // Without this the Operator cannot tell a slow reload from a tap that missed,
@@ -93,22 +67,6 @@ function markBusy(button, label) {
 
 refreshButton?.addEventListener("click", () => {
   markBusy(refreshButton, "Refreshing…");
-  location.reload();
-});
-
-endShiftButton?.addEventListener("click", async () => {
-  markBusy(endShiftButton, "Ending shift…");
-  if (document.fullscreenElement) {
-    await document.exitFullscreen();
-  }
-  if (wakeLock) {
-    await wakeLock.release();
-  }
-  try {
-    localStorage.removeItem(SHIFT_KEY);
-  } catch {
-    // Worst case Start shift needs a stray extra tap to reset.
-  }
   location.reload();
 });
 
@@ -138,7 +96,7 @@ document.addEventListener("fullscreenchange", () => {
 });
 
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible" && shiftStarted()) {
+  if (document.visibilityState === "visible") {
     takeWakeLock();
   }
 });
@@ -148,9 +106,8 @@ document.addEventListener("contextmenu", (event) => {
   event.preventDefault();
 });
 
-if (shiftStarted()) {
-  takeWakeLock();
-  resumeButton.hidden = isImmersive();
-} else {
-  startButton.hidden = false;
-}
+// The wake lock needs no tap, so every page load takes it. Full screen does
+// need one: the installed app gets it from the manifest, and a browser tab
+// gets the Resume bar.
+takeWakeLock();
+resumeButton.hidden = isImmersive();
