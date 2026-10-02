@@ -180,3 +180,60 @@ func TestLeaderVoidPreservesTheViewedDate(t *testing.T) {
 		t.Error("voiding does not keep showing the date the Leader was viewing")
 	}
 }
+
+func TestLeaderCompRequiresTheCorrectPIN(t *testing.T) {
+	service := newTestService(t)
+	_, body := postOrder(t, service, validOrder())
+	orderID := body["order"].(map[string]any)["id"].(string)
+
+	postForm(t, service, "/leader/orders/"+orderID+"/comp", url.Values{"pin": {"0000"}})
+
+	sales, err := service.GetAdminSales("")
+	if err != nil {
+		t.Fatalf("admin sales: %v", err)
+	}
+	if sales.Summary.CompedCount != 0 {
+		t.Error("a wrong PIN comped the order")
+	}
+}
+
+func TestLeaderCompKeepsTheOrderAndDropsItsRevenue(t *testing.T) {
+	service := newTestService(t)
+	_, body := postOrder(t, service, validOrder())
+	orderID := body["order"].(map[string]any)["id"].(string)
+
+	recorder := postForm(t, service, "/leader/orders/"+orderID+"/comp", url.Values{"pin": {service.LeaderPIN}})
+	responseBody := recorder.Body.String()
+	if !strings.Contains(responseBody, "comped.") {
+		t.Errorf("the comp response does not confirm the comp: %s", responseBody)
+	}
+	if !strings.Contains(responseBody, "badge-comped") {
+		t.Error("the comped order is not marked Comped in the order list")
+	}
+	if strings.Contains(responseBody, "/leader/orders/"+orderID+"/comp") {
+		t.Error("a comped order still offers Comp")
+	}
+	if !strings.Contains(responseBody, "/leader/orders/"+orderID+"/void") {
+		t.Error("a comped order no longer offers Void")
+	}
+
+	sales, err := service.GetAdminSales("")
+	if err != nil {
+		t.Fatalf("admin sales: %v", err)
+	}
+	if sales.Summary.OrderCount != 1 {
+		t.Errorf("orderCount after comp = %d, want 1", sales.Summary.OrderCount)
+	}
+	if sales.Summary.TotalCents != 0 {
+		t.Errorf("totalCents after comp = %d, want 0", sales.Summary.TotalCents)
+	}
+}
+
+func TestLeaderCompOfAnUnknownOrderReportsNotFound(t *testing.T) {
+	service := newTestService(t)
+
+	recorder := postForm(t, service, "/leader/orders/does-not-exist/comp", url.Values{"pin": {service.LeaderPIN}})
+	if !strings.Contains(recorder.Body.String(), "Order not found") {
+		t.Error("comping an unknown order does not report Order not found")
+	}
+}

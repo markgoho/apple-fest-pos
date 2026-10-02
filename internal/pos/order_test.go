@@ -404,3 +404,90 @@ func TestConcurrentDuplicateClientIDsSellOnce(t *testing.T) {
 		t.Errorf("transactions = %d, want 1", rows)
 	}
 }
+
+func TestCompOrderReturns404ForAnUnknownID(t *testing.T) {
+	service := newTestService(t)
+
+	_, err := service.CompOrder("does-not-exist")
+	if !errors.Is(err, ErrNotFound) {
+		t.Fatalf("err = %v, want ErrNotFound", err)
+	}
+}
+
+func TestCompOrderRejectsAnAlreadyCompedOrder(t *testing.T) {
+	service := newTestService(t)
+	_, body := postOrder(t, service, validOrder())
+	orderID := body["order"].(map[string]any)["id"].(string)
+
+	if _, err := service.CompOrder(orderID); err != nil {
+		t.Fatalf("comp order: %v", err)
+	}
+
+	_, err := service.CompOrder(orderID)
+	if !errors.Is(err, ErrValidation) {
+		t.Fatalf("err = %v, want ErrValidation", err)
+	}
+}
+
+func TestCompOrderRejectsAVoidedOrder(t *testing.T) {
+	service := newTestService(t)
+	_, body := postOrder(t, service, validOrder())
+	orderID := body["order"].(map[string]any)["id"].(string)
+
+	if _, err := service.VoidOrder(orderID); err != nil {
+		t.Fatalf("void order: %v", err)
+	}
+
+	_, err := service.CompOrder(orderID)
+	if !errors.Is(err, ErrValidation) {
+		t.Fatalf("err = %v, want ErrValidation", err)
+	}
+}
+
+func TestVoidOrderAcceptsACompedOrder(t *testing.T) {
+	service := newTestService(t)
+	_, body := postOrder(t, service, validOrder())
+	orderID := body["order"].(map[string]any)["id"].(string)
+
+	if _, err := service.CompOrder(orderID); err != nil {
+		t.Fatalf("comp order: %v", err)
+	}
+
+	row, err := service.VoidOrder(orderID)
+	if err != nil {
+		t.Fatalf("void order: %v", err)
+	}
+	if row.Status != OrderVoided {
+		t.Errorf("status = %q, want %q", row.Status, OrderVoided)
+	}
+}
+
+func TestReprintOrderKeepsACompedOrVoidedStatus(t *testing.T) {
+	for _, status := range []OrderStatus{OrderComped, OrderVoided} {
+		service := newTestService(t)
+		_, body := postOrder(t, service, validOrder())
+		orderID := body["order"].(map[string]any)["id"].(string)
+
+		var err error
+		if status == OrderComped {
+			_, err = service.CompOrder(orderID)
+		} else {
+			_, err = service.VoidOrder(orderID)
+		}
+		if err != nil {
+			t.Fatalf("%s order: %v", status, err)
+		}
+
+		if _, err := service.ReprintOrder(orderID); err != nil {
+			t.Fatalf("reprint order: %v", err)
+		}
+
+		row, _, err := findByID(service.DB, orderID)
+		if err != nil {
+			t.Fatalf("find order: %v", err)
+		}
+		if row.Status != status {
+			t.Errorf("status after reprint = %q, want %q", row.Status, status)
+		}
+	}
+}

@@ -37,6 +37,7 @@
       <div class="card">
         <p class="label">Orders</p>
         <p class="value">{{.Summary.OrderCount}}</p>
+        {{if .Summary.CompedCount}}<p class="sub">{{.Summary.CompedCount}} comped</p>{{end}}
       </div>
       <div class="card">
         <p class="label">Revenue</p>
@@ -66,16 +67,23 @@
     {{if .Orders}}
     <ul class="order-list">
       {{range .Orders}}
-      <li class="order-row{{if eq .Status "voided"}} voided{{end}}">
+      <li class="order-row{{if eq .Status "voided"}} voided{{else if eq .Status "comped"}} comped{{end}}">
         <div class="info">
           <div class="num-line">
             <span class="order-num">#{{.OrderNumber}}</span>
             <span class="order-time">{{clock .CreatedAt}}</span>
-            {{if eq .Status "voided"}}<span class="badge-voided">Voided</span>{{end}}
+            {{if eq .Status "voided"}}<span class="badge-voided">Voided</span>{{else if eq .Status "comped"}}<span class="badge-comped">Comped</span>{{end}}
           </div>
           <p class="items-summary">{{range $index, $line := .Items}}{{if $index}}, {{end}}{{$line.Quantity}}&times; {{$line.Name}}{{end}}</p>
         </div>
         <span class="total">{{cents .TotalCents}}</span>
+        {{if and (ne .Status "voided") (ne .Status "comped")}}
+        <form method="post" action="/leader/orders/{{.ID}}/comp" class="comp-form" data-order-number="{{.OrderNumber}}">
+          <input type="hidden" name="pin" value="{{$.PIN}}">
+          <input type="hidden" name="date" value="{{$.BusinessDate}}">
+          <button type="submit" class="comp-btn">Comp</button>
+        </form>
+        {{end}}
         {{if ne .Status "voided"}}
         <form method="post" action="/leader/orders/{{.ID}}/void" class="void-form" data-order-number="{{.OrderNumber}}">
           <input type="hidden" name="pin" value="{{$.PIN}}">

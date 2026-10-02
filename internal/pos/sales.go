@@ -46,6 +46,7 @@ type AdminSalesOrder struct {
 // AdminSalesSummary is the day total at the top of the sales report.
 type AdminSalesSummary struct {
 	OrderCount    int `json:"orderCount"`
+	CompedCount   int `json:"compedCount"`
 	TotalCents    int `json:"totalCents"`
 	PrintFailures int `json:"printFailures"`
 }
@@ -130,6 +131,7 @@ func (service *OrderService) GetAdminSales(date string) (AdminSalesResponse, err
 	orders := make([]AdminSalesOrder, 0, len(rows))
 	summary := AdminSalesSummary{}
 	quantities := map[string]int{}
+	compedQuantities := map[string]int{}
 
 	for _, row := range rows {
 		request := parseStoredRequest(row.RequestJSON)
@@ -137,6 +139,9 @@ func (service *OrderService) GetAdminSales(date string) (AdminSalesResponse, err
 		for _, line := range request.Items {
 			if row.Status != OrderVoided {
 				quantities[line.MenuItemID] += line.Quantity
+			}
+			if row.Status == OrderComped {
+				compedQuantities[line.MenuItemID] += line.Quantity
 			}
 			items = append(items, AdminSalesOrderLine{
 				MenuItemID: line.MenuItemID,
@@ -147,7 +152,14 @@ func (service *OrderService) GetAdminSales(date string) (AdminSalesResponse, err
 
 		// A Voided order drops out of the summary as if it were never sold,
 		// but stays in Orders below, marked Voided (CONTEXT.md, issue #45).
-		if row.Status != OrderVoided {
+		// A Comped order was made and served: it counts as an order and its
+		// items count as sold, but it adds no money (CONTEXT.md, ADR-0012).
+		switch row.Status {
+		case OrderVoided:
+		case OrderComped:
+			summary.OrderCount++
+			summary.CompedCount++
+		default:
 			summary.OrderCount++
 			summary.TotalCents += row.TotalCents
 		}
@@ -167,7 +179,7 @@ func (service *OrderService) GetAdminSales(date string) (AdminSalesResponse, err
 		BusinessDate: businessDate,
 		ServerTime:   service.Now().UTC().Format(timestampLayout),
 		Summary:      summary,
-		Items:        aggregateItems(quantities),
+		Items:        aggregateItems(quantities, compedQuantities),
 		Orders:       orders,
 		Chart:        buildHourlyChart(orders),
 	}, nil
@@ -221,7 +233,7 @@ const (
 )
 
 // AdminSalesChart is the hourly revenue-by-item chart drawn on the Figures
-// tab. Bars is empty when the day has no non-Voided sales, so the template
+// tab. Bars is empty when the day has no paid sales, so the template
 // can skip drawing an all-zero chart.
 type AdminSalesChart struct {
 	ViewWidth  float64
@@ -244,7 +256,8 @@ type AdminSalesChartSegment struct {
 	ColorVar  string
 }
 
-// buildHourlyChart buckets each non-Voided order's items by the local hour
+// buildHourlyChart buckets each paid order's items (not Voided, not Comped:
+// the chart is money, and a Comped order brought none) by the local hour
 // its CreatedAt (a UTC ISO timestamp) converts to — the same conversion
 // pages.go's clock template func uses. The bucket range runs from the
 // earliest to the latest hour that actually has a sale, so the chart never
@@ -254,7 +267,7 @@ func buildHourlyChart(orders []AdminSalesOrder) AdminSalesChart {
 	minHour, maxHour := 0, -1
 
 	for _, order := range orders {
-		if order.Status == OrderVoided {
+		if order.Status == OrderVoided || order.Status == OrderComped {
 			continue
 		}
 		moment, err := time.Parse(timestampLayout, order.CreatedAt)
@@ -342,8 +355,10 @@ func hourLabel(hour int) string {
 	return fmt.Sprintf("%d%s", display, period)
 }
 
-// aggregateItems totals each menu item, most sold first.
-func aggregateItems(quantities map[string]int) []AdminSalesItemLine {
+// aggregateItems totals each menu item, most sold first. Quantity counts
+// every item served; revenue leaves out the comped ones, so the revenue
+// column still adds up to the day's total.
+func aggregateItems(quantities, compedQuantities map[string]int) []AdminSalesItemLine {
 	lines := make([]AdminSalesItemLine, 0, len(MenuItems))
 	for _, item := range MenuItems {
 		quantity := quantities[item.ID]
@@ -354,7 +369,7 @@ func aggregateItems(quantities map[string]int) []AdminSalesItemLine {
 			MenuItemID:   item.ID,
 			Name:         item.Name,
 			Quantity:     quantity,
-			RevenueCents: quantity * item.PriceCents,
+			RevenueCents: (quantity - compedQuantities[item.ID]) * item.PriceCents,
 		})
 	}
 

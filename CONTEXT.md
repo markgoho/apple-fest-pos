@@ -8,7 +8,7 @@ A person who runs the booth: takes orders on a tablet and watches for print fail
 
 ## Leader
 
-An adult scout leader who watches how the day is going but does not take orders. The Leader takes the cash from the customer and reconciles the till. Day to day the Leader only reads, on a personal phone joined to the booth access point; screens for the Leader are portrait, one-thumb, and never show print status. The one exception is voiding a Placed order: that happens on a PIN-gated Leader page reached from a link in the Operator's `/pos` screen, so the Leader may use the Operator's tablet for that one action. A void corrects the sales record only; it never touches the till or the printed paper, which are still settled by hand.
+An adult scout leader who watches how the day is going but does not take orders. The Leader takes the cash from the customer and reconciles the till. Day to day the Leader only reads, on a personal phone joined to the booth access point; screens for the Leader are portrait, one-thumb, and never show print status. The one exception is voiding or comping a Placed order: that happens on a PIN-gated Leader page reached from a link in the Operator's `/pos` screen, so the Leader may use the Operator's tablet for those actions. A void or a comp corrects the sales record only; it never touches the till or the printed paper, which are still settled by hand.
 
 An Operator and a Leader can be the same human at different moments. The distinction is the job, not the person.
 
@@ -58,6 +58,10 @@ The state of an order the Operator has confirmed and the booth has committed to.
 ## Voided
 
 The state of a Placed order the Leader has reversed. A Voided order drops out of the day's sales total, order count, and per-item sales breakdown, as if it were never sold. It stays in the order list, marked Voided, so the screen agrees with the Kitchen Ticket paper still at the booth about which orders happened. The void step shows the order number, so the Leader matches the paper in hand to the order on screen before voiding it.
+
+## Comped
+
+The state of a Placed order the Leader has given to a booth worker for free. Each adult or scout who works the event gets one free meal; the booth does not count them against a limit. A Comped order is not Voided: the food was made and eaten, so the order stays in the day's order count and its items stay in the per-item quantities, but it adds no money to the sales total, the per-item revenue, or the revenue chart. It stays in the order list, marked Comped. Like a void, a comp is a Leader action behind the Leader PIN, it corrects the sales record only, and the comp step shows the order number so the Leader matches the paper to the screen. The Customer Receipt still shows the full price. A Comped order can still be Voided; a Voided order cannot be Comped.
 
 ## Sent
 

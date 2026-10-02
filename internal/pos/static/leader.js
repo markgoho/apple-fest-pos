@@ -1,7 +1,7 @@
 // Figures/Orders tabs are pure client state (the whole day is already in the
-// rendered page); Void needs one confirm before it fires, per CONTEXT.md's
-// Voided entry: the confirm text shows the order number so the Leader
-// matches paper to screen (issue #45).
+// rendered page); Void and Comp each need one confirm before they fire, per
+// CONTEXT.md's Voided and Comped entries: the confirm text shows the order
+// number so the Leader matches paper to screen (issue #45, ADR-0012).
 "use strict";
 
 const tabs = {
@@ -20,14 +20,23 @@ for (const [name, tab] of Object.entries(tabs)) {
   tab.button.addEventListener("click", () => selectTab(name));
 }
 
-for (const form of document.querySelectorAll(".void-form")) {
-  form.addEventListener("submit", (event) => {
-    const orderNumber = form.dataset.orderNumber;
-    const confirmed = window.confirm(
-      "Void order #" + orderNumber + "? This only corrects the sales figures — settle the till and the paper by hand.",
-    );
-    if (!confirmed) {
-      event.preventDefault();
-    }
-  });
+function confirmBeforeSubmit(selector, question) {
+  for (const form of document.querySelectorAll(selector)) {
+    form.addEventListener("submit", (event) => {
+      if (!window.confirm(question(form.dataset.orderNumber))) {
+        event.preventDefault();
+      }
+    });
+  }
 }
+
+confirmBeforeSubmit(
+  ".void-form",
+  (orderNumber) =>
+    "Void order #" + orderNumber + "? This only corrects the sales figures — settle the till and the paper by hand.",
+);
+confirmBeforeSubmit(
+  ".comp-form",
+  (orderNumber) =>
+    "Comp order #" + orderNumber + "? The meal is free for a worker: the food still counts as served, and no money counts for it.",
+);

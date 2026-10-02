@@ -268,3 +268,67 @@ func TestKitchenBoardShowsTheSideOfALine(t *testing.T) {
 		t.Errorf("sides = %q, want [Sour Cream Applesauce]", board.Tickets[0].Lines[0].Sides)
 	}
 }
+
+func TestAdminSalesCountsACompedOrderAsServedButNotAsRevenue(t *testing.T) {
+	service := newTestService(t)
+
+	first := validOrder()
+	first["clientOrderId"] = "comped-sales-1"
+	_, body := postOrder(t, service, first)
+	orderID := body["order"].(map[string]any)["id"].(string)
+
+	second := validOrder()
+	second["clientOrderId"] = "comped-sales-2"
+	postOrder(t, service, second)
+
+	if _, err := service.CompOrder(orderID); err != nil {
+		t.Fatalf("comp order: %v", err)
+	}
+
+	sales, err := service.GetAdminSales("")
+	if err != nil {
+		t.Fatalf("admin sales: %v", err)
+	}
+
+	if sales.Summary.OrderCount != 2 {
+		t.Errorf("orderCount = %d, want 2", sales.Summary.OrderCount)
+	}
+	if sales.Summary.CompedCount != 1 {
+		t.Errorf("compedCount = %d, want 1", sales.Summary.CompedCount)
+	}
+	if sales.Summary.TotalCents != 2000 {
+		t.Errorf("totalCents = %d, want 2000", sales.Summary.TotalCents)
+	}
+	if len(sales.Items) != 1 || sales.Items[0].Quantity != 4 {
+		t.Fatalf("items = %+v, want one line of quantity 4", sales.Items)
+	}
+	if sales.Items[0].RevenueCents != 2000 {
+		t.Errorf("revenueCents = %d, want 2000", sales.Items[0].RevenueCents)
+	}
+
+	eventTotal, err := service.GetEventTotal(sales.BusinessDate, "2020-01-01")
+	if err != nil {
+		t.Fatalf("event total: %v", err)
+	}
+	if eventTotal.TotalCents != 2000 {
+		t.Errorf("event totalCents = %d, want 2000", eventTotal.TotalCents)
+	}
+}
+
+func TestHourlyChartLeavesOutACompedOrder(t *testing.T) {
+	service := newTestService(t)
+	_, body := postOrder(t, service, validOrder())
+	orderID := body["order"].(map[string]any)["id"].(string)
+
+	if _, err := service.CompOrder(orderID); err != nil {
+		t.Fatalf("comp order: %v", err)
+	}
+
+	sales, err := service.GetAdminSales("")
+	if err != nil {
+		t.Fatalf("admin sales: %v", err)
+	}
+	if len(sales.Chart.Bars) != 0 {
+		t.Errorf("chart bars = %d, want 0 for a day with only a comped order", len(sales.Chart.Bars))
+	}
+}

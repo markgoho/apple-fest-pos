@@ -1194,15 +1194,18 @@ tr.fail {
 }
 
 .order-row .total {
-  font-variant-numeric: tabular-nums;
+  margin: 0;
+  font-size: 1.25rem;
   font-weight: 800;
 }
 
-.order-row.voided .total {
+.order-row.voided .total,
+.order-row.comped .total {
   text-decoration: line-through;
 }
 
-.badge-voided {
+.badge-voided,
+.badge-comped {
   display: inline-block;
   padding: 0.05rem 0.45rem;
   border-radius: 999px;
@@ -1215,8 +1218,26 @@ tr.fail {
   vertical-align: middle;
 }
 
-.void-form {
+.badge-comped {
+  background: var(--cider-gold);
+}
+
+.void-form,
+.comp-form {
   flex-shrink: 0;
+}
+
+.comp-btn {
+  min-block-size: var(--tap);
+  padding: 0 0.9rem;
+  border: 2px solid var(--cider-gold);
+  background: white;
+  color: var(--cider-gold);
+}
+
+.comp-btn:active {
+  background: var(--cider-gold);
+  color: white;
 }
 
 .void-btn {

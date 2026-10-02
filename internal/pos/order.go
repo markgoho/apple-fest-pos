@@ -154,6 +154,11 @@ func (service *OrderService) ReprintOrder(orderID string) (PlaceOrderResponse, e
 		Items:         request.Items,
 	}, PrintResult{Customer: row.CustomerPrintStatus, Kitchen: row.KitchenPrintStatus})
 	status := orderStatusFor(print)
+	// A reprint reports on paper only. It must not undo the Leader's void or
+	// comp, which the same status column holds.
+	if row.Status == OrderVoided || row.Status == OrderComped {
+		status = row.Status
+	}
 
 	if _, err := service.DB.Exec(
 		`UPDATE transactions
@@ -186,6 +191,31 @@ func (service *OrderService) VoidOrder(orderID string) (transactionRow, error) {
 		return transactionRow{}, fmt.Errorf("void order: %w", err)
 	}
 	row.Status = OrderVoided
+	return row, nil
+}
+
+// CompOrder marks a Placed order as Comped (CONTEXT.md, ADR-0012): the food
+// was made and served, so the order stays in the order count and the item
+// quantities, but it adds no money to the sales total.
+func (service *OrderService) CompOrder(orderID string) (transactionRow, error) {
+	row, found, err := findByID(service.DB, orderID)
+	if err != nil {
+		return transactionRow{}, err
+	}
+	if !found {
+		return transactionRow{}, ErrNotFound
+	}
+	if row.Status == OrderVoided {
+		return transactionRow{}, fmt.Errorf("%w: Order is voided", ErrValidation)
+	}
+	if row.Status == OrderComped {
+		return transactionRow{}, fmt.Errorf("%w: Order is already comped", ErrValidation)
+	}
+
+	if _, err := service.DB.Exec(`UPDATE transactions SET status = ? WHERE id = ?`, string(OrderComped), row.ID); err != nil {
+		return transactionRow{}, fmt.Errorf("comp order: %w", err)
+	}
+	row.Status = OrderComped
 	return row, nil
 }
 
