@@ -2,6 +2,8 @@ package pos
 
 import (
 	"bytes"
+	"image"
+	"image/color"
 	"strings"
 	"testing"
 )
@@ -32,6 +34,61 @@ func TestBuildCustomerReceiptHasTheCutCommand(t *testing.T) {
 	}
 	if strings.Contains(string(payload), "REPRINT") {
 		t.Errorf("a first print should not carry a REPRINT header")
+	}
+}
+
+// The order number is how the customer collects the food, so it prints at
+// double size, and the size goes back to normal before the item list.
+func TestBuildCustomerReceiptPrintsTheOrderNumberAtDoubleSize(t *testing.T) {
+	payload := BuildCustomerReceipt(receiptOrder, HeaderNone)
+
+	if !bytes.Contains(payload, []byte("\x1d\x21\x11Order #101\r\n\x1d\x21\x00")) {
+		t.Errorf("the order number is not between the double size commands")
+	}
+	if strings.Contains(string(payload), "Apple Fest POS") {
+		t.Errorf("the receipt should not carry the name of the software")
+	}
+	if !strings.Contains(string(payload), receiptTagline) || !strings.Contains(string(payload), receiptThankYou) {
+		t.Errorf("the receipt has no tagline or no thank-you line")
+	}
+}
+
+func TestBuildCustomerReceiptStartsWithTheLogo(t *testing.T) {
+	payload := BuildCustomerReceipt(receiptOrder, HeaderNone)
+
+	// GS v 0, mode 0, 72 bytes for each row, 448 rows.
+	header := []byte{0x1b, 0x40, 0x1d, 0x76, 0x30, 0x00, 0x48, 0x00, 0xc0, 0x01}
+	if !bytes.HasPrefix(payload, header) {
+		t.Fatalf("payload does not start with the logo raster: % x", payload[:10])
+	}
+	if got, want := len(receiptLogo()), 8+72*448; got != want {
+		t.Errorf("logo raster is %d bytes, want %d", got, want)
+	}
+	afterLogo := payload[2+len(receiptLogo()):]
+	if !bytes.HasPrefix(afterLogo, append([]byte{0x1b, 0x61, 0x01}, receiptTagline...)) {
+		t.Errorf("the centred tagline does not follow the logo: %q", afterLogo[:20])
+	}
+}
+
+func TestRasterImagePutsTheImageInTheCentreOfThePaper(t *testing.T) {
+	source := image.NewGray(image.Rect(0, 0, 8, 2))
+	for i := range source.Pix {
+		source.Pix[i] = 255
+	}
+	source.SetGray(0, 0, color.Gray{Y: 0})
+	source.SetGray(7, 1, color.Gray{Y: 100})
+
+	raster := rasterImage(source)
+
+	if want := []byte{0x1d, 0x76, 0x30, 0x00, 72, 0, 2, 0}; !bytes.Equal(raster[:8], want) {
+		t.Fatalf("raster header = % x, want % x", raster[:8], want)
+	}
+	// Dot 284 is the left edge of an 8-dot image on 576 dots: byte 35, bit 4.
+	want := make([]byte, 2*72)
+	want[35] = 0x08
+	want[72+36] = 0x10
+	if !bytes.Equal(raster[8:], want) {
+		t.Errorf("raster data has the wrong dots set: % x", raster[8:])
 	}
 }
 
