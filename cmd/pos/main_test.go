@@ -7,7 +7,7 @@ import (
 )
 
 func TestRedirectToHTTPSKeepsTheHostAndThePath(t *testing.T) {
-	request := httptest.NewRequest(http.MethodGet, "http://pos.example.org:80/kitchen?a=1", nil)
+	request := httptest.NewRequest(http.MethodGet, "http://pos.example.org:80/pos?a=1", nil)
 	recorder := httptest.NewRecorder()
 
 	redirectToHTTPS(recorder, request)
@@ -16,7 +16,7 @@ func TestRedirectToHTTPSKeepsTheHostAndThePath(t *testing.T) {
 		t.Fatalf("status = %d, want %d", recorder.Code, http.StatusMovedPermanently)
 	}
 	got := recorder.Header().Get("Location")
-	want := "https://pos.example.org/kitchen?a=1"
+	want := "https://pos.example.org/pos?a=1"
 	if got != want {
 		t.Fatalf("Location = %q, want %q", got, want)
 	}

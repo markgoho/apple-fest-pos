@@ -112,7 +112,7 @@ endShiftButton?.addEventListener("click", async () => {
   location.reload();
 });
 
-// Cashier POS and Kitchen display are plain links to a full page load, which
+// Cashier POS is a plain link to a full page load, which
 // can take a few seconds on a slow Pi or thin Wi-Fi. A link gives no feedback
 // of its own between the tap and the new page painting, so a slow load reads
 // exactly like a tap that missed and the Operator taps again. The link still

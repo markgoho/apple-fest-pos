@@ -1,7 +1,6 @@
 package pos
 
 import (
-	"strings"
 	"testing"
 	"time"
 )
@@ -218,54 +217,6 @@ func TestAdminSalesOfAnEmptyDate(t *testing.T) {
 	}
 	if sales.Orders == nil || sales.Items == nil {
 		t.Errorf("orders and items must encode as [], not null")
-	}
-}
-
-func TestKitchenBoardShowsTheNewestOrders(t *testing.T) {
-	service := newTestService(t)
-
-	for _, clientOrderID := range []string{"kitchen-1", "kitchen-2"} {
-		request := validOrder()
-		request["clientOrderId"] = clientOrderID
-		request["notes"] = "no onions"
-		postOrder(t, service, request)
-	}
-
-	board, err := service.GetKitchenBoard()
-	if err != nil {
-		t.Fatalf("kitchen board: %v", err)
-	}
-
-	if len(board.Tickets) != 2 {
-		t.Fatalf("tickets = %d, want 2", len(board.Tickets))
-	}
-	if board.Tickets[0].OrderNumber != 101 {
-		t.Errorf("first ticket = %d, want 101", board.Tickets[0].OrderNumber)
-	}
-	if board.Tickets[0].Notes != "no onions" {
-		t.Errorf("notes = %q, want \"no onions\"", board.Tickets[0].Notes)
-	}
-	if board.Tickets[0].Lines[0].Name != "Potato Pancake" {
-		t.Errorf("line name = %q", board.Tickets[0].Lines[0].Name)
-	}
-	if len(board.Tickets[0].Lines[0].Sides) != 0 {
-		t.Errorf("a plain line must carry no side, got %q", board.Tickets[0].Lines[0].Sides)
-	}
-}
-
-func TestKitchenBoardShowsTheSideOfALine(t *testing.T) {
-	service := newTestService(t)
-
-	request := validOrder()
-	request["items"] = []map[string]any{{"menuItemId": "potato-pancake", "quantity": 1, "sides": []string{"applesauce", "sour-cream"}}}
-	postOrder(t, service, request)
-
-	board, err := service.GetKitchenBoard()
-	if err != nil {
-		t.Fatalf("kitchen board: %v", err)
-	}
-	if strings.Join(board.Tickets[0].Lines[0].Sides, ", ") != "Sour Cream, Applesauce" {
-		t.Errorf("sides = %q, want [Sour Cream Applesauce]", board.Tickets[0].Lines[0].Sides)
 	}
 }
 

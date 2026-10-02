@@ -88,19 +88,14 @@ func TestScreensRenderWithAnOrder(t *testing.T) {
 		t.Fatalf("place order: got %d, want 201", recorder.Code)
 	}
 
-	kitchen := getPage(t, service, "/kitchen")
-	if !strings.Contains(kitchen, "#100") || !strings.Contains(kitchen, "Applesauce") {
-		t.Errorf("/kitchen misses the order: %s", kitchen)
-	}
-
 	sales := postForm(t, service, "/leader", url.Values{"pin": {service.LeaderPIN}}).Body.String()
 	if !strings.Contains(sales, "$10") || !strings.Contains(sales, "Potato Pancake") {
 		t.Errorf("/leader misses the order: %s", sales)
 	}
 
 	home := getPage(t, service, "/")
-	if !strings.Contains(home, "Kitchen display") {
-		t.Error("/ does not link the kitchen display")
+	if !strings.Contains(home, `href="/pos"`) {
+		t.Error("/ does not link the Cashier POS")
 	}
 }
 

@@ -847,69 +847,6 @@ button:disabled {
   }
 }
 
-/* The kitchen display */
-
-.board {
-  min-block-size: var(--app-height, 100dvh);
-  padding: 1.5rem;
-}
-
-.board .bar {
-  font-weight: 800;
-}
-
-.tickets {
-  list-style: none;
-  margin: 1.5rem 0 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
-  gap: 1rem;
-}
-
-.ticket {
-  background: var(--panel);
-  border-radius: 1.5rem;
-  padding: 1.25rem;
-  box-shadow: 0 0.5rem 1.5rem #5f321718;
-}
-
-.ticket .bar {
-  align-items: baseline;
-  font-size: 1.75rem;
-}
-
-.ticket-lines {
-  margin: 0.75rem 0 0;
-  padding-inline-start: 0;
-  list-style: none;
-  font-size: 1.25rem;
-}
-
-.ticket-lines li {
-  padding-block: 0.25rem;
-}
-
-.qty {
-  font-weight: 900;
-  color: var(--apple-red);
-}
-
-.ticket em {
-  display: block;
-  color: var(--leaf-green-dark);
-}
-
-.ticket-notes {
-  margin-block-start: 0.75rem;
-  color: var(--leaf-green-dark);
-}
-
-.board .empty {
-  margin-block-start: 2rem;
-  font-size: 1.5rem;
-}
-
 /* The sales screen */
 
 .sales {

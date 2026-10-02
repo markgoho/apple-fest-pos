@@ -15,7 +15,6 @@ func (service *OrderService) Handler() http.Handler {
 	mux.Handle("GET /static/", http.FileServerFS(StaticFiles))
 	mux.HandleFunc("GET /{$}", handleHome)
 	mux.HandleFunc("GET /pos", handlePOSScreen)
-	mux.HandleFunc("GET /kitchen", service.handleKitchenScreen)
 	mux.HandleFunc("GET /leader", service.handleLeaderScreen)
 	mux.HandleFunc("POST /leader", service.handleLeaderUnlock)
 	mux.HandleFunc("POST /leader/orders/{id}/void", service.handleLeaderVoidOrder)
@@ -31,7 +30,6 @@ func (service *OrderService) Handler() http.Handler {
 	mux.HandleFunc("POST /system-admin/printers/save", service.handleSystemAdminSavePrinters)
 	mux.HandleFunc("POST /api/orders", service.handlePlaceOrder)
 	mux.HandleFunc("POST /api/orders/{id}/reprint", service.handleReprintOrder)
-	mux.HandleFunc("GET /api/kitchen", service.handleKitchen)
 	return mux
 }
 
@@ -68,22 +66,6 @@ func handlePOSScreen(writer http.ResponseWriter, request *http.Request) {
 	render(writer, "pos.html", posPage{
 		page:         page{Title: "Cashier POS", BodyClass: "theme", Kiosk: true},
 		MenuSections: sections,
-	})
-}
-
-// handleKitchenScreen draws the open orders. The screen is read-only; a
-// script polls /api/kitchen and redraws in place, because a meta refresh's
-// navigation would drop the tablet out of full screen every cycle.
-func (service *OrderService) handleKitchenScreen(writer http.ResponseWriter, request *http.Request) {
-	board, err := service.GetKitchenBoard()
-	if err != nil {
-		log.Printf("kitchen board: %v", err)
-		http.Error(writer, "Could not read the kitchen board", http.StatusInternalServerError)
-		return
-	}
-	render(writer, "kitchen.html", kitchenPage{
-		page:         page{Title: "Kitchen display", BodyClass: "theme", Kiosk: true},
-		KitchenBoard: board,
 	})
 }
 
@@ -419,16 +401,6 @@ func (service *OrderService) handleReprintOrder(writer http.ResponseWriter, requ
 	}
 
 	writeJSON(writer, http.StatusOK, response)
-}
-
-func (service *OrderService) handleKitchen(writer http.ResponseWriter, request *http.Request) {
-	board, err := service.GetKitchenBoard()
-	if err != nil {
-		log.Printf("kitchen board: %v", err)
-		writeError(writer, http.StatusInternalServerError, "Could not read the kitchen board")
-		return
-	}
-	writeJSON(writer, http.StatusOK, board)
 }
 
 // validationMessage removes the sentinel prefix, so the operator reads only

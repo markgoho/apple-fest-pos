@@ -4,7 +4,7 @@ The glossary for the Apple Fest POS. Terms only, no implementation.
 
 ## Operator
 
-A person who runs the booth: takes orders on a tablet and watches for print failures. The Operator does not handle cash. The Operator uses `/pos` and `/kitchen`. Most Operators are scouts between 11 and 17; an adult takes orders only occasionally. The Operator holds the tablet through a rotating hand strap, left hand in the strap and right index finger on the glass, and turns it to either orientation. The tablet is never docked and is not set down during a shift. Screens for the Operator are dense, work in landscape and in portrait, and assume a novice.
+A person who runs the booth: takes orders on a tablet and watches for print failures. The Operator does not handle cash. The Operator uses `/pos`. Most Operators are scouts between 11 and 17; an adult takes orders only occasionally. The Operator holds the tablet through a rotating hand strap, left hand in the strap and right index finger on the glass, and turns it to either orientation. The tablet is never docked and is not set down during a shift. Screens for the Operator are dense, work in landscape and in portrait, and assume a novice.
 
 ## Leader
 

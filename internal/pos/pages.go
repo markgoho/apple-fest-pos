@@ -28,7 +28,6 @@ var buildVersion = fmt.Sprintf("%d", time.Now().Unix())
 var templateFuncs = template.FuncMap{
 	"cents":     FormatCents,
 	"clock":     FormatClock,
-	"join":      strings.Join,
 	"asset":     func(path string) string { return path + "?v=" + buildVersion },
 	"menuItems": func() []MenuItem { return MenuItems },
 	"svgnum": func(value float64) string {
@@ -48,7 +47,6 @@ var templateFuncs = template.FuncMap{
 var pageTemplates = map[string]*template.Template{
 	"home.html":         parsePage("home.html"),
 	"pos.html":          parsePage("pos.html"),
-	"kitchen.html":      parsePage("kitchen.html"),
 	"leader.html":       parsePage("leader.html"),
 	"system-admin.html": parsePage("system-admin.html"),
 }
@@ -79,7 +77,7 @@ func FormatClock(timestamp string) string {
 
 // page holds what every screen puts in the shared layout. Kiosk gates the
 // full-screen/wake-lock lock-down (issue #6): only the Operator's tablets
-// (Home, /pos, /kitchen) run it, not pages meant for a personal phone or
+// (Home, /pos) run it, not pages meant for a personal phone or
 // laptop.
 type page struct {
 	Title     string
@@ -131,11 +129,6 @@ type homePage struct {
 type posPage struct {
 	page
 	MenuSections []menuSection
-}
-
-type kitchenPage struct {
-	page
-	KitchenBoard
 }
 
 // leaderPage draws the Leader PIN gate and, once unlocked, the Figures/Orders
