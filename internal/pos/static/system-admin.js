@@ -1,15 +1,23 @@
 // ADR-0007: the wipe is a genuine hard delete with no undo, guarded by one
-// confirm() dialog, proportionate for a PIN-gated, solo-admin action.
+// confirm() dialog, proportionate for a PIN-gated, solo-admin action. Start
+// Event gets the same guard in both directions, so one stray tap can neither
+// lock the wipe nor unlock it.
 "use strict";
 
-const resetForm = document.getElementById("reset-form");
-if (resetForm) {
-  resetForm.addEventListener("submit", (event) => {
-    if (!window.confirm("Wipe all orders? This cannot be undone.")) {
-      event.preventDefault();
-    }
-  });
+function confirmSubmit(formID, question) {
+  const form = document.getElementById(formID);
+  if (form) {
+    form.addEventListener("submit", (event) => {
+      if (!window.confirm(question)) {
+        event.preventDefault();
+      }
+    });
+  }
 }
+
+confirmSubmit("reset-form", "Wipe all orders? This cannot be undone.");
+confirmSubmit("start-event-form", "Set Start Event? This locks the data-reset tool.");
+confirmSubmit("clear-start-event-form", "Clear Start Event? This unlocks the data-reset tool.");
 
 // ADR-0010: the scan can take real time on a large network, and a plain
 // form POST gives no sign it's running until the page reloads. Disable the

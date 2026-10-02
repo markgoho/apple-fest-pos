@@ -119,3 +119,36 @@ func TestSystemAdminStartEventLocksOutTheResetTool(t *testing.T) {
 		t.Error("EventStarted() is false after Start Event was set")
 	}
 }
+
+func TestSystemAdminClearStartEventUnlocksTheResetTool(t *testing.T) {
+	service := newTestService(t)
+	pin := url.Values{"pin": {service.SystemAdminPIN}}
+
+	postForm(t, service, "/system-admin/start-event", pin)
+
+	postForm(t, service, "/system-admin/clear-start-event", url.Values{"pin": {"wrong"}})
+	started, err := service.EventStarted()
+	if err != nil {
+		t.Fatalf("read EventStarted: %v", err)
+	}
+	if !started {
+		t.Fatal("a wrong PIN cleared Start Event")
+	}
+
+	body := postForm(t, service, "/system-admin/clear-start-event", pin).Body.String()
+	if !strings.Contains(body, "Wipe all orders") {
+		t.Error("the reset tool is not shown after Start Event was cleared")
+	}
+	started, err = service.EventStarted()
+	if err != nil {
+		t.Fatalf("read EventStarted: %v", err)
+	}
+	if started {
+		t.Error("EventStarted() is true after Start Event was cleared")
+	}
+
+	body = postForm(t, service, "/system-admin/reset", pin).Body.String()
+	if !strings.Contains(body, "All orders wiped.") {
+		t.Error("the reset tool did not wipe after Start Event was cleared")
+	}
+}

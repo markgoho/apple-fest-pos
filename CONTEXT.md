@@ -22,7 +22,7 @@ One selling day of Apple Fest. The 2026 event is a Saturday and a Sunday, roughl
 
 ## Start Event
 
-The one-way switch the System Admin sets from the System Admin page once pre-event setup and testing are finished. It exists to close off the data reset tool: the wipe that clears every order can run only before Start Event, never after, so a real Event day's sales can never be erased by mistake.
+The switch the System Admin sets from the System Admin page once pre-event setup and testing are finished. It exists to close off the data reset tool: the wipe that clears every order cannot run while Start Event is set, so a real Event day's sales can never be erased by mistake. The System Admin can clear it again from the same page, behind a confirmation, as the recovery for a switch set by mistake (ADR-0007).
 
 ## Side
 

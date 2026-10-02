@@ -50,10 +50,14 @@
   <section class="panel">
     <h2>Start Event</h2>
     {{if .EventStarted}}
-    <p>Start Event is set. The data-reset tool is locked for the rest of the event.</p>
+    <p>Start Event is set. The data-reset tool is locked. Clear Start Event only if it was set by mistake.</p>
+    <form method="post" action="/system-admin/clear-start-event" id="clear-start-event-form">
+      <input type="hidden" name="pin" value="{{.PIN}}">
+      <button type="submit">Clear Start Event</button>
+    </form>
     {{else}}
-    <p>Start Event locks the data-reset tool for the rest of the event. Set it once pre-event setup and testing are finished.</p>
-    <form method="post" action="/system-admin/start-event">
+    <p>Start Event locks the data-reset tool. Set it once pre-event setup and testing are finished.</p>
+    <form method="post" action="/system-admin/start-event" id="start-event-form">
       <input type="hidden" name="pin" value="{{.PIN}}">
       <button type="submit">Set Start Event</button>
     </form>
@@ -63,7 +67,7 @@
   <section class="panel">
     <h2>Data reset</h2>
     {{if .EventStarted}}
-    <p class="empty">Locked: Start Event is set.</p>
+    <p class="empty">Locked: Start Event is set. To unlock, clear Start Event above.</p>
     {{else}}
     <p>Wipe all orders deletes every order and restarts order numbers at the start. This cannot be undone.</p>
     <form method="post" action="/system-admin/reset" id="reset-form">

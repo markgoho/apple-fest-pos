@@ -11,7 +11,7 @@ import (
 var ErrEventStarted = errors.New("event started")
 
 // EventStarted reports whether the System Admin has set Start Event, the
-// one-way flag that locks the data-reset tool out for the rest of the event.
+// flag that locks the data-reset tool out while it is set.
 func (service *OrderService) EventStarted() (bool, error) {
 	var value string
 	err := service.DB.QueryRow(`SELECT value FROM metadata WHERE key = 'event_started'`).Scan(&value)
@@ -24,13 +24,23 @@ func (service *OrderService) EventStarted() (bool, error) {
 	return value == "true", nil
 }
 
-// StartEvent sets the Start Event flag (ADR-0007). It cannot be unset.
+// StartEvent sets the Start Event flag (ADR-0007).
 func (service *OrderService) StartEvent() error {
 	_, err := service.DB.Exec(
 		`INSERT INTO metadata (key, value) VALUES ('event_started', 'true')
 		 ON CONFLICT(key) DO UPDATE SET value = excluded.value`)
 	if err != nil {
 		return fmt.Errorf("set event_started: %w", err)
+	}
+	return nil
+}
+
+// ClearStartEvent removes the Start Event flag (ADR-0007), the recovery for
+// a flag set by mistake. It deletes no orders: the wipe stays a separate,
+// separately confirmed action.
+func (service *OrderService) ClearStartEvent() error {
+	if _, err := service.DB.Exec(`DELETE FROM metadata WHERE key = 'event_started'`); err != nil {
+		return fmt.Errorf("clear event_started: %w", err)
 	}
 	return nil
 }

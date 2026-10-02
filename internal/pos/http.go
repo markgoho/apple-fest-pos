@@ -23,6 +23,7 @@ func (service *OrderService) Handler() http.Handler {
 	mux.HandleFunc("GET /system-admin", service.handleSystemAdminScreen)
 	mux.HandleFunc("POST /system-admin", service.handleSystemAdminUnlock)
 	mux.HandleFunc("POST /system-admin/start-event", service.handleSystemAdminStartEvent)
+	mux.HandleFunc("POST /system-admin/clear-start-event", service.handleSystemAdminClearStartEvent)
 	mux.HandleFunc("POST /system-admin/reset", service.handleSystemAdminReset)
 	mux.HandleFunc("POST /system-admin/check-printers", service.handleSystemAdminCheckPrinters)
 	mux.HandleFunc("POST /system-admin/test-ticket", service.handleSystemAdminTestTicket)
@@ -205,6 +206,18 @@ func (service *OrderService) handleSystemAdminStartEvent(writer http.ResponseWri
 		if err := service.StartEvent(); err != nil {
 			log.Printf("start event: %v", err)
 			message = "Could not set Start Event."
+		}
+	}
+	service.renderSystemAdmin(writer, pin, message, nil)
+}
+
+func (service *OrderService) handleSystemAdminClearStartEvent(writer http.ResponseWriter, request *http.Request) {
+	pin := request.FormValue("pin")
+	var message string
+	if service.systemAdminUnlocked(pin) {
+		if err := service.ClearStartEvent(); err != nil {
+			log.Printf("clear start event: %v", err)
+			message = "Could not clear Start Event."
 		}
 	}
 	service.renderSystemAdmin(writer, pin, message, nil)
