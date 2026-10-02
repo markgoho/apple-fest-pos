@@ -1087,6 +1087,42 @@ tr.fail {
   text-align: center;
 }
 
+.pin-form {
+  inline-size: 100%;
+  max-inline-size: 20rem;
+  justify-self: center;
+}
+
+.pin-pad {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+}
+
+.pin-pad[hidden] {
+  display: none;
+}
+
+.pin-pad button {
+  min-block-size: 4.25rem;
+  border: 2px solid var(--gold-tan);
+  background: var(--panel);
+  color: var(--gold-tan-ink);
+  font-size: 1.6rem;
+}
+
+.pin-pad button:active {
+  background: var(--gold-tan-soft);
+}
+
+.pin-pad .word {
+  font-size: 1rem;
+}
+
 .danger {
   background: var(--apple-red-dark);
 }

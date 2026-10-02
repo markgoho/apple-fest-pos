@@ -99,11 +99,7 @@
 
   {{else}}
   {{if .Error}}<p class="notice warn">{{.Error}}</p>{{end}}
-  <form method="post" action="/leader" class="pin-form">
-    <label for="pin">PIN</label>
-    <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="pin" name="pin" autofocus>
-    <button type="submit">Unlock</button>
-  </form>
+  {{template "pinpad" "/leader"}}
   {{end}}
 </main>
 {{if .Unlocked}}<script src="{{asset "/static/leader.js"}}" defer></script>{{end}}

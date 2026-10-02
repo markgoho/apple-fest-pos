@@ -110,3 +110,22 @@ func TestStaticFilesAreServed(t *testing.T) {
 		t.Error("/static/pos.css is not the stylesheet")
 	}
 }
+
+func TestPINGatedPagesShowThePINPadWithATypedFallback(t *testing.T) {
+	service := newTestService(t)
+
+	for _, path := range []string{"/leader", "/system-admin"} {
+		body := getPage(t, service, path)
+		if !strings.Contains(body, `<form method="post" action="`+path+`" class="pin-form">`) {
+			t.Errorf("%s: the PIN form does not post back to the page", path)
+		}
+		if !strings.Contains(body, `class="pin-pad"`) || !strings.Contains(body, "/static/pin-pad.js") {
+			t.Errorf("%s: the lock screen has no PIN pad", path)
+		}
+		// The pad starts hidden and Unlock stays in the page, so the typed
+		// input still works when the script does not run.
+		if !strings.Contains(body, `aria-label="PIN pad" hidden>`) || !strings.Contains(body, ">Unlock</button>") {
+			t.Errorf("%s: the lock screen has no typed fallback", path)
+		}
+	}
+}

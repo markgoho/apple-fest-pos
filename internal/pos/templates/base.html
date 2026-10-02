@@ -19,3 +19,29 @@
   </body>
 </html>
 {{end}}
+
+{{/* The lock screen of a PIN-gated page (ADR-0006). The dot is the form's
+     action. The typed input and Unlock work with no script; pin-pad.js turns
+     them into an on-screen pad, so a script fault never locks anyone out. */}}
+{{define "pinpad"}}
+<form method="post" action="{{.}}" class="pin-form">
+  <label for="pin">PIN</label>
+  <input type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" id="pin" name="pin" autocomplete="off" autofocus>
+  <fieldset class="pin-pad" aria-label="PIN pad" hidden>
+    <button type="button">1</button>
+    <button type="button">2</button>
+    <button type="button">3</button>
+    <button type="button">4</button>
+    <button type="button">5</button>
+    <button type="button">6</button>
+    <button type="button">7</button>
+    <button type="button">8</button>
+    <button type="button">9</button>
+    <button type="button" class="word" data-pin-key="clear">Clear</button>
+    <button type="button">0</button>
+    <button type="button" class="word" data-pin-key="delete">Delete</button>
+  </fieldset>
+  <button type="submit">Unlock</button>
+</form>
+<script src="{{asset "/static/pin-pad.js"}}" defer></script>
+{{end}}
