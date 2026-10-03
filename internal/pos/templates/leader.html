@@ -21,6 +21,7 @@
   </div>
 
   <section class="panel" id="figures-panel"{{if ne .Tab "figures"}} hidden{{end}}>
+    <div class="figures">
     {{if .Chart.Bars}}
     <div class="chart-block">
       <h2>Revenue by hour</h2>
@@ -50,6 +51,7 @@
       </div>
     </section>
 
+    <div class="items-block">
     <h2>Items sold</h2>
     {{if .Items}}
     <table>
@@ -61,6 +63,8 @@
       </tbody>
     </table>
     {{else}}<p class="empty">No items sold yet today.</p>{{end}}
+    </div>
+    </div>
   </section>
 
   <section class="panel" id="orders-panel"{{if ne .Tab "orders"}} hidden{{end}}>
@@ -77,19 +81,26 @@
           <p class="items-summary">{{range $index, $line := .Items}}{{if $index}}, {{end}}{{$line.Quantity}}&times; {{$line.Name}}{{end}}</p>
         </div>
         <span class="total">{{cents .TotalCents}}</span>
-        {{if and (ne .Status "voided") (ne .Status "comped")}}
+        {{if ne .Status "voided"}}
+        <div class="row-actions">
+        <form method="post" action="/leader/orders/{{.ID}}/reprint" class="reprint-form" data-order-number="{{.OrderNumber}}">
+          <input type="hidden" name="pin" value="{{$.PIN}}">
+          <input type="hidden" name="date" value="{{$.BusinessDate}}">
+          <button type="submit" class="reprint-btn">Reprint</button>
+        </form>
+        {{if ne .Status "comped"}}
         <form method="post" action="/leader/orders/{{.ID}}/comp" class="comp-form" data-order-number="{{.OrderNumber}}">
           <input type="hidden" name="pin" value="{{$.PIN}}">
           <input type="hidden" name="date" value="{{$.BusinessDate}}">
           <button type="submit" class="comp-btn">Comp</button>
         </form>
         {{end}}
-        {{if ne .Status "voided"}}
         <form method="post" action="/leader/orders/{{.ID}}/void" class="void-form" data-order-number="{{.OrderNumber}}">
           <input type="hidden" name="pin" value="{{$.PIN}}">
           <input type="hidden" name="date" value="{{$.BusinessDate}}">
           <button type="submit" class="void-btn">Void</button>
         </form>
+        </div>
         {{end}}
       </li>
       {{end}}

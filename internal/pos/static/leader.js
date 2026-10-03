@@ -40,3 +40,8 @@ confirmBeforeSubmit(
   (orderNumber) =>
     "Comp order #" + orderNumber + "? The meal is free for a worker: the food still counts as served, and no money counts for it.",
 );
+confirmBeforeSubmit(
+  ".reprint-form",
+  (orderNumber) =>
+    "Reprint order #" + orderNumber + "? The receipt and the kitchen ticket print again, marked REPRINT.",
+);

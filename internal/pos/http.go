@@ -19,6 +19,7 @@ func (service *OrderService) Handler() http.Handler {
 	mux.HandleFunc("POST /leader", service.handleLeaderUnlock)
 	mux.HandleFunc("POST /leader/orders/{id}/void", service.handleLeaderVoidOrder)
 	mux.HandleFunc("POST /leader/orders/{id}/comp", service.handleLeaderCompOrder)
+	mux.HandleFunc("POST /leader/orders/{id}/reprint", service.handleLeaderReprintOrder)
 	mux.HandleFunc("GET /system-admin", service.handleSystemAdminScreen)
 	mux.HandleFunc("POST /system-admin", service.handleSystemAdminUnlock)
 	mux.HandleFunc("POST /system-admin/start-event", service.handleSystemAdminStartEvent)
@@ -116,6 +117,27 @@ func (service *OrderService) handleLeaderCompOrder(writer http.ResponseWriter, r
 			message = "Could not comp the order."
 		default:
 			message = fmt.Sprintf("Order #%d comped.", row.OrderNumber)
+		}
+	}
+	service.renderLeader(writer, pin, message, "orders", request.FormValue("date"))
+}
+
+// handleLeaderReprintOrder resends a stored order's paper, marked REPRINT, and
+// redraws the Orders tab. It changes no sales figure.
+func (service *OrderService) handleLeaderReprintOrder(writer http.ResponseWriter, request *http.Request) {
+	pin := request.FormValue("pin")
+	var message string
+	if service.leaderUnlocked(pin) {
+		switch response, err := service.ReprintOrder(request.PathValue("id")); {
+		case errors.Is(err, ErrNotFound):
+			message = "Order not found."
+		case err != nil:
+			log.Printf("leader reprint order: %v", err)
+			message = "Could not reprint the order."
+		case response.Print.Customer == PrintFailed || response.Print.Kitchen == PrintFailed:
+			message = fmt.Sprintf("Order #%d: a printer did not answer. Check the printers and try again.", response.Order.OrderNumber)
+		default:
+			message = fmt.Sprintf("Order #%d sent to the printers again.", response.Order.OrderNumber)
 		}
 	}
 	service.renderLeader(writer, pin, message, "orders", request.FormValue("date"))

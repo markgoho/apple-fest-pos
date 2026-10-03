@@ -1081,7 +1081,66 @@ tr.fail {
    (CONTEXT.md's Leader entry). */
 
 .leader {
-  max-inline-size: 30rem;
+  max-inline-size: 64rem;
+  padding: clamp(0.75rem, 4vw, 1.5rem);
+}
+
+.leader .panel {
+  padding: clamp(1rem, 4vw, 1.5rem);
+}
+
+/* The Figures panel sizes from its own width, not the viewport's: a phone
+   stacks it, and a tablet puts the cards in a column beside the chart. */
+.leader #figures-panel {
+  container: figures / inline-size;
+}
+
+.leader .cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.leader .card {
+  flex: 1 1 8rem;
+  padding: 1rem;
+  container-type: inline-size;
+}
+
+.leader .card .value {
+  font-size: clamp(1.75rem, 24cqi, 2.75rem);
+}
+
+.leader .figures {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.leader .figures .chart-block {
+  margin-block-end: 0;
+}
+
+@container figures (min-width: 44rem) {
+  .leader .figures {
+    grid-template-columns: 2fr 1fr;
+    grid-template-areas:
+      "chart cards"
+      "items cards";
+    align-items: start;
+  }
+
+  .leader .figures .chart-block {
+    grid-area: chart;
+  }
+
+  .leader .figures .cards {
+    grid-area: cards;
+    display: grid;
+  }
+
+  .leader .figures .items-block {
+    grid-area: items;
+  }
 }
 
 .tabs {
@@ -1132,8 +1191,20 @@ tr.fail {
 }
 
 .order-row .info {
-  flex: 1;
+  flex: 1 1 10rem;
   min-inline-size: 0;
+}
+
+/* The buttons move together onto their own line when the row is too narrow
+   for them beside the order. */
+.order-row {
+  flex-wrap: wrap;
+}
+
+.row-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-inline-start: auto;
 }
 
 .order-row .num-line {
@@ -1185,8 +1256,22 @@ tr.fail {
 }
 
 .void-form,
-.comp-form {
+.comp-form,
+.reprint-form {
   flex-shrink: 0;
+}
+
+.reprint-btn {
+  min-block-size: var(--tap);
+  padding: 0 0.9rem;
+  border: 2px solid var(--orchard-brown);
+  background: white;
+  color: var(--orchard-brown);
+}
+
+.reprint-btn:active {
+  background: var(--orchard-brown);
+  color: white;
 }
 
 .comp-btn {

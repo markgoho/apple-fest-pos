@@ -237,3 +237,58 @@ func TestLeaderCompOfAnUnknownOrderReportsNotFound(t *testing.T) {
 		t.Error("comping an unknown order does not report Order not found")
 	}
 }
+
+func TestLeaderReprintRequiresTheCorrectPIN(t *testing.T) {
+	service := newTestService(t)
+	_, body := postOrder(t, service, validOrder())
+	orderID := body["order"].(map[string]any)["id"].(string)
+
+	recorder := postForm(t, service, "/leader/orders/"+orderID+"/reprint", url.Values{"pin": {"0000"}})
+	if strings.Contains(recorder.Body.String(), "reprint") {
+		t.Error("a wrong PIN reprinted the order")
+	}
+}
+
+func TestLeaderReprintConfirmsAndStaysOnOrders(t *testing.T) {
+	service := newTestService(t)
+	_, body := postOrder(t, service, validOrder())
+	order := body["order"].(map[string]any)
+	orderID := order["id"].(string)
+
+	recorder := postForm(t, service, "/leader/orders/"+orderID+"/reprint", url.Values{"pin": {service.LeaderPIN}})
+	responseBody := recorder.Body.String()
+	if !strings.Contains(responseBody, "Order #100") {
+		t.Errorf("the reprint response does not name the order: %s", responseBody)
+	}
+	if !strings.Contains(responseBody, "/leader/orders/"+orderID+"/reprint") {
+		t.Error("the order list does not offer Reprint")
+	}
+
+	sales, err := service.GetAdminSales("")
+	if err != nil {
+		t.Fatalf("admin sales: %v", err)
+	}
+	if sales.Summary.OrderCount != 1 || sales.Summary.TotalCents == 0 {
+		t.Errorf("a reprint changed the sales: %+v", sales.Summary)
+	}
+}
+
+func TestLeaderVoidedOrderOffersNoReprint(t *testing.T) {
+	service := newTestService(t)
+	_, body := postOrder(t, service, validOrder())
+	orderID := body["order"].(map[string]any)["id"].(string)
+
+	recorder := postForm(t, service, "/leader/orders/"+orderID+"/void", url.Values{"pin": {service.LeaderPIN}})
+	if strings.Contains(recorder.Body.String(), "/leader/orders/"+orderID+"/reprint") {
+		t.Error("a voided order still offers Reprint")
+	}
+}
+
+func TestLeaderReprintOfAnUnknownOrderReportsNotFound(t *testing.T) {
+	service := newTestService(t)
+
+	recorder := postForm(t, service, "/leader/orders/does-not-exist/reprint", url.Values{"pin": {service.LeaderPIN}})
+	if !strings.Contains(recorder.Body.String(), "Order not found") {
+		t.Error("reprinting an unknown order does not report Order not found")
+	}
+}
