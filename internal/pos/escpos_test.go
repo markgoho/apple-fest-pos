@@ -123,7 +123,7 @@ func TestBuildKitchenTicketHasEmphasisAndTheCutCommand(t *testing.T) {
 	if !bytes.Contains(payload, []byte{0x1d, 0x21, 0x11}) {
 		t.Errorf("payload has no double size command")
 	}
-	if !strings.Contains(string(payload), "2  POTATO PANCAKE") {
+	if !strings.Contains(string(payload), "POTATO PANCAKE") {
 		t.Errorf("payload has no upper case item line: %q", string(payload))
 	}
 	if strings.Contains(string(payload), "REPRINT") {
@@ -182,7 +182,7 @@ func TestBuildKitchenTicketPrintsEverySideUnderItsLine(t *testing.T) {
 	payload := string(BuildKitchenTicket(sideOrder, HeaderNone))
 
 	// One per line: the ticket prints at double width and nothing wraps it.
-	if !strings.Contains(payload, "1  POTATO PANCAKE\r\n   SOUR CREAM\r\n   KETCHUP") {
+	if !strings.Contains(payload, "POTATO PANCAKE\r\n   SOUR CREAM\r\n   KETCHUP") {
 		t.Errorf("the sides do not sit under the item line, one each: %q", payload)
 	}
 }
@@ -194,7 +194,30 @@ func TestAPlainLinePrintsNoSide(t *testing.T) {
 	}
 
 	ticket := string(BuildKitchenTicket(receiptOrder, HeaderNone))
-	if !strings.Contains(ticket, "2  POTATO PANCAKE\r\n\r\n") {
+	if !strings.Contains(ticket, "POTATO PANCAKE\r\nPOTATO PANCAKE\r\n\r\n") {
 		t.Errorf("a plain line must add no side line to the kitchen ticket: %q", ticket)
+	}
+}
+
+// A young cook reads "2  POTATO PANCAKE / SOUR CREAM" as one pancake, or as
+// sour cream on only one. Every item prints once per unit, with its Sides
+// under each one, and no count at all.
+func TestBuildKitchenTicketPrintsOneLinePerUnit(t *testing.T) {
+	order := ReceiptOrder{
+		OrderNumber: 103,
+		CreatedAt:   "2026-10-03T16:00:00.000Z",
+		Items: []CartLine{
+			{MenuItemID: "potato-pancake", Quantity: 2, Sides: []string{"sour-cream"}},
+			{MenuItemID: "og-toastie", Quantity: 1},
+		},
+	}
+	payload := string(BuildKitchenTicket(order, HeaderNone))
+
+	want := "POTATO PANCAKE\r\n   SOUR CREAM\r\nPOTATO PANCAKE\r\n   SOUR CREAM\r\nOG TOASTIE\r\n"
+	if !strings.Contains(payload, want) {
+		t.Errorf("the ticket does not print one line per unit: %q", payload)
+	}
+	if strings.Contains(payload, "2  ") || strings.Contains(payload, "1  ") {
+		t.Errorf("the ticket still prints a count: %q", payload)
 	}
 }
