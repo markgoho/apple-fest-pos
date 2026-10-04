@@ -1064,19 +1064,6 @@ tr.fail {
   background: var(--apple-red-dark);
 }
 
-.kiosk-resume {
-  position: fixed;
-  inset-block-start: 0;
-  inset-inline: 0;
-  z-index: 100;
-  min-block-size: var(--tap);
-  border: 0;
-  font-size: 1.1rem;
-  font-weight: 900;
-  color: white;
-  background: var(--leaf-green);
-}
-
 /* The Leader screen: a phone-portrait, one-thumb read of the day
    (CONTEXT.md's Leader entry). */
 
