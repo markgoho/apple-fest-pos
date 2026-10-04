@@ -3,11 +3,15 @@
   <div class="top-row">
     <button type="button" class="more-btn" id="more" aria-expanded="false" aria-controls="more-sheet">More</button>
     <header class="band">
-      <a class="home" href="/">Apple Fest POS</a>
-      <p class="order-no">Last order <output class="n" id="last-order">—</output></p>
-      <p class="pi-clock"><time id="clock" data-server-ms="{{.ServerTimeMS}}"></time> <span class="clock-warning" id="clock-warning" hidden>Pi clock is wrong – tell Mark</span></p>
-      <p class="fault" id="fault" role="status"></p>
-      <button type="button" class="neutral-btn" id="reprint" disabled>Reprint</button>
+      <div class="band-start">
+        <a class="home" href="/">Apple Fest POS</a>
+        <p class="order-no">Last order <output class="n" id="last-order">—</output></p>
+        <p class="fault" id="fault" role="status"></p>
+      </div>
+      <p class="pi-clock"><time id="clock" data-server-ms="{{.ServerTimeMS}}"></time><span class="clock-warning" id="clock-warning" hidden>Pi clock is wrong – tell Mark</span></p>
+      <div class="band-end">
+        <button type="button" class="neutral-btn" id="reprint" disabled>Reprint</button>
+      </div>
     </header>
   </div>
 

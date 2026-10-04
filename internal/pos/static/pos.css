@@ -337,13 +337,27 @@ button:disabled {
 .band {
   flex: 1;
   min-inline-size: 0;
-  display: flex;
+  display: grid;
+  /* Equal side columns keep the clock in the true center of the band. */
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
   gap: 0.75rem;
-  padding: 0.6rem 1rem;
+  padding: 0.4rem 1rem;
   background: var(--panel);
   border-block-end: 2px solid var(--edge);
+}
+
+.band-start {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem 0.75rem;
+  min-inline-size: 0;
+}
+
+.band-end {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .band .home {
@@ -351,6 +365,7 @@ button:disabled {
 }
 
 .band .order-no {
+  flex: 0 0 auto;
   color: var(--leaf-green-dark);
   font-weight: 800;
 }
@@ -360,23 +375,30 @@ button:disabled {
 }
 
 .band .pi-clock {
-  flex: 0 0 auto;
-  font-weight: 800;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: clamp(1.75rem, 4vw, 2.75rem);
+  font-weight: 900;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
   color: var(--orchard-brown);
 }
 
 .clock-warning {
-  margin-inline-start: 0.4rem;
+  margin-block-start: 0.25rem;
   padding: 0.15rem 0.5rem;
   border-radius: 999px;
   background: var(--apple-red);
   color: white;
   font-size: 0.85rem;
+  font-weight: 800;
+  line-height: 1.2;
 }
 
 .band .fault {
-  flex: 1;
+  min-inline-size: 0;
   color: var(--apple-red-dark);
   font-weight: 700;
   font-size: 0.9rem;
