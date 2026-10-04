@@ -194,30 +194,28 @@ func TestAPlainLinePrintsNoSide(t *testing.T) {
 	}
 
 	ticket := string(BuildKitchenTicket(receiptOrder, HeaderNone))
-	if !strings.Contains(ticket, "POTATO PANCAKE\r\nPOTATO PANCAKE\r\n\r\n") {
+	if !strings.Contains(ticket, "2  POTATO PANCAKE\r\n\r\n") {
 		t.Errorf("a plain line must add no side line to the kitchen ticket: %q", ticket)
 	}
 }
 
-// A young cook reads "2  POTATO PANCAKE / SOUR CREAM" as one pancake, or as
-// sour cream on only one. Every item prints once per unit, with its Sides
-// under each one, and no count at all.
-func TestBuildKitchenTicketPrintsOneLinePerUnit(t *testing.T) {
+// A young cook reads "2  POTATO PANCAKE / SOUR CREAM" as sour cream on one
+// pancake only. A line with Sides prints once per unit, with its Sides under
+// each one. A line with no Sides keeps its count, shown only above one.
+func TestBuildKitchenTicketRepeatsOnlyLinesWithSides(t *testing.T) {
 	order := ReceiptOrder{
 		OrderNumber: 103,
 		CreatedAt:   "2026-10-03T16:00:00.000Z",
 		Items: []CartLine{
 			{MenuItemID: "potato-pancake", Quantity: 2, Sides: []string{"sour-cream"}},
+			{MenuItemID: "harvest-toastie", Quantity: 2},
 			{MenuItemID: "og-toastie", Quantity: 1},
 		},
 	}
 	payload := string(BuildKitchenTicket(order, HeaderNone))
 
-	want := "POTATO PANCAKE\r\n   SOUR CREAM\r\nPOTATO PANCAKE\r\n   SOUR CREAM\r\nOG TOASTIE\r\n"
+	want := "POTATO PANCAKE\r\n   SOUR CREAM\r\nPOTATO PANCAKE\r\n   SOUR CREAM\r\n2  HARVEST TOASTIE\r\nOG TOASTIE\r\n"
 	if !strings.Contains(payload, want) {
-		t.Errorf("the ticket does not print one line per unit: %q", payload)
-	}
-	if strings.Contains(payload, "2  ") || strings.Contains(payload, "1  ") {
-		t.Errorf("the ticket still prints a count: %q", payload)
+		t.Errorf("ticket = %q, want it to contain %q", payload, want)
 	}
 }

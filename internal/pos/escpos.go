@@ -157,16 +157,26 @@ func BuildKitchenTicket(order ReceiptOrder, header ReceiptHeader) []byte {
 	}
 
 	for _, line := range order.Items {
-		// One item per unit, with no count: a young cook read
-		// "2  POTATO PANCAKE / SOUR CREAM" as sour cream on one pancake only
-		// (ADR-0009, amended 3 Oct 2026). Each copy repeats its Sides.
+		name := strings.ToUpper(MenuItemName(line.MenuItemID))
+		sides := SideLabels(line.MenuItemID, line.Sides)
+		// A line with no Sides keeps its count, shown only above one.
+		if len(sides) == 0 {
+			if line.Quantity > 1 {
+				name = fmt.Sprintf("%d  %s", line.Quantity, name)
+			}
+			lines = append(lines, name)
+			continue
+		}
+		// A line with Sides prints once per unit, with no count: a young cook
+		// read "2  POTATO PANCAKE / SOUR CREAM" as sour cream on one pancake
+		// only (ADR-0009, amended 3 Oct 2026).
 		for range line.Quantity {
-			lines = append(lines, strings.ToUpper(MenuItemName(line.MenuItemID)))
+			lines = append(lines, name)
 			// One topping per line. The kitchen ticket prints at double width,
 			// so an 80mm roll holds about 24 characters and nothing here wraps
 			// them: "SOUR CREAM, APPLESAUCE" already overflows, and a break
 			// mid-word is the one thing the cook must not read.
-			for _, label := range SideLabels(line.MenuItemID, line.Sides) {
+			for _, label := range sides {
 				lines = append(lines, "   "+strings.ToUpper(label))
 			}
 		}
