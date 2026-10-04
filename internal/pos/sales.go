@@ -59,7 +59,24 @@ type AdminSalesResponse struct {
 	Summary      AdminSalesSummary    `json:"summary"`
 	Items        []AdminSalesItemLine `json:"items"`
 	Orders       []AdminSalesOrder    `json:"orders"`
+	Sides        AdminSalesSides      `json:"sides"`
 	Chart        AdminSalesChart      `json:"-"`
+}
+
+// AdminSalesSides counts how many served potato pancakes carried each Side
+// (CONTEXT.md). One pancake can carry several Sides, so the lines add up to
+// more than Pancakes.
+type AdminSalesSides struct {
+	Pancakes int                  `json:"pancakes"`
+	Lines    []AdminSalesSideLine `json:"lines"`
+}
+
+// AdminSalesSideLine is one Side, or "No side", with its share of the
+// pancakes as a whole percent.
+type AdminSalesSideLine struct {
+	Label    string `json:"label"`
+	Pancakes int    `json:"pancakes"`
+	Percent  int    `json:"percent"`
 }
 
 type storedRequest struct {
@@ -132,6 +149,8 @@ func (service *OrderService) GetAdminSales(date string) (AdminSalesResponse, err
 	summary := AdminSalesSummary{}
 	quantities := map[string]int{}
 	compedQuantities := map[string]int{}
+	sideCounts := map[string]int{}
+	pancakes, plainPancakes := 0, 0
 
 	for _, row := range rows {
 		request := parseStoredRequest(row.RequestJSON)
@@ -139,6 +158,15 @@ func (service *OrderService) GetAdminSales(date string) (AdminSalesResponse, err
 		for _, line := range request.Items {
 			if row.Status != OrderVoided {
 				quantities[line.MenuItemID] += line.Quantity
+				if line.MenuItemID == "potato-pancake" {
+					pancakes += line.Quantity
+					if len(line.Sides) == 0 {
+						plainPancakes += line.Quantity
+					}
+					for _, side := range line.Sides {
+						sideCounts[side] += line.Quantity
+					}
+				}
 			}
 			if row.Status == OrderComped {
 				compedQuantities[line.MenuItemID] += line.Quantity
@@ -181,8 +209,30 @@ func (service *OrderService) GetAdminSales(date string) (AdminSalesResponse, err
 		Summary:      summary,
 		Items:        aggregateItems(quantities, compedQuantities),
 		Orders:       orders,
+		Sides:        buildSides(pancakes, plainPancakes, sideCounts),
 		Chart:        buildHourlyChart(orders),
 	}, nil
+}
+
+// buildSides lists the pancake Sides most chosen first, with "No side" last.
+// A Voided order is not counted; a Comped one is, because it was served.
+func buildSides(pancakes, plainPancakes int, sideCounts map[string]int) AdminSalesSides {
+	sides := AdminSalesSides{Pancakes: pancakes}
+	if pancakes == 0 {
+		return sides
+	}
+	percent := func(count int) int { return (count*100 + pancakes/2) / pancakes }
+
+	pancake, _ := MenuItemByID("potato-pancake")
+	for _, side := range pancake.Sides {
+		count := sideCounts[side.ID]
+		sides.Lines = append(sides.Lines, AdminSalesSideLine{Label: side.Label, Pancakes: count, Percent: percent(count)})
+	}
+	sort.SliceStable(sides.Lines, func(first, second int) bool {
+		return sides.Lines[first].Pancakes > sides.Lines[second].Pancakes
+	})
+	sides.Lines = append(sides.Lines, AdminSalesSideLine{Label: "No side", Pancakes: plainPancakes, Percent: percent(plainPancakes)})
+	return sides
 }
 
 // AdminSalesEventTotal is the two-event-day total shown alongside whichever

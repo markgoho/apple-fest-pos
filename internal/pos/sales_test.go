@@ -283,3 +283,51 @@ func TestHourlyChartLeavesOutACompedOrder(t *testing.T) {
 		t.Errorf("chart bars = %d, want 0 for a day with only a comped order", len(sales.Chart.Bars))
 	}
 }
+
+func TestAdminSalesCountsPancakeSides(t *testing.T) {
+	service := newTestService(t)
+
+	var businessDate string
+	place := func(clientOrderID string, items []map[string]any) string {
+		order := validOrder()
+		order["clientOrderId"] = clientOrderID
+		order["items"] = items
+		_, body := postOrder(t, service, order)
+		placed := body["order"].(map[string]any)
+		businessDate = placed["createdAt"].(string)[:10]
+		return placed["id"].(string)
+	}
+	place("sides-1", []map[string]any{
+		{"menuItemId": "potato-pancake", "quantity": 2, "sides": []string{"sour-cream", "applesauce"}},
+		{"menuItemId": "og-toastie", "quantity": 1},
+	})
+	place("sides-2", []map[string]any{{"menuItemId": "potato-pancake", "quantity": 1, "sides": []string{"ketchup"}}})
+	place("sides-3", []map[string]any{{"menuItemId": "potato-pancake", "quantity": 1}})
+	voided := place("sides-4", []map[string]any{{"menuItemId": "potato-pancake", "quantity": 5, "sides": []string{"ketchup"}}})
+	if _, err := service.VoidOrder(voided); err != nil {
+		t.Fatalf("void order: %v", err)
+	}
+
+	sales, err := service.GetAdminSales(businessDate)
+	if err != nil {
+		t.Fatalf("admin sales: %v", err)
+	}
+
+	if sales.Sides.Pancakes != 4 {
+		t.Errorf("pancakes = %d, want 4", sales.Sides.Pancakes)
+	}
+	want := []AdminSalesSideLine{
+		{Label: "Sour Cream", Pancakes: 2, Percent: 50},
+		{Label: "Applesauce", Pancakes: 2, Percent: 50},
+		{Label: "Ketchup", Pancakes: 1, Percent: 25},
+		{Label: "No side", Pancakes: 1, Percent: 25},
+	}
+	if len(sales.Sides.Lines) != len(want) {
+		t.Fatalf("side lines = %+v, want %+v", sales.Sides.Lines, want)
+	}
+	for index, line := range want {
+		if sales.Sides.Lines[index] != line {
+			t.Errorf("side line %d = %+v, want %+v", index, sales.Sides.Lines[index], line)
+		}
+	}
+}

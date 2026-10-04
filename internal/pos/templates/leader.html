@@ -63,6 +63,19 @@
       </tbody>
     </table>
     {{else}}<p class="empty">No items sold yet today.</p>{{end}}
+    {{if .Sides.Lines}}
+    <h2>Pancake sides</h2>
+    <ul class="side-bars" aria-label="Share of {{.Sides.Pancakes}} pancakes with each side">
+      {{range .Sides.Lines}}
+      <li>
+        <span class="side-name">{{.Label}}</span>
+        <span class="side-bar"><i style="inline-size: {{.Percent}}%"></i></span>
+        <span class="side-count">{{.Pancakes}} <small>{{.Percent}}%</small></span>
+      </li>
+      {{end}}
+    </ul>
+    <p class="side-note">Out of {{.Sides.Pancakes}} pancakes. One pancake can have more than one side.</p>
+    {{end}}
     </div>
     </div>
   </section>

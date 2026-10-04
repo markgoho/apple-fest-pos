@@ -1120,6 +1120,63 @@ tr.fail {
   margin-block-end: 0;
 }
 
+.side-bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.6rem 0.75rem;
+  align-items: center;
+}
+
+.side-bars li {
+  display: contents;
+}
+
+.side-name {
+  font-weight: 700;
+}
+
+.side-bar {
+  block-size: 1rem;
+  border-radius: 0.3rem;
+  background: #f3e8d8;
+  overflow: hidden;
+}
+
+.side-bar i {
+  display: block;
+  block-size: 100%;
+  background: var(--apple-red);
+}
+
+.side-count {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.side-count small {
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+.side-note {
+  margin-block-start: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--gold-tan-ink);
+}
+
+.leader .items-block h2 + .side-bars {
+  margin-block-start: 0;
+}
+
+.leader .items-block table + h2,
+.leader .items-block .empty + h2 {
+  margin-block-start: 1.5rem;
+}
+
 @container figures (min-width: 44rem) {
   .leader .figures {
     grid-template-columns: 2fr 1fr;
