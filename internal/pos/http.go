@@ -14,7 +14,8 @@ func (service *OrderService) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.Handle("GET /static/", http.FileServerFS(StaticFiles))
 	mux.HandleFunc("GET /{$}", handleHome)
-	mux.HandleFunc("GET /pos", handlePOSScreen)
+	mux.HandleFunc("GET /pos", service.handlePOSScreen)
+	mux.HandleFunc("GET /api/time", service.handleTime)
 	mux.HandleFunc("GET /leader", service.handleLeaderScreen)
 	mux.HandleFunc("POST /leader", service.handleLeaderUnlock)
 	mux.HandleFunc("POST /leader/orders/{id}/void", service.handleLeaderVoidOrder)
@@ -43,9 +44,17 @@ func handleHome(writer http.ResponseWriter, request *http.Request) {
 	})
 }
 
+// handleTime gives the Pi's clock, so the POS header can warn when it is
+// wrong. The tablet asks again every minute, so a clock that the network
+// corrects later clears the warning without a reload.
+func (service *OrderService) handleTime(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Cache-Control", "no-store")
+	writeJSON(writer, http.StatusOK, map[string]int64{"serverMs": service.Now().UnixMilli()})
+}
+
 // handlePOSScreen draws the menu grid. The cart is client-side state, so the
 // server sends the menu once and the script does the rest.
-func handlePOSScreen(writer http.ResponseWriter, request *http.Request) {
+func (service *OrderService) handlePOSScreen(writer http.ResponseWriter, request *http.Request) {
 	var sections []menuSection
 	for _, item := range MenuItems {
 		tiles := []menuTile{{
@@ -67,6 +76,7 @@ func handlePOSScreen(writer http.ResponseWriter, request *http.Request) {
 	render(writer, "pos.html", posPage{
 		page:         page{Title: "Cashier POS", BodyClass: "theme", Kiosk: true},
 		MenuSections: sections,
+		ServerTimeMS: service.Now().UnixMilli(),
 	})
 }
 

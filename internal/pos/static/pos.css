@@ -359,6 +359,22 @@ button:disabled {
   font-size: 1.3rem;
 }
 
+.band .pi-clock {
+  flex: 0 0 auto;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--orchard-brown);
+}
+
+.clock-warning {
+  margin-inline-start: 0.4rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: var(--apple-red);
+  color: white;
+  font-size: 0.85rem;
+}
+
 .band .fault {
   flex: 1;
   color: var(--apple-red-dark);

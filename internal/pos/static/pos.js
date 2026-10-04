@@ -447,3 +447,35 @@ scrim.addEventListener("click", () => {
 });
 
 draw();
+
+// The header clock shows the tablet's time, which is always right. The Pi's
+// clock sets the business date, and the Pi has no clock battery, so the
+// header warns when the Pi's clock is more than five minutes off. The tablet
+// asks the Pi again every minute, so a clock the network corrects later
+// clears the warning without a reload.
+const clockElement = document.getElementById("clock");
+const clockWarning = document.getElementById("clock-warning");
+const clockFormat = new Intl.DateTimeFormat("en-US", { weekday: "short", hour: "numeric", minute: "2-digit" });
+const PI_CLOCK_LIMIT_MS = 5 * 60 * 1000;
+let piClockOffset = Number(clockElement.dataset.serverMs) - Date.now();
+
+function tickClock() {
+  clockElement.textContent = clockFormat.format(new Date()).replace(",", "");
+  clockWarning.hidden = Math.abs(piClockOffset) < PI_CLOCK_LIMIT_MS;
+}
+
+async function checkPiClock() {
+  try {
+    const sent = Date.now();
+    const response = await fetch("/api/time", { cache: "no-store" });
+    const { serverMs } = await response.json();
+    piClockOffset = serverMs - (sent + Date.now()) / 2;
+  } catch {
+    // Off the network: keep the last known offset.
+  }
+  tickClock();
+}
+
+tickClock();
+setInterval(tickClock, 1000);
+setInterval(checkPiClock, 60 * 1000);

@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 )
 
 func getPage(t *testing.T, service *OrderService, path string) string {
@@ -122,5 +123,31 @@ func TestPINGatedPagesShowThePINPadWithATypedFallback(t *testing.T) {
 		if !strings.Contains(body, `aria-label="PIN pad" hidden>`) || !strings.Contains(body, ">Unlock</button>") {
 			t.Errorf("%s: the lock screen has no typed fallback", path)
 		}
+	}
+}
+
+// The POS header shows the tablet's clock, and warns when the Pi's clock is
+// wrong: the Pi's clock sets the business date, and a wrong one reset the
+// order numbers on 3 Oct 2026.
+func TestPOSScreenCarriesThePiClock(t *testing.T) {
+	service := newTestService(t)
+	service.Now = func() time.Time { return time.Date(2026, 10, 4, 14, 5, 0, 0, time.UTC) }
+
+	body := getPage(t, service, "/pos")
+	if !strings.Contains(body, `data-server-ms="1791122700000"`) {
+		t.Error("/pos does not carry the Pi's time for the clock script")
+	}
+	if !strings.Contains(body, `id="clock-warning"`) {
+		t.Error("/pos has no Pi clock warning")
+	}
+}
+
+func TestTimeAPIGivesThePiClock(t *testing.T) {
+	service := newTestService(t)
+	service.Now = func() time.Time { return time.Date(2026, 10, 4, 14, 5, 0, 0, time.UTC) }
+
+	body := getPage(t, service, "/api/time")
+	if !strings.Contains(body, `"serverMs":1791122700000`) {
+		t.Errorf("/api/time = %s, want serverMs 1791122700000", body)
 	}
 }

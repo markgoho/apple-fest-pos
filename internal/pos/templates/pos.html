@@ -5,6 +5,7 @@
     <header class="band">
       <a class="home" href="/">Apple Fest POS</a>
       <p class="order-no">Last order <output class="n" id="last-order">—</output></p>
+      <p class="pi-clock"><time id="clock" data-server-ms="{{.ServerTimeMS}}"></time> <span class="clock-warning" id="clock-warning" hidden>Pi clock is wrong – tell Mark</span></p>
       <p class="fault" id="fault" role="status"></p>
       <button type="button" class="neutral-btn" id="reprint" disabled>Reprint</button>
     </header>

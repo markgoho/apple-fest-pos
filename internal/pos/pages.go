@@ -129,6 +129,10 @@ type homePage struct {
 type posPage struct {
 	page
 	MenuSections []menuSection
+	// ServerTimeMS is the Pi's clock at page load. The header shows the
+	// tablet's clock, and warns when the Pi's clock is far from it: the Pi's
+	// clock sets the business date.
+	ServerTimeMS int64
 }
 
 // leaderPage draws the Leader PIN gate and, once unlocked, the Figures/Orders
